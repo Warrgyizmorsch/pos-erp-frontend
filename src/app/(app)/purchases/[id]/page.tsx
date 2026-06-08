@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft, Receipt, Printer, ShieldCheck, Phone, MapPin, Package, FileText
+  ArrowLeft, Receipt, Printer, ShieldCheck, Phone, MapPin, Package, FileText, RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { accountingService } from "@/services/accountingService";
 import { purchaseService } from "@/services/purchaseService";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Purchase, PurchaseStatus, PurchasePaymentStatus } from "@/types";
@@ -28,12 +29,19 @@ const paymentColors: Record<PurchasePaymentStatus, string> = {
   partial: "bg-blue-500/10 text-blue-500 border-blue-500/20",
 };
 
+const accountingColors = {
+  posted: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  failed: "bg-red-500/10 text-red-500 border-red-500/20",
+  not_posted: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+};
+
 export default function PurchaseDetailsPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [loading, setLoading] = useState(true);
   const [printOpen, setPrintOpen] = useState(false);
+  const [reposting, setReposting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -47,7 +55,12 @@ export default function PurchaseDetailsPage() {
     }
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   if (loading) {
     return (
@@ -71,6 +84,23 @@ export default function PurchaseDetailsPage() {
       </div>
     );
   }
+
+  const accountingStatus = purchase.accountingStatus || "not_posted";
+  const accountingVoucher = typeof purchase.accountingVoucherId === "object" ? purchase.accountingVoucherId : undefined;
+
+  const handleRepostAccounting = async () => {
+    setReposting(true);
+    try {
+      const result = await accountingService.repostPurchaseAccounting(purchase._id);
+      await load();
+      toast.success(result.message || "Purchase accounting voucher posted");
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || "Failed to repost purchase accounting voucher");
+    } finally {
+      setReposting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 pb-10 max-w-5xl mx-auto print:max-w-none print:m-0 print:p-0">
@@ -125,6 +155,41 @@ export default function PurchaseDetailsPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-muted-foreground" /> Accounting
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <Badge className={accountingColors[accountingStatus]} variant="outline">
+                {accountingStatus.replace("_", " ").toUpperCase()}
+              </Badge>
+              {accountingVoucher && (
+                <div className="text-muted-foreground">
+                  Voucher <span className="font-semibold text-foreground">{accountingVoucher.voucherNo}</span>
+                  <span className="ml-2">({accountingVoucher.status})</span>
+                </div>
+              )}
+              {purchase.accountingError && <p className="max-w-2xl text-sm text-red-500">{purchase.accountingError}</p>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {accountingVoucher && (
+                <Button variant="outline" onClick={() => router.push("/accounting/vouchers")}>
+                  View Voucher
+                </Button>
+              )}
+              {accountingStatus !== "posted" && (
+                <Button variant="outline" className="gap-2" disabled={reposting} onClick={handleRepostAccounting}>
+                  <RefreshCw className={`h-4 w-4 ${reposting ? "animate-spin" : ""}`} />
+                  Repost
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/30"><CardTitle className="text-lg flex items-center gap-2"><Package className="h-5 w-5 text-muted-foreground" /> Item Details</CardTitle></CardHeader>

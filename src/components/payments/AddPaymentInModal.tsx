@@ -157,14 +157,21 @@ export function AddPaymentInModal({ open, onOpenChange, onSuccess, paymentId }: 
     }
   };
 
+  const normalizeOptionalIds = (values: z.infer<typeof formSchema>) => ({
+    ...values,
+    cashBankAccountId: values.cashBankAccountId?.trim() ? values.cashBankAccountId : undefined,
+    linkedInvoiceId: values.linkedInvoiceId?.trim() ? values.linkedInvoiceId : undefined,
+  });
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
+      const payload = normalizeOptionalIds(values);
       if (isEditing && paymentId) {
-        await paymentInService.update(paymentId, values);
+        await paymentInService.update(paymentId, payload);
         toast.success("Payment-In updated successfully");
       } else {
-        await paymentInService.create(values);
+        await paymentInService.create(payload);
         toast.success("Payment-In recorded successfully");
       }
       onSuccess?.();

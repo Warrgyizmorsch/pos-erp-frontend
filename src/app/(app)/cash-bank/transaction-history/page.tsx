@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCashBankStore } from "@/store/cashBankStore";
 import { getSocket } from "@/lib/socket";
 import { cashBankService } from "@/services/cashBankService";
+import { accountingService } from "@/services/accountingService";
 import {
   Search,
   IndianRupee,
@@ -35,6 +36,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency, formatCurrencyCompact, cn, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
+
+type CashBankTransactionRow = {
+  _id: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+};
 
 export default function TransactionHistoryPage() {
   return (
@@ -146,14 +152,38 @@ function TransactionHistoryContent() {
     const socket = getSocket();
 
     socket.on("cashBank:transactionCreated", (data) => {
-      console.log("[Socket.IO] New transaction received:", data);
-      addLiveTransaction(data.transaction);
-      updateLiveBalance(data.summary);
-      toast.success(
-        `Txn ${data.transaction.transactionNo} logged: ${formatCurrency(
-          data.transaction.amount
-        )} (${data.transaction.type.replace(/_/g, " ")})`
-      );
+      try {
+        console.log("[Socket.IO] New transaction received:", data);
+        // Support two emitter shapes: { transaction, summary } or transaction directly
+        const s = data?.summary;
+        let tx = null;
+        if (data && typeof data === 'object') {
+          if (Object.prototype.hasOwnProperty.call(data, 'transaction')) {
+            tx = data.transaction || null;
+          } else {
+            tx = data || null;
+          }
+        }
+
+        if (tx && typeof tx === 'object') {
+          try {
+            addLiveTransaction(tx);
+          } catch (innerAddErr) {
+            console.warn('addLiveTransaction failed for incoming tx:', innerAddErr, tx);
+          }
+        }
+
+        if (s) updateLiveBalance(s);
+
+        if (tx && typeof tx === 'object') {
+          const txnNo = tx?.transactionNo ?? tx?.transactionId ?? "(unknown)";
+          const amt = typeof tx?.amount !== "undefined" ? formatCurrency(tx.amount) : "";
+          const typeLabel = tx?.type ? tx.type.replace(/_/g, " ") : "";
+          toast.success(`Txn ${txnNo} logged: ${amt}${typeLabel ? ` (${typeLabel})` : ""}`);
+        }
+      } catch (err) {
+        console.error('Unhandled error in transactionCreated handler:', err);
+      }
     });
 
     socket.on("cashBank:balanceUpdated", (data) => {
@@ -274,6 +304,17 @@ function TransactionHistoryContent() {
     }
   };
 
+  const handleRepostAccounting = async (tx: CashBankTransactionRow) => {
+    try {
+      const result = await accountingService.repostCashBankTransactionAccounting(tx._id);
+      toast.success(result.message || "Accounting voucher posted");
+      fetchTransactions();
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || "Failed to repost accounting voucher");
+    }
+  };
+
   // Export transactions helper
   const handleExportCSV = () => {
     if (transactions.length === 0) {
@@ -385,7 +426,7 @@ function TransactionHistoryContent() {
             </div>
           </div>
           <div className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-black mt-3 sm:mt-4 text-emerald-500 font-mono tracking-tight whitespace-nowrap">
-            {formatCurrencyCompact(summary.cashBalance)}
+            {formatCurrencyCompact(summary?.cashBalance ?? 0)}
           </div>
           <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-1 truncate">Cash ledger balance</div>
         </Card>
@@ -401,7 +442,7 @@ function TransactionHistoryContent() {
             </div>
           </div>
           <div className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-black mt-3 sm:mt-4 text-orange-500 font-mono tracking-tight whitespace-nowrap">
-            {formatCurrencyCompact(summary.totalBankBalance)}
+            {formatCurrencyCompact(summary?.totalBankBalance ?? 0)}
           </div>
           <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-1 truncate">Unified banks aggregate</div>
         </Card>
@@ -417,7 +458,7 @@ function TransactionHistoryContent() {
             </div>
           </div>
           <div className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-black mt-3 sm:mt-4 text-emerald-600 font-mono tracking-tight whitespace-nowrap">
-            {formatCurrencyCompact(summary.todayInflow || 0)}
+            {formatCurrencyCompact(summary?.todayInflow ?? 0)}
           </div>
           <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-1 truncate">Receipts and pay-ins today</div>
         </Card>
@@ -433,7 +474,7 @@ function TransactionHistoryContent() {
             </div>
           </div>
           <div className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-black mt-3 sm:mt-4 text-rose-500 font-mono tracking-tight whitespace-nowrap">
-            {formatCurrencyCompact(summary.todayOutflow || 0)}
+            {formatCurrencyCompact(summary?.todayOutflow ?? 0)}
           </div>
           <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-1 truncate">Purchases, refunds, expenses</div>
         </Card>
@@ -449,7 +490,7 @@ function TransactionHistoryContent() {
             </div>
           </div>
           <div className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-black mt-3 sm:mt-4 text-foreground font-mono tracking-tight whitespace-nowrap">
-            {formatCurrencyCompact((summary.cashBalance || 0) + (summary.totalBankBalance || 0))}
+            {formatCurrencyCompact((summary?.cashBalance ?? 0) + (summary?.totalBankBalance ?? 0))}
           </div>
           <div className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-1 truncate">Total active cash & bank funds</div>
         </Card>
@@ -607,6 +648,7 @@ function TransactionHistoryContent() {
                 <th className="p-4 hidden sm:table-cell whitespace-nowrap">Account</th>
                 <th className="p-4 text-right whitespace-nowrap">Amount</th>
                 <th className="p-4 text-center hidden sm:table-cell whitespace-nowrap">Status</th>
+                <th className="p-4 text-center hidden lg:table-cell whitespace-nowrap">Accounting</th>
                 <th className="p-4 text-center w-[100px] whitespace-nowrap">Actions</th>
               </tr>
             </thead>
@@ -721,9 +763,33 @@ function TransactionHistoryContent() {
                         </span>
                       </td>
 
+                      <td className="p-4 text-center hidden lg:table-cell whitespace-nowrap">
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+                            tx.accountingStatus === "posted" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500",
+                            tx.accountingStatus === "failed" && "bg-red-500/10 text-red-600 dark:text-red-500",
+                            (!tx.accountingStatus || tx.accountingStatus === "not_posted") && "bg-slate-500/10 text-slate-600 dark:text-slate-400"
+                          )}
+                        >
+                          {(tx.accountingStatus || "not_posted").replace("_", " ")}
+                        </span>
+                      </td>
+
                       {/* Actions */}
                       <td className="p-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                          {(tx.accountingStatus || "not_posted") !== "posted" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-lg hover:bg-primary/10 text-primary shrink-0"
+                              onClick={() => handleRepostAccounting(tx)}
+                              title="Repost Accounting"
+                            >
+                              <IndianRupee className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"

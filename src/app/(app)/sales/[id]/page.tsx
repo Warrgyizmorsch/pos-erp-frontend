@@ -11,6 +11,7 @@ import {
   Phone,
   Printer,
   Receipt,
+  RefreshCw,
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintSaleDialog } from "@/components/sales/PrintSaleDialog";
+import { accountingService } from "@/services/accountingService";
 import { saleService } from "@/services/saleService";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Sale } from "@/types";
@@ -34,12 +36,19 @@ const paymentColors: Record<Sale["paymentStatus"], string> = {
   partial: "bg-blue-500/10 text-blue-500 border-blue-500/20",
 };
 
+const accountingColors = {
+  posted: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  failed: "bg-red-500/10 text-red-500 border-red-500/20",
+  not_posted: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+};
+
 export default function SaleDetailsPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
   const [printOpen, setPrintOpen] = useState(false);
+  const [reposting, setReposting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -71,6 +80,23 @@ export default function SaleDetailsPage() {
 
   const customer = typeof sale.customer === "object" ? sale.customer : undefined;
   const balanceDue = Math.max(0, sale.totalAmount - sale.amountPaid);
+  const accountingStatus = sale.accountingStatus || "not_posted";
+  const accountingVoucher = typeof sale.accountingVoucherId === "object" ? sale.accountingVoucherId : undefined;
+
+  const handleRepostAccounting = async () => {
+    setReposting(true);
+    try {
+      const result = await accountingService.repostSaleAccounting(sale._id);
+      const updatedSale = await saleService.getById(sale._id);
+      setSale(updatedSale);
+      toast.success(result.message || "Accounting voucher posted");
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || "Failed to repost accounting voucher");
+    } finally {
+      setReposting(false);
+    }
+  };
 
   return <div className="mx-auto max-w-5xl space-y-6 pb-10">
     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -122,6 +148,35 @@ export default function SaleDetailsPage() {
         </CardContent>
       </Card>
     </div>
+
+    <Card>
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Receipt className="h-5 w-5 text-muted-foreground" /> Accounting
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Badge className={accountingColors[accountingStatus]} variant="outline">
+            {accountingStatus.replace("_", " ").toUpperCase()}
+          </Badge>
+          {accountingVoucher && <div className="text-muted-foreground">
+            Voucher <span className="font-semibold text-foreground">{accountingVoucher.voucherNo}</span>
+            <span className="ml-2">({accountingVoucher.status})</span>
+          </div>}
+          {sale.accountingError && <p className="max-w-2xl text-sm text-red-500">{sale.accountingError}</p>}
+        </div>
+        {accountingStatus !== "posted" && <Button
+          variant="outline"
+          className="gap-2 self-start sm:self-center"
+          disabled={reposting}
+          onClick={handleRepostAccounting}
+        >
+          <RefreshCw className={`h-4 w-4 ${reposting ? "animate-spin" : ""}`} />
+          Repost
+        </Button>}
+      </CardContent>
+    </Card>
 
     <Card className="overflow-hidden">
       <CardHeader className="bg-muted/30"><CardTitle className="flex items-center gap-2 text-lg"><Package className="h-5 w-5 text-muted-foreground" /> Item Details</CardTitle></CardHeader>

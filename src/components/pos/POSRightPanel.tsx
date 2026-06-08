@@ -159,7 +159,7 @@ function POSRightPanelContent() {
       } else {
         // Create new sale
         savedSale = await saleService.create(saleData);
-        toast.success("Sale saved!"); 
+        toast.success(savedSale?.accountingPosted ? "Sale saved and accounting voucher posted." : "Sale saved!");
       }
       
       setPrintSaleData(savedSale);

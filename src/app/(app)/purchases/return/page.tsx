@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Receipt, Plus, Search, Calendar, ArrowLeft, Trash2,
-  Loader2, Eye, Printer, X, Wallet, Building, ArrowUpRight, Ban, FileDown
+  Loader2, Eye, Printer, X, Wallet, Building, ArrowUpRight, Ban, FileDown, RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -26,9 +26,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { getAccountingErrorMessage, VoucherDetailsDrawer } from "@/components/accounting/accounting-ui";
 
 // Services
 import { purchaseReturnService } from "@/services/purchaseReturnService";
+import { accountingService, type VoucherDetail } from "@/services/accountingService";
 import { supplierService } from "@/services/supplierService";
 import { bankService } from "@/services/bankService";
 
@@ -88,11 +90,14 @@ export default function PurchaseReturnPage() {
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [repostingId, setRepostingId] = useState<string | null>(null);
 
   // Detail View states
   const [selectedReturn, setSelectedReturn] = useState<PurchaseReturnModel | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
+  const [voucherDetail, setVoucherDetail] = useState<VoucherDetail | null>(null);
+  const [voucherOpen, setVoucherOpen] = useState(false);
 
   // Keyboard Shortcuts Support
   useEffect(() => {
@@ -363,6 +368,40 @@ export default function PurchaseReturnPage() {
     }
   };
 
+  const repostAccounting = async (id: string) => {
+    try {
+      setRepostingId(id);
+      const result = await accountingService.repostPurchaseReturnAccounting(id);
+      toast.success(result.message || "Accounting voucher posted");
+      await loadReturns();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to repost accounting voucher");
+    } finally {
+      setRepostingId(null);
+    }
+  };
+
+  const getAccountingVoucherId = (ret: PurchaseReturnModel) => (
+    typeof ret.accountingVoucherId === "string" ? ret.accountingVoucherId : ret.accountingVoucherId?._id
+  );
+
+  const getAccountingVoucherNo = (ret: PurchaseReturnModel) => (
+    typeof ret.accountingVoucherId === "object" ? ret.accountingVoucherId?.voucherNo : undefined
+  );
+
+  const viewAccountingVoucher = async (ret: PurchaseReturnModel) => {
+    const voucherId = getAccountingVoucherId(ret);
+    if (!voucherId) return;
+
+    try {
+      const detail = await accountingService.getVoucherById(voucherId);
+      setVoucherDetail(detail);
+      setVoucherOpen(true);
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to load voucher details"));
+    }
+  };
+
   // Summary Metrics calculations for List View
   const listTotalReturns = returns.reduce((s, x) => x.status !== "cancelled" ? s + x.grandTotal : s, 0);
   const listTotalRefunded = returns.reduce((s, x) => x.status !== "cancelled" ? s + x.refundReceivedAmount : s, 0);
@@ -474,6 +513,7 @@ export default function PurchaseReturnPage() {
                       <th className="text-right p-4 font-semibold">Total Return</th>
                       <th className="text-right p-4 font-semibold">Refund Recd.</th>
                       <th className="text-right p-4 font-semibold">Debit Bal.</th>
+                      <th className="text-center p-4 font-semibold">Accounting</th>
                       <th className="text-center p-4 font-semibold">Status</th>
                       <th className="text-right p-4 font-semibold">Actions</th>
                     </tr>
@@ -494,6 +534,24 @@ export default function PurchaseReturnPage() {
                         <td className="p-4 text-right text-amber-500">{formatCurrency(ret.debitBalance)}</td>
                         <td className="p-4 text-center whitespace-nowrap">
                           <Badge
+                            variant="outline"
+                            className={cn(
+                              "whitespace-nowrap",
+                              (ret.accountingStatus || "not_posted") === "posted" && "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+                              (ret.accountingStatus || "not_posted") === "failed" && "bg-red-500/10 text-red-600 border-red-500/20",
+                              (ret.accountingStatus || "not_posted") === "not_posted" && "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                            )}
+                          >
+                            {(ret.accountingStatus || "not_posted").replace("_", " ").toUpperCase()}
+                          </Badge>
+                          {getAccountingVoucherNo(ret) && (
+                            <div className="mt-1 font-mono text-xs text-muted-foreground">
+                              {getAccountingVoucherNo(ret)}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4 text-center whitespace-nowrap">
+                          <Badge
                             className={cn(
                               "whitespace-nowrap",
                               ret.status === "refunded" && "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-0",
@@ -510,9 +568,30 @@ export default function PurchaseReturnPage() {
                             <Button variant="ghost" size="icon-sm" onClick={() => viewReturnDetails(ret._id)}>
                               <Eye className="h-4 w-4" />
                             </Button>
+                            {getAccountingVoucherId(ret) && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => viewAccountingVoucher(ret)}
+                                title="View accounting voucher"
+                              >
+                                <Receipt className="h-4 w-4" />
+                              </Button>
+                            )}
                             {ret.status !== "cancelled" && (
                               <Button variant="ghost" size="icon-sm" className="text-red-500" onClick={() => cancelReturn(ret._id)}>
                                 <Ban className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {ret.status !== "cancelled" && (ret.accountingStatus || "not_posted") !== "posted" && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={repostingId === ret._id}
+                                onClick={() => repostAccounting(ret._id)}
+                                title="Repost accounting voucher"
+                              >
+                                <RefreshCw className={cn("h-4 w-4", repostingId === ret._id && "animate-spin")} />
                               </Button>
                             )}
                           </div>
@@ -998,6 +1077,7 @@ export default function PurchaseReturnPage() {
         </DialogContent>
       </Dialog>
       <ReturnPrintDialog open={printOpen} onOpenChange={setPrintOpen} type="purchase" note={selectedReturn} />
+      <VoucherDetailsDrawer detail={voucherDetail} open={voucherOpen} onOpenChange={setVoucherOpen} />
     </div>
   );
 }

@@ -102,9 +102,10 @@ export const useCashBankStore = create<CashBankState>((set, get) => ({
   },
 
   addLiveTransaction: (transaction) => {
+    if (!transaction || !transaction._id) return;
     set((state) => {
       // Avoid inserting duplicates
-      const exists = state.transactions.some(tx => tx._id === transaction._id);
+      const exists = state.transactions.some(tx => tx?._id === transaction._id);
       if (exists) return {};
       return {
         transactions: [transaction, ...state.transactions],
