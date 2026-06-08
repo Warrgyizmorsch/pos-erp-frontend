@@ -1038,7 +1038,9 @@ export default function CreatePurchasePage() {
         toast.success("Draft saved!");
       } else {
         savedPurchase = await purchaseService.create(payload);
-        toast.success("Purchase created! Stock updated automatically.");
+        toast.success(savedPurchase.accountingPosted
+          ? "Purchase saved and accounting voucher posted."
+          : "Purchase created! Stock updated automatically.");
       }
       if (printAfterSave) {
         setPrintPurchase(savedPurchase);

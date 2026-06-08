@@ -143,6 +143,18 @@ export interface Sale {
   notes?: string;
   cashBankAccountId?: string;
   cashier: User | string;
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+    totalDebit?: number;
+    totalCredit?: number;
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   createdAt: string;
 }
 
@@ -290,6 +302,18 @@ export interface Purchase {
   notes?: string;
   cashBankAccountId?: string;
   createdBy: User | string;
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+    totalDebit?: number;
+    totalCredit?: number;
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -307,6 +331,16 @@ export interface PurchaseReturn {
   totalAmount: number;
   reason: string;
   status: "pending" | "approved" | "completed";
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   createdBy: User | string;
   createdAt: string;
   updatedAt: string;
@@ -335,6 +369,16 @@ export interface Expense {
   reference?: string;
   cashBankAccountId?: string;
   createdBy: User | string;
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   isRecurring: boolean;
   createdAt: string;
   updatedAt: string;
@@ -538,6 +582,16 @@ export interface SaleReturn {
   status: SaleReturnStatus;
   notes?: string;
   attachments?: string[];
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   cashier: User | string;
   createdAt: string;
   updatedAt: string;
@@ -593,6 +647,16 @@ export interface PurchaseReturnModel {
   status: PurchaseReturnStatus;
   notes?: string;
   attachments?: string[];
+  accountingVoucherId?: string | {
+    _id: string;
+    voucherNo: string;
+    date?: string;
+    status: "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED";
+  };
+  accountingPosted?: boolean;
+  accountingPostedAt?: string;
+  accountingStatus?: "not_posted" | "posted" | "failed";
+  accountingError?: string;
   createdAt: string;
   updatedAt: string;
 }

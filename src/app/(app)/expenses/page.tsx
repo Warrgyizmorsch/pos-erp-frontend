@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { expenseService } from "@/services/expenseService";
 import { cashBankService } from "@/services/cashBankService";
+import { accountingService } from "@/services/accountingService";
 import { formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/types";
 
@@ -38,6 +39,12 @@ const emptyForm = {
 const EXPENSE_CATEGORIES = [
   "Office Supplies", "Rent", "Utilities", "Salaries", "Marketing", "Travel", "Maintenance", "Miscellaneous"
 ];
+
+const accountingStatusClasses = {
+  posted: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  failed: "bg-red-500/10 text-red-600 border-red-500/20",
+  not_posted: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+};
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -160,6 +167,17 @@ export default function ExpensesPage() {
     } catch { toast.error("Failed to delete"); }
   };
 
+  const handleRepostAccounting = async (expenseId: string) => {
+    try {
+      const result = await accountingService.repostExpenseAccounting(expenseId);
+      toast.success(result.message || "Expense accounting voucher posted");
+      load();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Failed to repost accounting voucher");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -186,6 +204,7 @@ export default function ExpensesPage() {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Category</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Amount</th>
                   <th className="text-center p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Payment Mode</th>
+                  <th className="text-center p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Accounting</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
@@ -216,8 +235,21 @@ export default function ExpensesPage() {
                     <td className="p-4 text-center hidden md:table-cell text-sm capitalize">
                       {e.paymentMethod.replace("_", " ")}
                     </td>
+                    <td className="p-4 text-center hidden lg:table-cell">
+                      <Badge
+                        variant="outline"
+                        className={accountingStatusClasses[e.accountingStatus || "not_posted"]}
+                      >
+                        {(e.accountingStatus || "not_posted").replace("_", " ")}
+                      </Badge>
+                    </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {(e.accountingStatus || "not_posted") !== "posted" && (
+                          <Button variant="ghost" size="icon-sm" onClick={() => handleRepostAccounting(e._id)} title="Repost accounting">
+                            <IndianRupee className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(e)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
