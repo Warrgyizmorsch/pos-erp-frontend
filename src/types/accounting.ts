@@ -157,6 +157,8 @@ export interface AccountingSettings {
   defaultBankLedgerId?: IdNameCode;
   defaultSalesLedgerId?: IdNameCode;
   defaultPurchaseLedgerId?: IdNameCode;
+  defaultSalesReturnLedgerId?: IdNameCode;
+  defaultPurchaseReturnLedgerId?: IdNameCode;
   defaultRoundOffLedgerId?: IdNameCode;
   defaultDiscountGivenLedgerId?: IdNameCode;
   defaultDiscountReceivedLedgerId?: IdNameCode;
