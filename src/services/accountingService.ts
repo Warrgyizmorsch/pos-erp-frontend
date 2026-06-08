@@ -298,4 +298,9 @@ export const accountingService = {
     const response = await api.get<ApiResponse<AccountingSettings | null>>("/accounting/settings");
     return response.data.data;
   },
+
+  async updateAccountingSettings(payload: Partial<AccountingSettings>): Promise<AccountingSettings> {
+    const response = await api.put<ApiResponse<AccountingSettings>>("/accounting/settings", payload);
+    return response.data.data;
+  },
 };
