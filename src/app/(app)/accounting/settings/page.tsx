@@ -110,6 +110,15 @@ const ledgerSettings: LedgerSetting[] = [
 
 const emptyValue = "NONE";
 
+const defaultAccountingForm: Partial<AccountingSettings> = {
+  accountingEnabled: true,
+  autoVoucherPosting: true,
+  gstAccountingEnabled: false,
+  inventoryAccountingEnabled: false,
+  allowManualJournalEntry: false,
+  allowBackdatedVouchers: true,
+};
+
 const getLedgerValue = (settings: Partial<AccountingSettings>, key: LedgerSetting["key"]) => {
   const value = settings[key];
   if (!value) return "";
@@ -133,7 +142,7 @@ export default function AccountingSettingsPage() {
         accountingService.getLedgers({ isActive: true }),
       ]);
       setSettings(nextSettings);
-      setForm(nextSettings || {});
+      setForm({ ...defaultAccountingForm, ...(nextSettings || {}) });
       setLedgers(nextLedgers);
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to load accounting settings"));
@@ -182,7 +191,7 @@ export default function AccountingSettingsPage() {
 
       const saved = await accountingService.updateAccountingSettings(payload as Partial<AccountingSettings>);
       setSettings(saved);
-      setForm(saved);
+      setForm({ ...defaultAccountingForm, ...saved });
       toast.success("Accounting settings saved");
       await loadSettings();
     } catch (error) {
