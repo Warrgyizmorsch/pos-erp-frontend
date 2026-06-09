@@ -130,6 +130,10 @@ export interface AccountingDashboard {
     gstAccountingEnabled: boolean;
     inventoryAccountingEnabled: boolean;
     autoVoucherPosting: boolean;
+    initialized?: boolean;
+    missingDefaultGroupsCount?: number;
+    missingDefaultLedgersCount?: number;
+    missingDefaultVoucherTypesCount?: number;
     activeFinancialYear?: FinancialYear | null;
   };
   counts: {
@@ -166,11 +170,25 @@ export interface AccountingSettings {
   defaultCOGSLedgerId?: IdNameCode;
 }
 
+export interface AccountingSettingsValidation {
+  valid: boolean;
+  missingLedgers: Array<{
+    field: string;
+    label: string;
+    reason: string;
+  }>;
+  warnings: string[];
+}
+
 export interface AccountingStatus {
   accountingEnabled: boolean;
+  initialized?: boolean;
   groupsCount: number;
   ledgersCount: number;
   voucherTypesCount: number;
+  missingDefaultGroupsCount?: number;
+  missingDefaultLedgersCount?: number;
+  missingDefaultVoucherTypesCount?: number;
   activeFinancialYear?: FinancialYear | null;
   settingsConfigured: boolean;
   foundationReady: boolean;
@@ -254,6 +272,139 @@ export interface LedgerStatement {
     closingBalance: number;
     closingBalanceType: BalanceType;
   };
+}
+
+export interface AccountingHealthIssue {
+  id: string;
+  type: string;
+  severity: "critical" | "warning" | "info" | string;
+  module: string;
+  referenceId?: string;
+  referenceNo?: string;
+  voucherId?: string;
+  message: string;
+  suggestedFix?: string;
+  suggestedApi?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface AccountingHealthCheck {
+  status: "healthy" | "warning" | "critical" | string;
+  checkedAt: string;
+  summary: {
+    totalIssues: number;
+    criticalIssues: number;
+    warningIssues: number;
+    infoIssues: number;
+    missingPostings: number;
+    ledgerMismatches: number;
+    duplicateVouchers: number;
+  };
+  issues: AccountingHealthIssue[];
+}
+
+export interface LedgerReconciliation {
+  checkedAt: string;
+  fixed?: boolean;
+  count: number;
+  mismatches: Array<{
+    ledgerId: string;
+    ledgerName: string;
+    code: string;
+    groupName?: string;
+    storedBalance: number;
+    storedBalanceType: BalanceType;
+    expectedBalance: number;
+    expectedBalanceType: BalanceType;
+    difference: number;
+    status: string;
+  }>;
+}
+
+export interface CashBankReconciliation {
+  checkedAt: string;
+  accounts: CashBankReconciliationAccount[];
+}
+
+export interface CashBankReconciliationAccount {
+    accountId: string;
+    accountName: string;
+    accountType: string;
+    currentBalance: number;
+    cashBankBalance?: number;
+    openingBalance: number;
+    transactionNet: number;
+    ledgerBalance: number | null;
+    ledgerBalanceType?: BalanceType | null;
+    transactionBalance: number;
+    difference: number;
+    transactionDifference: number | null;
+    openingBalanceDifference: number | null;
+    status: string;
+    suggestedFix: string;
+    mappedLedger: {
+      ledgerId: string;
+      name: string;
+      code: string;
+      ledgerType: string;
+      openingBalance: number;
+      openingBalanceType: BalanceType;
+    } | null;
+}
+
+export interface PartyReconciliation {
+  checkedAt: string;
+  customers: PartyReconciliationRow[];
+  suppliers: PartyReconciliationRow[];
+}
+
+export interface PartyReconciliationRow {
+  partyId: string;
+  partyType: string;
+  partyName: string;
+  businessBalance: number;
+  partyLedgerBalance: number | null;
+  accountingBalance: number | null;
+  difference: number;
+  status: string;
+  suggestedFix: string;
+}
+
+export interface GSTReconciliation {
+  checkedAt: string;
+  rows: Array<{
+    ledgerCode: string;
+    expected: number;
+    actual: number | null;
+    difference: number;
+    status: string;
+  }>;
+  mismatches: Array<{
+    ledgerCode: string;
+    expected: number;
+    actual: number | null;
+    difference: number;
+    status: string;
+  }>;
+  outputGST?: Record<string, number>;
+  inputGST?: Record<string, number>;
+}
+
+export interface AccountingAuditLog {
+  _id: string;
+  createdAt: string;
+  user?: IdNameCode & { role?: string; email?: string };
+  userName: string;
+  action: string;
+  module: string;
+  referenceId?: string;
+  referenceNo?: string;
+  description: string;
+  oldData?: Record<string, unknown>;
+  newData?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 export interface DayBookEntry {

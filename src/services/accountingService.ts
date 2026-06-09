@@ -1,20 +1,27 @@
 import api from "@/services/api";
 import type {
+  AccountingAuditLog,
   AccountingDashboard,
+  AccountingHealthCheck,
   AccountingInitializeResponse,
   AccountingReportDashboard,
   AccountingSettings,
+  AccountingSettingsValidation,
   AccountingStatus,
   BasicTrialBalance,
   BalanceSheetReport,
   BookReport,
+  CashBankReconciliation,
   ChartGroup,
   DayBook,
+  GSTReconciliation,
   GroupSummaryReport,
   JournalPayload,
   Ledger,
+  LedgerReconciliation,
   LedgerSummaryReport,
   LedgerStatement,
+  PartyReconciliation,
   PartyOutstandingReport,
   ProfitLossReport,
   TestVoucherPayload,
@@ -25,25 +32,33 @@ import type {
 } from "@/types/accounting";
 
 export type {
+  AccountingAuditLog,
   AccountingDashboard,
+  AccountingHealthCheck,
+  AccountingHealthIssue,
   AccountingInitializeResponse,
   AccountingReportDashboard,
   AccountingSettings,
+  AccountingSettingsValidation,
   AccountingStatus,
   BasicTrialBalance,
   BalanceSheetReport,
   BookReport,
+  CashBankReconciliation,
   ChartGroup,
   ChartLedger,
   DayBook,
   DayBookEntry,
   GroupSummaryReport,
+  GSTReconciliation,
   JournalPayload,
   Ledger as AccountingLedger,
   Ledger,
+  LedgerReconciliation,
   LedgerSummaryReport,
   LedgerStatement,
   LedgerStatementEntry,
+  PartyReconciliation,
   PartyOutstandingReport,
   ProfitLossReport,
   TestVoucherPayload,
@@ -66,6 +81,12 @@ interface ApiResponse<T> {
   data: T;
   count?: number;
   message?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 const withFilters = (url: string, filters?: Filters) => {
@@ -90,6 +111,11 @@ export const accountingService = {
 
   async initialize(): Promise<AccountingInitializeResponse> {
     const response = await api.post<AccountingInitializeResponse>("/accounting/initialize");
+    return response.data;
+  },
+
+  async restoreDefaultLedgers(): Promise<AccountingInitializeResponse> {
+    const response = await api.post<AccountingInitializeResponse>("/accounting/ledgers/restore-defaults");
     return response.data;
   },
 
@@ -208,6 +234,16 @@ export const accountingService = {
     return response.data;
   },
 
+  async repostMissingAccounting(payload: { module: string; referenceId: string }) {
+    const response = await api.post<ApiResponse<unknown>>("/accounting/repost/missing", payload);
+    return response.data;
+  },
+
+  async repostMissingAccountingBatch(items: Array<{ module: string; referenceId: string }>) {
+    const response = await api.post<ApiResponse<unknown[]>>("/accounting/repost/missing/batch", { items });
+    return response.data;
+  },
+
   async getDayBook(filters?: Filters): Promise<DayBook> {
     const response = await api.get<ApiResponse<DayBook>>(withFilters("/accounting/day-book", filters));
     return response.data.data;
@@ -294,6 +330,56 @@ export const accountingService = {
     return response.data.data;
   },
 
+  async getGSTSummary(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/summary", filters));
+    return response.data.data;
+  },
+
+  async getOutputGSTReport(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/output", filters));
+    return response.data.data;
+  },
+
+  async getInputGSTReport(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/input", filters));
+    return response.data.data;
+  },
+
+  async getGSTPayableSummary(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/payable-summary", filters));
+    return response.data.data;
+  },
+
+  async getHSNSummary(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/hsn-summary", filters));
+    return response.data.data;
+  },
+
+  async getGSTR1Report(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/gstr1", filters));
+    return response.data.data;
+  },
+
+  async getGSTR3BSummary(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/gstr3b-summary", filters));
+    return response.data.data;
+  },
+
+  async getGSTLedgerReport(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/ledger", filters));
+    return response.data.data;
+  },
+
+  async getGSTPartyWiseReport(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/party-wise", filters));
+    return response.data.data;
+  },
+
+  async getGSTExceptions(filters?: Filters) {
+    const response = await api.get<ApiResponse<unknown>>(withFilters("/accounting/gst/exceptions", filters));
+    return response.data.data;
+  },
+
   async getAccountingSettings(): Promise<AccountingSettings | null> {
     const response = await api.get<ApiResponse<AccountingSettings | null>>("/accounting/settings");
     return response.data.data;
@@ -302,5 +388,67 @@ export const accountingService = {
   async updateAccountingSettings(payload: Partial<AccountingSettings>): Promise<AccountingSettings> {
     const response = await api.put<ApiResponse<AccountingSettings>>("/accounting/settings", payload);
     return response.data.data;
+  },
+
+  async validateAccountingSettings(): Promise<AccountingSettingsValidation> {
+    const response = await api.get<ApiResponse<AccountingSettingsValidation>>("/accounting/settings/validate");
+    return response.data.data;
+  },
+
+  async getAccountingHealthCheck(): Promise<AccountingHealthCheck> {
+    const response = await api.get<ApiResponse<AccountingHealthCheck>>("/accounting/health-check");
+    return response.data.data;
+  },
+
+  async getLedgerReconciliation(): Promise<LedgerReconciliation> {
+    const response = await api.get<ApiResponse<LedgerReconciliation>>("/accounting/reconciliation/ledgers");
+    return response.data.data;
+  },
+
+  async fixLedgerReconciliation(): Promise<{ before: LedgerReconciliation; after: LedgerReconciliation }> {
+    const response = await api.post<ApiResponse<{ before: LedgerReconciliation; after: LedgerReconciliation }>>(
+      "/accounting/reconciliation/ledgers/fix",
+    );
+    return response.data.data;
+  },
+
+  async getCashBankReconciliation(): Promise<CashBankReconciliation> {
+    const response = await api.get<ApiResponse<CashBankReconciliation>>("/accounting/reconciliation/cash-bank");
+    return response.data.data;
+  },
+
+  async getCashBankReconciliationDetails(): Promise<CashBankReconciliation> {
+    const response = await api.get<ApiResponse<CashBankReconciliation>>("/accounting/reconciliation/cash-bank/details");
+    return response.data.data;
+  },
+
+  async linkCashBankLedgers() {
+    const response = await api.post<ApiResponse<unknown>>("/accounting/reconciliation/cash-bank/link-ledgers");
+    return response.data;
+  },
+
+  async linkPartyLedgers() {
+    const response = await api.post<ApiResponse<unknown>>("/accounting/reconciliation/parties/link-ledgers");
+    return response.data;
+  },
+
+  async getPartyReconciliation(): Promise<PartyReconciliation> {
+    const response = await api.get<ApiResponse<PartyReconciliation>>("/accounting/reconciliation/parties");
+    return response.data.data;
+  },
+
+  async getGSTReconciliation(filters?: Filters): Promise<GSTReconciliation> {
+    const response = await api.get<ApiResponse<GSTReconciliation>>(
+      withFilters("/accounting/reconciliation/gst", filters),
+    );
+    return response.data.data;
+  },
+
+  async getAccountingAuditLogs(filters?: Filters): Promise<{
+    logs: AccountingAuditLog[];
+    pagination?: ApiResponse<AccountingAuditLog[]>["pagination"];
+  }> {
+    const response = await api.get<ApiResponse<AccountingAuditLog[]>>(withFilters("/accounting/audit-logs", filters));
+    return { logs: response.data.data, pagination: response.data.pagination };
   },
 };

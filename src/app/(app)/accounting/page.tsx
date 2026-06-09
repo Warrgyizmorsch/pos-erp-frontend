@@ -6,6 +6,7 @@ import {
   BarChart3,
   BookOpen,
   CheckCircle2,
+  Database,
   FileText,
   Landmark,
   Layers,
@@ -43,6 +44,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { accountingService, type AccountingDashboard } from "@/services/accountingService";
+import { useAuthStore } from "@/store/authStore";
 
 const quickActions = [
   { label: "Chart of Accounts", href: "/accounting/chart-of-accounts", icon: Layers },
@@ -66,6 +68,9 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
 export default function AccountingPage() {
   const [dashboard, setDashboard] = useState<AccountingDashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const { user } = useAuthStore();
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -92,6 +97,36 @@ export default function AccountingPage() {
 
   const status = dashboard?.status;
   const counts = dashboard?.counts;
+  const isAdmin = user?.role === "admin";
+  const confirmationText = "This will create missing default account groups, ledgers, voucher types, financial year, and settings. Existing records will not be duplicated.";
+
+  const initializeAccounting = async () => {
+    if (!window.confirm(confirmationText)) return;
+    try {
+      setInitializing(true);
+      await accountingService.initialize();
+      toast.success("Accounting initialized successfully");
+      await loadDashboard();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to initialize accounting"));
+    } finally {
+      setInitializing(false);
+    }
+  };
+
+  const restoreDefaultLedgers = async () => {
+    if (!window.confirm(confirmationText)) return;
+    try {
+      setRestoring(true);
+      await accountingService.restoreDefaultLedgers();
+      toast.success("Accounting initialized successfully");
+      await loadDashboard();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to restore default ledgers"));
+    } finally {
+      setRestoring(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -100,6 +135,18 @@ export default function AccountingPage() {
         description="Accounting dashboard for manual journals, ledgers, vouchers, day book, and validation reports."
         icon={Landmark}
       >
+        {isAdmin && (
+          <>
+            <Button variant="outline" onClick={() => void initializeAccounting()} disabled={initializing || restoring}>
+              {initializing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+              Initialize Accounting
+            </Button>
+            <Button variant="outline" onClick={() => void restoreDefaultLedgers()} disabled={initializing || restoring}>
+              {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Restore Missing Default Ledgers
+            </Button>
+          </>
+        )}
         <Button variant="outline" onClick={() => void loadDashboard()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh
@@ -129,7 +176,21 @@ export default function AccountingPage() {
             {status?.accountingEnabled ? "Enabled" : "Disabled"}
           </Badge>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-xs text-muted-foreground">Accounting Foundation</p>
+            <Badge className="mt-3" variant={status?.initialized ? "success" : "warning"}>
+              {status?.initialized ? "Accounting Initialized" : "Not Initialized"}
+            </Badge>
+          </div>
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-xs text-muted-foreground">Missing Default Ledgers</p>
+            <p className="mt-2 text-xl font-semibold">{status?.missingDefaultLedgersCount ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-xs text-muted-foreground">Missing Default Groups</p>
+            <p className="mt-2 text-xl font-semibold">{status?.missingDefaultGroupsCount ?? 0}</p>
+          </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <p className="text-xs text-muted-foreground">Active Financial Year</p>
             <p className="mt-2 font-semibold">{status?.activeFinancialYear?.name || "Not set"}</p>

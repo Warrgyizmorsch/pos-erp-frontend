@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, RefreshCw, Save, Settings, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw, Save, Settings, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
   formatAccountingDate,
@@ -25,8 +25,11 @@ import { Switch } from "@/components/ui/switch";
 import {
   accountingService,
   type AccountingSettings,
+  type AccountingSettingsValidation,
+  type AccountingStatus,
   type Ledger,
 } from "@/services/accountingService";
+import { useAuthStore } from "@/store/authStore";
 
 type BooleanSetting = {
   key: keyof Pick<
@@ -122,19 +125,28 @@ export default function AccountingSettingsPage() {
   const [settings, setSettings] = useState<AccountingSettings | null>(null);
   const [form, setForm] = useState<Partial<AccountingSettings>>({});
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
+  const [validation, setValidation] = useState<AccountingSettingsValidation | null>(null);
+  const [status, setStatus] = useState<AccountingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [initializing, setInitializing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const { user } = useAuthStore();
 
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const [nextSettings, nextLedgers] = await Promise.all([
+      const [nextSettings, nextLedgers, nextValidation, nextStatus] = await Promise.all([
         accountingService.getAccountingSettings(),
         accountingService.getLedgers({ isActive: true }),
+        accountingService.validateAccountingSettings(),
+        accountingService.getStatus(),
       ]);
       setSettings(nextSettings);
       setForm(nextSettings || {});
       setLedgers(nextLedgers);
+      setValidation(nextValidation);
+      setStatus(nextStatus);
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to load accounting settings"));
     } finally {
@@ -184,11 +196,43 @@ export default function AccountingSettingsPage() {
       setSettings(saved);
       setForm(saved);
       toast.success("Accounting settings saved");
+      setValidation(await accountingService.validateAccountingSettings());
       await loadSettings();
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to save accounting settings"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const confirmationText = "This will create missing default account groups, ledgers, voucher types, financial year, and settings. Existing records will not be duplicated.";
+  const isAdmin = user?.role === "admin";
+
+  const initializeAccounting = async () => {
+    if (!window.confirm(confirmationText)) return;
+    try {
+      setInitializing(true);
+      await accountingService.initialize();
+      toast.success("Accounting initialized successfully");
+      await loadSettings();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to initialize accounting"));
+    } finally {
+      setInitializing(false);
+    }
+  };
+
+  const restoreDefaultLedgers = async () => {
+    if (!window.confirm(confirmationText)) return;
+    try {
+      setRestoring(true);
+      await accountingService.restoreDefaultLedgers();
+      toast.success("Accounting initialized successfully");
+      await loadSettings();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to restore default ledgers"));
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -208,6 +252,18 @@ export default function AccountingSettingsPage() {
         <Badge variant={accountingEnabled ? "success" : "secondary"}>
           {accountingEnabled ? "Accounting Enabled" : "Accounting Disabled"}
         </Badge>
+        {isAdmin && (
+          <>
+            <Button variant="outline" onClick={() => void initializeAccounting()} disabled={loading || saving || initializing || restoring}>
+              {initializing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+              Initialize Accounting
+            </Button>
+            <Button variant="outline" onClick={() => void restoreDefaultLedgers()} disabled={loading || saving || initializing || restoring}>
+              {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Restore Missing Default Ledgers
+            </Button>
+          </>
+        )}
         <Button variant="outline" onClick={() => void loadSettings()} disabled={loading || saving}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh
@@ -254,6 +310,51 @@ export default function AccountingSettingsPage() {
               Current: {formatAccountingDate(settings?.lockBooksTillDate)}
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            {validation?.valid ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-amber-600" />}
+            Settings Validation
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Accounting Foundation</p>
+              <Badge className="mt-3" variant={status?.initialized ? "success" : "warning"}>
+                {status?.initialized ? "Accounting Initialized" : "Not Initialized"}
+              </Badge>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Missing Default Ledgers</p>
+              <p className="mt-2 text-xl font-semibold">{status?.missingDefaultLedgersCount ?? 0}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <p className="text-xs text-muted-foreground">Missing Default Groups</p>
+              <p className="mt-2 text-xl font-semibold">{status?.missingDefaultGroupsCount ?? 0}</p>
+            </div>
+          </div>
+          <Badge variant={validation?.valid ? "success" : "warning"}>
+            {validation?.valid ? "Valid configuration" : `${validation?.missingLedgers.length || 0} missing ledger mapping(s)`}
+          </Badge>
+          {validation?.warnings.map((warning) => (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" key={warning}>
+              {warning}
+            </div>
+          ))}
+          {validation?.missingLedgers.length ? (
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {validation.missingLedgers.map((ledger) => (
+                <div className="rounded-lg border border-border p-3 text-sm" key={`${ledger.field}-${ledger.reason}`}>
+                  <p className="font-medium">{ledger.label}</p>
+                  <p className="text-muted-foreground">{ledger.reason}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
