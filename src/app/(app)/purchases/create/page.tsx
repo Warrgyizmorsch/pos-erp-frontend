@@ -1060,7 +1060,7 @@ export default function CreatePurchasePage() {
   const totalQty = items.reduce((s, item) => s + (item.product || item.newProductName ? item.quantity : 0), 0);
 
   return (
-    <div className="bg-slate-50/50 pb-32 relative">
+    <div className="bg-background pb-32 relative">
       {/* Top Header */}
       <div className="mb-4">
         <PageHeader

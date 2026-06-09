@@ -67,27 +67,27 @@ export const KeyboardShortcutsSettings: React.FC<KeyboardShortcutsSettingsProps>
           {/* Shortcuts Status */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-semibold text-muted-foreground">
                 Total Shortcuts
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-2xl font-bold text-foreground">
                 {totalShortcuts}
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-semibold text-muted-foreground">
                 POS Shortcuts
               </p>
               <p className="text-2xl font-bold text-blue-600">{posShortcuts.length}</p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-semibold text-muted-foreground">
                 Sales Shortcuts
               </p>
               <p className="text-2xl font-bold text-green-600">{salesShortcuts.length}</p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-semibold text-muted-foreground">
                 Purchase Shortcuts
               </p>
               <p className="text-2xl font-bold text-orange-600">{purchaseShortcuts.length}</p>
@@ -96,12 +96,12 @@ export const KeyboardShortcutsSettings: React.FC<KeyboardShortcutsSettingsProps>
 
           {/* Enable/Disable Shortcuts */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10 dark:bg-muted/20 border border-border/80 transition-colors">
               <div>
                 <Label className="text-base font-semibold cursor-pointer">
                   Enable Keyboard Shortcuts
                 </Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {shortcutsEnabled
                     ? 'Keyboard shortcuts are currently active'
                     : 'Keyboard shortcuts are currently disabled'}
@@ -110,13 +110,13 @@ export const KeyboardShortcutsSettings: React.FC<KeyboardShortcutsSettingsProps>
               <Switch checked={shortcutsEnabled} onCheckedChange={handleToggleShortcuts} />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10 dark:bg-muted/20 border border-border/80 transition-colors">
               <div>
                 <Label className="text-base font-semibold cursor-pointer flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   Enable Barcode Scanner Mode
                 </Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {barcodeModeEnabled
                     ? 'Barcode scanner input is enabled'
                     : 'Barcode scanner input is disabled'}
@@ -163,8 +163,8 @@ export const KeyboardShortcutsSettings: React.FC<KeyboardShortcutsSettingsProps>
               View All Keyboard Shortcuts
             </Button>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-              💡 Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs font-mono">Ctrl+/</kbd> anytime to open this help
+            <p className="text-xs text-muted-foreground text-center">
+              💡 Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono">Ctrl+/</kbd> anytime to open this help
             </p>
           </div>
 
