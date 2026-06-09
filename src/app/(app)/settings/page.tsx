@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Settings, User, Moon, Sun, Shield } from "lucide-react";
+import { Landmark, Loader2, Settings, User, Moon, Sun, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,16 +10,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { useAccountingPreferenceStore } from "@/store/accountingPreferenceStore";
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { authService } from "@/services/authService";
 import { KeyboardShortcutsSettings } from "@/components/settings/KeyboardShortcutsSettings";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const {
+    accountingEnabled,
+    isLoading: accountingLoading,
+    isSaving: accountingSaving,
+    error: accountingError,
+    fetchAccountingPreference,
+    setAccountingEnabled,
+  } = useAccountingPreferenceStore();
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [saving, setSaving] = useState(false);
@@ -28,6 +37,24 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changing, setChanging] = useState(false);
+  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    void fetchAccountingPreference();
+  }, [fetchAccountingPreference]);
+
+  useEffect(() => {
+    if (accountingError) toast.error(accountingError);
+  }, [accountingError]);
+
+  const handleAccountingToggle = async (enabled: boolean) => {
+    try {
+      await setAccountingEnabled(enabled);
+      toast.success(enabled ? "Accounting enabled" : "Accounting disabled");
+    } catch {
+      toast.error("Failed to update accounting setting");
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -71,8 +98,11 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+    } catch (err: unknown) {
+      const message = err && typeof err === "object" && "response" in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      toast.error(message || "Failed to change password");
     } finally {
       setChanging(false);
     }
@@ -142,7 +172,44 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      {isAdmin && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="h-5 w-5" />
+                Accounting
+              </CardTitle>
+              <CardDescription>Control the Accounting module visibility and posting switch</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-medium">Enable Accounting</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant={accountingEnabled === false ? "secondary" : "success"}>
+                      {accountingEnabled === false ? "Disabled" : "Enabled"}
+                    </Badge>
+                    {accountingLoading && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Loading
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Switch
+                  checked={accountingEnabled !== false}
+                  disabled={accountingLoading || accountingSaving}
+                  onCheckedChange={(checked) => void handleAccountingToggle(checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.3 : 0.2 }}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" />Security</CardTitle>
@@ -167,7 +234,7 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.4 : 0.3 }}>
         <KeyboardShortcutsSettings />
       </motion.div>
 

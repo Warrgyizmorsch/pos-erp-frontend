@@ -432,6 +432,16 @@ export const accountingService = {
     return response.data;
   },
 
+  async postOpeningBalances() {
+    const response = await api.post<ApiResponse<unknown>>("/accounting/opening-balances/post-all");
+    return response.data;
+  },
+
+  async postCashBankOpeningBalances() {
+    const response = await api.post<ApiResponse<unknown>>("/accounting/opening-balances/cash-bank/post-all");
+    return response.data;
+  },
+
   async getPartyReconciliation(): Promise<PartyReconciliation> {
     const response = await api.get<ApiResponse<PartyReconciliation>>("/accounting/reconciliation/parties");
     return response.data.data;

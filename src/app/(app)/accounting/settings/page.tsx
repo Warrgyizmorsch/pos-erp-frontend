@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Database, Loader2, RefreshCw, Save, Settings, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Calculator, CheckCircle2, Database, Landmark, Link2, Loader2, RefreshCw, Save, Settings, SlidersHorizontal, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   formatAccountingDate,
@@ -29,6 +29,7 @@ import {
   type AccountingStatus,
   type Ledger,
 } from "@/services/accountingService";
+import { useAccountingPreferenceStore } from "@/store/accountingPreferenceStore";
 import { useAuthStore } from "@/store/authStore";
 
 type BooleanSetting = {
@@ -140,7 +141,9 @@ export default function AccountingSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [initializing, setInitializing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [repairing, setRepairing] = useState<string | null>(null);
   const { user } = useAuthStore();
+  const syncAccountingEnabled = useAccountingPreferenceStore((state) => state.syncAccountingEnabled);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -156,12 +159,13 @@ export default function AccountingSettingsPage() {
       setLedgers(nextLedgers);
       setValidation(nextValidation);
       setStatus(nextStatus);
+      syncAccountingEnabled(Boolean(nextStatus.accountingEnabled));
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to load accounting settings"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [syncAccountingEnabled]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -204,6 +208,7 @@ export default function AccountingSettingsPage() {
       const saved = await accountingService.updateAccountingSettings(payload as Partial<AccountingSettings>);
       setSettings(saved);
       setForm({ ...defaultAccountingForm, ...saved });
+      syncAccountingEnabled(Boolean(saved.accountingEnabled));
       toast.success("Accounting settings saved");
       setValidation(await accountingService.validateAccountingSettings());
       await loadSettings();
@@ -242,6 +247,20 @@ export default function AccountingSettingsPage() {
       toast.error(getAccountingErrorMessage(error, "Failed to restore default ledgers"));
     } finally {
       setRestoring(false);
+    }
+  };
+
+  const runRepairAction = async (key: string, label: string, action: () => Promise<unknown>) => {
+    if (!window.confirm(`Run ${label}? This action is safe and will not modify existing voucher entries.`)) return;
+    try {
+      setRepairing(key);
+      await action();
+      toast.success(`${label} completed`);
+      await loadSettings();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, `${label} failed`));
+    } finally {
+      setRepairing(null);
     }
   };
 
@@ -321,6 +340,69 @@ export default function AccountingSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {isAdmin && (
+        <Card className="rounded-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Landmark className="h-4 w-4" />
+              Accounting Repair Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("validate", "Validate Accounting Settings", async () => {
+                setValidation(await accountingService.validateAccountingSettings());
+              })}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "validate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Validate Accounting Settings
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("cash-bank", "Link Cash/Bank Ledgers", () => accountingService.linkCashBankLedgers())}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "cash-bank" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              Link Cash/Bank Ledgers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("parties", "Link Party Ledgers", () => accountingService.linkPartyLedgers())}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "parties" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
+              Link Party Ledgers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("opening", "Post Opening Balances", () => accountingService.postOpeningBalances())}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "opening" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+              Post Opening Balances
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("cash-bank-opening", "Post Cash/Bank Opening Balances", () => accountingService.postCashBankOpeningBalances())}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "cash-bank-opening" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+              Post Cash/Bank Opening
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void runRepairAction("recalculate", "Recalculate Ledger Balances", () => accountingService.fixLedgerReconciliation())}
+              disabled={Boolean(repairing) || loading || saving}
+            >
+              {repairing === "recalculate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
+              Recalculate Ledger Balances
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="rounded-lg">
         <CardHeader>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, RefreshCw, ShieldCheck, Wrench } from "lucide-react";
+import { Database, Loader2, RefreshCw, ShieldCheck, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import {
   formatAccountingMoney,
@@ -63,6 +63,7 @@ export default function AccountingReconciliationPage() {
   const [fixing, setFixing] = useState(false);
   const [linkingCashBank, setLinkingCashBank] = useState(false);
   const [linkingParties, setLinkingParties] = useState(false);
+  const [postingCashBankOpening, setPostingCashBankOpening] = useState(false);
 
   const loadAll = useCallback(async () => {
     try {
@@ -118,6 +119,21 @@ export default function AccountingReconciliationPage() {
       toast.error(getAccountingErrorMessage(error, "Cash/bank ledger linking failed"));
     } finally {
       setLinkingCashBank(false);
+    }
+  };
+
+  const postCashBankOpeningBalances = async () => {
+    const confirmed = window.confirm("Post missing cash/bank opening balance vouchers? Existing opening vouchers will not be duplicated.");
+    if (!confirmed) return;
+    try {
+      setPostingCashBankOpening(true);
+      await accountingService.postCashBankOpeningBalances();
+      toast.success("Cash/bank opening balances posted");
+      await loadAll();
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Cash/bank opening balance posting failed"));
+    } finally {
+      setPostingCashBankOpening(false);
     }
   };
 
@@ -204,10 +220,16 @@ export default function AccountingReconciliationPage() {
                     Link missing accounts first. Recalculate ledger balances only after mappings are correct.
                   </p>
                 </div>
-                <Button className="shrink-0" variant="outline" onClick={() => void linkCashBankLedgers()} disabled={linkingCashBank}>
-                  {linkingCashBank ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
-                  Link Cash/Bank Ledgers
-                </Button>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                  <Button variant="outline" onClick={() => void linkCashBankLedgers()} disabled={linkingCashBank || postingCashBankOpening}>
+                    {linkingCashBank ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
+                    Link Cash/Bank Ledgers
+                  </Button>
+                  <Button variant="outline" onClick={() => void postCashBankOpeningBalances()} disabled={linkingCashBank || postingCashBankOpening}>
+                    {postingCashBankOpening ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+                    Post Opening Balances
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-3">

@@ -43,6 +43,7 @@ import {
   Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAccountingPreferenceStore } from "@/store/accountingPreferenceStore";
 import { useBusinessStore } from "@/store/businessStore";
 import { useThemeStore } from "@/store/themeStore";
 import { Button } from "@/components/ui/button";
@@ -201,22 +202,32 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useThemeStore();
   const { profile, fetchProfile } = useBusinessStore();
+  const { accountingEnabled, fetchAccountingPreference } = useAccountingPreferenceStore();
   const [manualOpenGroups, setManualOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!profile) fetchProfile();
   }, [fetchProfile, profile]);
 
+  useEffect(() => {
+    void fetchAccountingPreference();
+  }, [fetchAccountingPreference]);
+
+  const visibleNavEntries = useMemo(
+    () => navEntries.filter((entry) => entry.label !== "Accounting" || accountingEnabled !== false),
+    [accountingEnabled],
+  );
+
   const openGroups = useMemo(() => {
     const state: Record<string, boolean> = {};
-    navEntries.forEach((entry) => {
+    visibleNavEntries.forEach((entry) => {
       if (isGroup(entry)) {
         const isPathActive = entry.children.some((child) => pathname.startsWith(child.href));
         state[entry.label] = Boolean(manualOpenGroups[entry.label] || isPathActive);
       }
     });
     return state;
-  }, [manualOpenGroups, pathname]);
+  }, [manualOpenGroups, pathname, visibleNavEntries]);
 
   const isLinkActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -399,7 +410,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
       
       <nav className="no-scrollbar flex-1 space-y-2 overflow-y-auto border-t border-border/55 px-4 py-6">
-        {navEntries.map((entry) => (isGroup(entry) ? renderGroup(entry) : renderLink(entry)))}
+        {visibleNavEntries.map((entry) => (isGroup(entry) ? renderGroup(entry) : renderLink(entry)))}
       </nav>
 
       <div className="border-t border-border/55 bg-[#f6f7fb] px-4 pb-4 pt-4 dark:bg-card">
