@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useShortcutStore } from '@/store/shortcutStore';
 import { isInputElement } from '@/constants/shortcuts';
 import type { BarcodeOptions } from '@/types/shortcuts';
@@ -39,6 +39,7 @@ export const useBarcodeScanner = (options: UseBarcodeOptions) => {
 
   const { barcodeModeEnabled, shortcutsEnabled } = useShortcutStore();
   const barcodeRef = useRef<string>('');
+  const [currentBarcode, setCurrentBarcode] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scanStartRef = useRef<number>(0);
   const lastCharTimeRef = useRef<number>(0);
@@ -53,6 +54,7 @@ export const useBarcodeScanner = (options: UseBarcodeOptions) => {
 
   const resetBarcode = useCallback(() => {
     barcodeRef.current = '';
+    setCurrentBarcode('');
     scanStartRef.current = 0;
     lastCharTimeRef.current = 0;
     if (timeoutRef.current) {
@@ -166,6 +168,7 @@ export const useBarcodeScanner = (options: UseBarcodeOptions) => {
 
       // Accumulate barcode
       barcodeRef.current += event.key;
+      setCurrentBarcode(barcodeRef.current);
 
       // Clear previous timeout
       if (timeoutRef.current) {
@@ -199,8 +202,8 @@ export const useBarcodeScanner = (options: UseBarcodeOptions) => {
   }, [enabled, barcodeModeEnabled, shortcutsEnabled, handleKeyDown, resetBarcode]);
 
   return {
-    currentBarcode: barcodeRef.current,
-    isScanning: barcodeRef.current.length > 0,
+    currentBarcode,
+    isScanning: currentBarcode.length > 0,
     reset: resetBarcode,
     complete: completeScan,
   };

@@ -47,16 +47,30 @@ export default function CheckoutPage() {
     try {
       setProcessing(true);
       const payload = {
-        items: cart.items.map((item) => ({
-          product: item.product._id,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          purchasePrice: item.purchasePrice, // Added
-          taxRate: item.taxRate || 0,
-          cgst: (item.total * (item.taxRate || 0) / 100) / 2, // Simple split for local
-          sgst: (item.total * (item.taxRate || 0) / 100) / 2,
-          igst: 0,
-        })),
+        items: cart.items.map((item) => {
+          const taxAmount = (item.total * (item.taxRate || 0)) / 100;
+          const cgst = item.cgst ?? taxAmount / 2;
+          const sgst = item.sgst ?? taxAmount - cgst;
+          const igst = item.igst ?? 0;
+          return {
+            product: item.product._id,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            purchasePrice: item.purchasePrice,
+            taxRate: item.taxRate || 0,
+            gstRate: item.taxRate || 0,
+            taxableAmount: item.total,
+            taxAmount,
+            cgst,
+            cgstAmount: cgst,
+            sgst,
+            sgstAmount: sgst,
+            igst,
+            igstAmount: igst,
+            hsn: item.product.hsnCode || "",
+            total: item.total + taxAmount,
+          };
+        }),
         customer: cart.customer?._id,
         customerName: cart.customer?.name || "Walk-in Customer",
         subtotal: cart.subtotal,

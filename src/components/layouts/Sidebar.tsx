@@ -345,7 +345,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         </button>
 
         <AnimatePresence initial={false}>
-          {(isOpen || sidebarCollapsed) && (
+          {isOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}

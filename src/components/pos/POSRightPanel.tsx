@@ -140,11 +140,57 @@ function POSRightPanelContent() {
         : activeBill.paymentMode === "Bank"
           ? "upi"
           : activeBill.paymentMode.toLowerCase();
+      const splitLineTax = (taxAmount: number) => {
+        const cgst = Number((taxAmount / 2).toFixed(2));
+        return { cgst, sgst: Number((taxAmount - cgst).toFixed(2)), igst: 0 };
+      };
+      const taxTotals = currentItems.reduce((totals, item) => {
+        const split = splitLineTax(item.taxAmount || 0);
+        return {
+          totalCgst: totals.totalCgst + split.cgst,
+          totalSgst: totals.totalSgst + split.sgst,
+          totalIgst: totals.totalIgst + split.igst,
+        };
+      }, { totalCgst: 0, totalSgst: 0, totalIgst: 0 });
 
       const saleData = {
         customer: cId, customerName: cName, saleDate: dateToUse,
-        items: currentItems.map(i => ({ product: i.productId || undefined, name: i.itemName, sku: i.itemCode, quantity: i.quantity, unitPrice: i.pricePerUnit, purchasePrice: i.purchasePrice, discount: i.discount, total: i.total })),
-        subtotal, taxAmount: taxAmt, discountAmount: discountAmt, totalAmount: currentGrandTotal, amountPaid: receivedAmount,
+        items: currentItems.map(i => {
+          const base = i.quantity * i.pricePerUnit;
+          const discountAmount = base * (i.discount / 100);
+          const taxableAmount = i.isInclusive ? Math.max(0, i.total - i.taxAmount) : Math.max(0, base - discountAmount);
+          const split = splitLineTax(i.taxAmount || 0);
+
+          return {
+            product: i.productId || undefined,
+            name: i.itemName,
+            sku: i.itemCode,
+            quantity: i.quantity,
+            unitPrice: i.pricePerUnit,
+            purchasePrice: i.purchasePrice,
+            discount: i.discount,
+            taxRate: i.taxPercent,
+            gstRate: i.taxPercent,
+            taxableAmount,
+            taxAmount: i.taxAmount,
+            cgst: split.cgst,
+            cgstAmount: split.cgst,
+            sgst: split.sgst,
+            sgstAmount: split.sgst,
+            igst: split.igst,
+            igstAmount: split.igst,
+            hsn: i.product?.hsnCode || "",
+            total: i.total,
+          };
+        }),
+        subtotal,
+        taxAmount: taxAmt,
+        totalCgst: Number(taxTotals.totalCgst.toFixed(2)),
+        totalSgst: Number(taxTotals.totalSgst.toFixed(2)),
+        totalIgst: Number(taxTotals.totalIgst.toFixed(2)),
+        discountAmount: discountAmt,
+        totalAmount: currentGrandTotal,
+        amountPaid: receivedAmount,
         status: "completed", paymentStatus: paidInFull ? "paid" : "partial", paymentMethod, notes: activeBill.remarks,
         cashBankAccountId: (activeBill.paymentMode !== "Cash" && activeBill.paymentMode !== "Wallet" && activeBill.paymentMode !== "Partial") ? activeBill.cashBankAccountId : undefined,
       };
