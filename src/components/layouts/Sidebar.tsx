@@ -222,7 +222,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     const state: Record<string, boolean> = {};
     visibleNavEntries.forEach((entry) => {
       if (isGroup(entry)) {
-        const isPathActive = entry.children.some((child) => pathname.startsWith(child.href));
+        const isPathActive = entry.children.some((child) => pathname === child.href || pathname.startsWith(`${child.href}/`));
         state[entry.label] = Boolean(manualOpenGroups[entry.label] || isPathActive);
       }
     });
@@ -230,7 +230,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   }, [manualOpenGroups, pathname, visibleNavEntries]);
 
   const isLinkActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
 
   const toggleGroup = (label: string) => {
     if (sidebarCollapsed) return;

@@ -8,6 +8,7 @@ import {
   getAccountingErrorMessage,
   LoadingPanel,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,21 @@ import {
 } from "@/services/accountingService";
 
 const statusBadge = (status: string) => (
-  <Badge variant={status === "ok" ? "success" : status === "missing_ledger" || status === "missing_accounting_ledger" ? "warning" : "destructive"}>
+  <Badge variant={status === "ok" ? "success" : status.startsWith("missing_") ? "warning" : "destructive"}>
     {status}
   </Badge>
 );
+
+const signedMoney = (value: number | null | undefined, type?: string | null) => {
+  if (value === null || value === undefined) return "-";
+  return `${formatAccountingMoney(Math.abs(value))}${type ? ` ${type}` : ""}`;
+};
+
+const panelError = (message?: string) => message ? (
+  <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+    {message}
+  </div>
+) : null;
 
 function BalanceMetric({
   label,
@@ -64,25 +76,35 @@ export default function AccountingReconciliationPage() {
   const [linkingCashBank, setLinkingCashBank] = useState(false);
   const [linkingParties, setLinkingParties] = useState(false);
   const [postingCashBankOpening, setPostingCashBankOpening] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadAll = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [nextLedger, nextCashBank, nextParties, nextGst] = await Promise.all([
-        accountingService.getLedgerReconciliation(),
-        accountingService.getCashBankReconciliationDetails(),
-        accountingService.getPartyReconciliation(),
-        accountingService.getGSTReconciliation(),
-      ]);
-      setLedger(nextLedger);
-      setCashBank(nextCashBank);
-      setParties(nextParties);
-      setGst(nextGst);
-    } catch (error) {
-      toast.error(getAccountingErrorMessage(error, "Failed to load reconciliation"));
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const nextErrors: Record<string, string> = {};
+    const results = await Promise.allSettled([
+      accountingService.getLedgerReconciliation(),
+      accountingService.getCashBankReconciliationDetails(),
+      accountingService.getPartyReconciliation(),
+      accountingService.getGSTReconciliation(),
+    ]);
+
+    const [ledgerResult, cashBankResult, partiesResult, gstResult] = results;
+    if (ledgerResult.status === "fulfilled") setLedger(ledgerResult.value);
+    else nextErrors.ledgers = getAccountingErrorMessage(ledgerResult.reason, "Failed to load ledger reconciliation");
+
+    if (cashBankResult.status === "fulfilled") setCashBank(cashBankResult.value);
+    else nextErrors.cashBank = getAccountingErrorMessage(cashBankResult.reason, "Failed to load cash/bank reconciliation");
+    if (partiesResult.status === "fulfilled") setParties(partiesResult.value);
+    else nextErrors.parties = getAccountingErrorMessage(partiesResult.reason, "Failed to load party reconciliation");
+
+    if (gstResult.status === "fulfilled") setGst(gstResult.value);
+    else nextErrors.gst = getAccountingErrorMessage(gstResult.reason, "Failed to load GST reconciliation");
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      toast.error("Some reconciliation panels could not be loaded");
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -93,6 +115,55 @@ export default function AccountingReconciliationPage() {
   }, [loadAll]);
 
   const partyRows = useMemo(() => [...(parties?.customers || []), ...(parties?.suppliers || [])], [parties]);
+
+  const exportRows = useMemo(() => [
+    ...(ledger?.mismatches || []).map((row) => ({
+      section: "Ledger Balances",
+      name: row.ledgerName,
+      reference: row.code,
+      expected: formatAccountingMoney(row.expectedBalance),
+      actual: formatAccountingMoney(row.storedBalance),
+      difference: formatAccountingMoney(Math.abs(row.difference || 0)),
+      status: "mismatch",
+    })),
+    ...(cashBank?.accounts || []).map((row) => ({
+      section: "Cash & Bank",
+      name: row.accountName,
+      reference: row.mappedLedger?.code || "-",
+      expected: formatAccountingMoney(row.calculatedCurrentBalance),
+      actual: row.ledgerBalance === null ? "-" : formatAccountingMoney(row.ledgerBalance),
+      difference: formatAccountingMoney(Math.abs(row.difference || 0)),
+      status: row.status,
+    })),
+    ...partyRows.map((row) => ({
+      section: "Parties",
+      name: `${row.partyName} (${row.partyType})`,
+      reference: `${row.partyLedgerEntryCount || 0} party ledger entries`,
+      expected: formatAccountingMoney(row.businessBalance),
+      actual: row.accountingBalance === null ? "-" : formatAccountingMoney(row.accountingBalance),
+      difference: formatAccountingMoney(Math.abs(row.difference || 0)),
+      status: row.status,
+    })),
+    ...(gst?.rows || []).map((row) => ({
+      section: "GST",
+      name: row.ledgerCode,
+      reference: row.status,
+      expected: signedMoney(row.expected, row.expectedType),
+      actual: signedMoney(row.actual, row.actualType),
+      difference: signedMoney(row.difference, row.difference < 0 ? "CREDIT" : "DEBIT"),
+      status: row.status,
+    })),
+  ], [cashBank, gst, ledger, partyRows]);
+
+  const exportColumns = [
+    { key: "section", label: "Section" },
+    { key: "name", label: "Name" },
+    { key: "reference", label: "Reference" },
+    { key: "expected", label: "Expected / Business" },
+    { key: "actual", label: "Actual / Ledger" },
+    { key: "difference", label: "Difference" },
+    { key: "status", label: "Status" },
+  ];
 
   const fixLedgerBalances = async () => {
     const confirmed = window.confirm("Recalculate stored ledger balances from posted vouchers? Voucher entries will not be changed.");
@@ -159,6 +230,14 @@ export default function AccountingReconciliationPage() {
         description="Compare posted vouchers with ledger, cash/bank, party, and GST records."
         icon={ShieldCheck}
       >
+        <AccountingExportActions
+          title="Accounting Reconciliation"
+          subtitle={`Generated ${new Date().toLocaleString()}`}
+          filename={`accounting-reconciliation-${new Date().toISOString().slice(0, 10)}`}
+          columns={exportColumns}
+          rows={exportRows}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadAll()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh
@@ -176,6 +255,7 @@ export default function AccountingReconciliationPage() {
         <TabsContent value="ledgers">
           <Card className="rounded-lg">
             <CardContent className="p-0">
+              {panelError(errors.ledgers)}
               <div className="flex items-center justify-between p-4">
                 <Badge variant={ledger?.count ? "destructive" : "success"}>{ledger?.count || 0} mismatches</Badge>
                 <Button variant="outline" onClick={() => void fixLedgerBalances()} disabled={fixing || !ledger?.count}>
@@ -213,6 +293,7 @@ export default function AccountingReconciliationPage() {
         <TabsContent value="cash-bank">
           <Card className="rounded-lg">
             <CardContent className="space-y-4 p-4">
+              {panelError(errors.cashBank)}
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">Cash & Bank Ledger Mapping</p>
@@ -270,8 +351,8 @@ export default function AccountingReconciliationPage() {
                         muted={row.ledgerBalance === null}
                       />
                       <BalanceMetric
-                        label="Ledger Opening"
-                        value={row.mappedLedger ? formatAccountingMoney(row.mappedLedger.openingBalance) : "Not linked"}
+                        label={row.openingPosted ? "Opening Voucher" : "Ledger Opening"}
+                        value={row.openingPosted ? (row.openingVoucher?.voucherNo || "Posted") : row.mappedLedger ? formatAccountingMoney(row.mappedLedger.openingBalance) : "Not linked"}
                         muted={!row.mappedLedger}
                       />
                     </div>
@@ -282,6 +363,11 @@ export default function AccountingReconciliationPage() {
                       {row.openingBalanceDifference !== null && Math.abs(row.openingBalanceDifference) > 0.01 ? (
                         <Badge className="mt-3" variant="warning">
                           Opening difference {formatAccountingMoney(Math.abs(row.openingBalanceDifference))}
+                        </Badge>
+                      ) : null}
+                      {row.openingPosted && row.ledgerMasterOpeningDifference !== null && row.ledgerMasterOpeningDifference !== undefined && Math.abs(row.ledgerMasterOpeningDifference) > 0.01 ? (
+                        <Badge className="mt-3 ml-2" variant="outline">
+                          Opening tracked by voucher
                         </Badge>
                       ) : null}
                     </div>
@@ -300,6 +386,7 @@ export default function AccountingReconciliationPage() {
         <TabsContent value="parties">
           <Card className="rounded-lg">
             <CardContent className="space-y-4 p-4">
+              {panelError(errors.parties)}
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-medium">Party Ledger Mapping</p>
@@ -328,12 +415,23 @@ export default function AccountingReconciliationPage() {
                     <TableRow key={`${row.partyType}-${row.partyId}`}>
                       <TableCell><p className="font-medium">{row.partyName}</p><p className="text-xs text-muted-foreground">{row.partyType}</p></TableCell>
                       <TableCell>{formatAccountingMoney(row.businessBalance)}</TableCell>
-                      <TableCell>{row.partyLedgerBalance === null ? "-" : formatAccountingMoney(row.partyLedgerBalance)}</TableCell>
+                      <TableCell>
+                        <p>{row.partyLedgerBalance === null ? "-" : formatAccountingMoney(row.partyLedgerBalance)}</p>
+                        {(row.partyLedgerEntryCount || 0) > 0 ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {row.partyLedgerEntryCount} entr{row.partyLedgerEntryCount === 1 ? "y" : "ies"}
+                            {row.lastPartyLedgerEntry?.receiptNo ? ` · Last ${row.lastPartyLedgerEntry.receiptNo}` : ""}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-xs text-muted-foreground">No history</p>
+                        )}
+                      </TableCell>
                       <TableCell>{row.accountingBalance === null ? "-" : formatAccountingMoney(row.accountingBalance)}</TableCell>
                       <TableCell>{formatAccountingMoney(Math.abs(row.difference || 0))}</TableCell>
                       <TableCell>{statusBadge(row.status)}</TableCell>
                     </TableRow>
                   ))}
+                  {partyRows.length === 0 && <TableRow><TableCell colSpan={6} className="h-28 text-center text-muted-foreground">No active parties found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -343,6 +441,7 @@ export default function AccountingReconciliationPage() {
         <TabsContent value="gst">
           <Card className="rounded-lg">
             <CardContent className="p-0">
+              {panelError(errors.gst)}
               <div className="p-4 text-sm text-muted-foreground">GST reconciliation is view-only.</div>
               <Table>
                 <TableHeader>
@@ -358,12 +457,13 @@ export default function AccountingReconciliationPage() {
                   {(gst?.rows || []).map((row) => (
                     <TableRow key={row.ledgerCode}>
                       <TableCell className="font-medium">{row.ledgerCode}</TableCell>
-                      <TableCell>{formatAccountingMoney(Math.abs(row.expected))}</TableCell>
-                      <TableCell>{row.actual === null ? "-" : formatAccountingMoney(Math.abs(row.actual))}</TableCell>
-                      <TableCell>{formatAccountingMoney(Math.abs(row.difference || 0))}</TableCell>
+                      <TableCell>{signedMoney(row.expected, row.expectedType)}</TableCell>
+                      <TableCell>{signedMoney(row.actual, row.actualType)}</TableCell>
+                      <TableCell>{signedMoney(row.difference, row.difference < 0 ? "CREDIT" : "DEBIT")}</TableCell>
                       <TableCell>{statusBadge(row.status)}</TableCell>
                     </TableRow>
                   ))}
+                  {(gst?.rows || []).length === 0 && <TableRow><TableCell colSpan={5} className="h-28 text-center text-muted-foreground">No GST ledgers found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>

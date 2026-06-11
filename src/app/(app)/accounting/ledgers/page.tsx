@@ -9,6 +9,7 @@ import {
   getAccountingErrorMessage,
   LoadingPanel,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,30 @@ export default function AccountingLedgersPage() {
     });
   }, [group, ledgerType, ledgers, nature, search, status]);
 
+  const exportRows = useMemo(() => filteredLedgers.map((ledger) => ({
+    ledgerName: ledger.name,
+    code: ledger.code,
+    group: ledger.groupId?.name || "-",
+    nature: ledger.groupId?.nature || "-",
+    ledgerType: ledger.ledgerType,
+    openingBalance: formatBalance(ledger.openingBalance, ledger.openingBalanceType),
+    currentBalance: formatBalance(ledger.currentBalance, ledger.currentBalanceType),
+    system: ledger.isSystemDefault ? "System" : "Custom",
+    status: ledger.isActive ? "Active" : "Inactive",
+  })), [filteredLedgers]);
+
+  const exportColumns = [
+    { key: "ledgerName", label: "Ledger Name" },
+    { key: "code", label: "Code" },
+    { key: "group", label: "Group" },
+    { key: "nature", label: "Nature" },
+    { key: "ledgerType", label: "Ledger Type" },
+    { key: "openingBalance", label: "Opening Balance" },
+    { key: "currentBalance", label: "Current Balance" },
+    { key: "system", label: "System" },
+    { key: "status", label: "Status" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -101,6 +126,14 @@ export default function AccountingLedgersPage() {
         description="Professional ledger list with balances and statement access."
         icon={ListCollapse}
       >
+        <AccountingExportActions
+          title="Ledgers"
+          subtitle={`Filtered ledgers · ${filteredLedgers.length} record${filteredLedgers.length === 1 ? "" : "s"}`}
+          filename={`ledgers-${new Date().toISOString().slice(0, 10)}`}
+          columns={exportColumns}
+          rows={exportRows}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadLedgers()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh

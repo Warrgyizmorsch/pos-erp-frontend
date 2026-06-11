@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, FileText, HeartPulse, Loader2, RefreshCw, RotateCw, Wrench } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   getAccountingErrorMessage,
   LoadingPanel,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,38 @@ export default function AccountingHealthPage() {
 
   const summary = health?.summary;
   const issues = health?.issues || [];
+  const hasLedgerMismatch = issues.some((issue) => issue.type === "LEDGER_BALANCE_MISMATCH");
+  const hasGSTMismatch = issues.some((issue) => issue.type === "GST_MISMATCH");
+  const exportRows = useMemo(() => [
+    {
+      section: "Summary",
+      severity: health?.status || "-",
+      type: "SYSTEM_STATUS",
+      module: "accounting",
+      referenceNo: "",
+      message: `Total ${summary?.totalIssues || 0}, Critical ${summary?.criticalIssues || 0}, Warnings ${summary?.warningIssues || 0}`,
+      suggestedFix: health?.status === "healthy" ? "No action required." : "Review listed issues.",
+    },
+    ...issues.map((issue) => ({
+      section: "Issue",
+      severity: issue.severity,
+      type: issue.type,
+      module: issue.module,
+      referenceNo: issue.referenceNo || "-",
+      message: issue.message,
+      suggestedFix: issue.suggestedFix || "-",
+    })),
+  ], [health?.status, issues, summary]);
+
+  const exportColumns = [
+    { key: "section", label: "Section" },
+    { key: "severity", label: "Severity" },
+    { key: "type", label: "Type" },
+    { key: "module", label: "Module" },
+    { key: "referenceNo", label: "Reference No" },
+    { key: "message", label: "Message" },
+    { key: "suggestedFix", label: "Suggested Fix" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -115,6 +148,14 @@ export default function AccountingHealthPage() {
         <Badge variant={health?.status === "healthy" ? "success" : health?.status === "critical" ? "destructive" : "warning"}>
           {health?.status || "Unknown"}
         </Badge>
+        <AccountingExportActions
+          title="Accounting Health"
+          subtitle={`Checked ${health?.checkedAt ? formatAccountingDate(health.checkedAt) : new Date().toLocaleString()}`}
+          filename={`accounting-health-${new Date().toISOString().slice(0, 10)}`}
+          columns={exportColumns}
+          rows={exportRows}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadHealth()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh
@@ -134,15 +175,27 @@ export default function AccountingHealthPage() {
       <Card className="rounded-lg">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Quick Fix Actions</CardTitle>
-          <Button variant="outline" onClick={() => void fixLedgers()} disabled={fixingId === "ledger-fix"}>
-            {fixingId === "ledger-fix" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
-            Recalculate Ledger Balances
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {hasGSTMismatch && (
+              <Button variant="outline" asChild>
+                <Link href="/accounting/reconciliation">
+                  <FileText className="h-4 w-4" />
+                  Review GST
+                </Link>
+              </Button>
+            )}
+            {hasLedgerMismatch && (
+              <Button variant="outline" onClick={() => void fixLedgers()} disabled={fixingId === "ledger-fix"}>
+                {fixingId === "ledger-fix" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
+                Recalculate Ledger Balances
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <Badge variant="outline">Repost missing accounting one document at a time</Badge>
-          <Badge variant="outline">GST reconciliation is view-only</Badge>
-          <Badge variant="outline">Ledger fix does not modify voucher entries</Badge>
+          {hasGSTMismatch && <Badge variant="outline">GST reconciliation is view-only</Badge>}
+          {hasLedgerMismatch && <Badge variant="outline">Ledger fix does not modify voucher entries</Badge>}
         </CardContent>
       </Card>
 
@@ -190,6 +243,11 @@ export default function AccountingHealthPage() {
                       {issue.type === "MISSING_POSTING" && (
                         <Button variant="outline" size="icon-sm" title="Repost accounting" onClick={() => void repost(issue)} disabled={fixingId === issue.id}>
                           {fixingId === issue.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
+                        </Button>
+                      )}
+                      {issue.type === "GST_MISMATCH" && (
+                        <Button asChild variant="outline" size="icon-sm" title="Review GST reconciliation">
+                          <Link href="/accounting/reconciliation"><FileText className="h-4 w-4" /></Link>
                         </Button>
                       )}
                     </div>

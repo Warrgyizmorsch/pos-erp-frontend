@@ -7,13 +7,17 @@ import {
   ArrowLeft,
   BadgeIndianRupee,
   BookOpen,
+  ChevronDown,
   Download,
+  File,
+  FileText,
   FileSpreadsheet,
   Landmark,
   Loader2,
   Printer,
   ReceiptText,
   RefreshCw,
+  Sheet,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -27,6 +31,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -37,6 +47,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { accountingService } from "@/services/accountingService";
+import { businessService } from "@/services/businessService";
+import { ReportPrintDialog } from "@/components/print/ReportPrintDialog";
+import type { ReportCell, ReportColumn } from "@/lib/print/templates/ReportPrintTemplate";
+import {
+  exportReportCsv,
+  exportReportExcel,
+  exportReportPdf,
+  formatReportValue,
+  type ExportRow,
+} from "@/lib/print/exportUtils";
+import type { BusinessProfile } from "@/types";
 
 export type GSTReportKind =
   | "summary"
@@ -95,6 +116,101 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
 }
 
 const amount = (value: number) => (value ? formatAccountingMoney(value) : "-");
+const money = (value: number | undefined | null) => formatAccountingMoney(Number(value || 0));
+const moneyOrDash = (value: number | undefined | null) => Number(value || 0) ? money(value) : "-";
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+const label = (key: string) => key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()).trim();
+const columns = (keys: string[]): ReportColumn[] => keys.map((key) => ({ key, label: label(key) }));
+
+type PreparedGSTReport = {
+  title: string;
+  subtitle: string;
+  filename: string;
+  rows: ExportRow[];
+  columns: ReportColumn[];
+  totals?: ExportRow;
+};
+
+const normalizeExportRows = (rows: Array<Record<string, any>>) => {
+  const keys = rows.length ? Object.keys(rows[0]).slice(0, 14) : [];
+  return {
+    keys,
+    rows: rows.map((row) => Object.fromEntries(keys.map((key) => [key, formatReportValue(key, row[key])]))) as ExportRow[],
+  };
+};
+
+function prepareGSTReport(kind: GSTReportKind, data: any, info: typeof meta[GSTReportKind], startDate: string, endDate: string): PreparedGSTReport {
+  const subtitle = `${formatAccountingDate(startDate)} to ${formatAccountingDate(endDate)}`;
+  const filename = `${slug(info.title)}-${new Date().toISOString().slice(0, 10)}`;
+
+  if (kind === "summary") {
+    const rows = ["cgst", "sgst", "igst", "totalTax"].map((key) => ({
+      taxHead: key === "totalTax" ? "Total" : key.toUpperCase(),
+      outputGST: money(data.outputGST?.[key] || 0),
+      inputGST: money(data.inputGST?.[key] || 0),
+      netPayable: money(key === "totalTax" ? data.netGST?.totalPayable || 0 : data.netGST?.[`${key}Payable`] || 0),
+    }));
+    return {
+      title: info.title,
+      subtitle,
+      filename,
+      columns: columns(["taxHead", "outputGST", "inputGST", "netPayable"]),
+      rows,
+      totals: {
+        taxHead: "TOTAL",
+        outputGST: money(data.outputGST?.totalTax || 0),
+        inputGST: money(data.inputGST?.totalTax || 0),
+        netPayable: money(data.netGST?.totalPayable || 0),
+      },
+    };
+  }
+
+  if (kind === "payable") {
+    const rows = ["cgst", "sgst", "igst", "total"].map((key) => ({
+      taxHead: key.toUpperCase(),
+      output: money(data.output?.[key] || 0),
+      input: money(data.input?.[key] || 0),
+      payable: money(data.payable?.[key] || 0),
+      excessITC: money(data.excessITC?.[key] || 0),
+    }));
+    return { title: info.title, subtitle, filename, columns: columns(["taxHead", "output", "input", "payable", "excessITC"]), rows };
+  }
+
+  if (kind === "gstr1") {
+    const merged = [
+      ...(data.b2b || []).map((row: any) => ({ section: "B2B", ...row })),
+      ...(data.b2c || []).map((row: any) => ({ section: "B2C", ...row })),
+      ...(data.creditNotes || []).map((row: any) => ({ section: "Credit Note", ...row })),
+    ];
+    const normalized = normalizeExportRows(merged);
+    return { title: info.title, subtitle: data.note ? `${subtitle} · ${data.note}` : subtitle, filename, columns: columns(normalized.keys), rows: normalized.rows };
+  }
+
+  if (kind === "gstr3b") {
+    const rows = [
+      { section: "Outward Supplies", ...(data.outwardSupplies || {}) },
+      { section: "Inward ITC", ...(data.inwardITC || {}) },
+      { section: "Net Tax Payable", ...(data.netTaxPayable || {}) },
+    ];
+    const normalized = normalizeExportRows(rows);
+    return { title: info.title, subtitle: data.note ? `${subtitle} · ${data.note}` : subtitle, filename, columns: columns(normalized.keys), rows: normalized.rows };
+  }
+
+  if (kind === "exceptions") {
+    const normalized = normalizeExportRows(data.rows || []);
+    return {
+      title: info.title,
+      subtitle,
+      filename,
+      columns: columns(normalized.keys),
+      rows: normalized.rows,
+      totals: { severity: "TOTAL", type: "", module: "", message: `High ${data.counts?.high || 0} · Medium ${data.counts?.medium || 0} · Low ${data.counts?.low || 0}` },
+    };
+  }
+
+  const normalized = normalizeExportRows(data.rows || []);
+  return { title: info.title, subtitle, filename, columns: columns(normalized.keys), rows: normalized.rows };
+}
 
 function GenericTable({ rows }: { rows: Array<Record<string, any>> }) {
   if (!rows?.length) {
@@ -198,6 +314,9 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
   const info = meta[kind];
   const [data, setData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printReport, setPrintReport] = useState<PreparedGSTReport | null>(null);
   const [startDate, setStartDate] = useState(monthStart());
   const [endDate, setEndDate] = useState(today());
 
@@ -216,17 +335,76 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
     void load();
   }, [load]);
 
+  const prepareCurrentReport = () => data ? prepareGSTReport(kind, data, info, startDate, endDate) : null;
+
+  const handleExport = async (format: "csv" | "excel" | "pdf" | "print") => {
+    const prepared = prepareCurrentReport();
+    if (!prepared) {
+      toast.error("Load GST report data before exporting");
+      return;
+    }
+
+    try {
+      setExporting(true);
+      if (format === "print") {
+        setPrintReport(prepared);
+        setPrintOpen(true);
+        return;
+      }
+
+      const business: BusinessProfile | undefined = await businessService.getProfile().catch(() => undefined);
+      const context = {
+        title: prepared.title,
+        filename: prepared.filename,
+        dateRange: prepared.subtitle,
+        business,
+        totals: prepared.totals,
+      };
+
+      if (format === "csv") exportReportCsv(prepared.rows, context);
+      if (format === "excel") await exportReportExcel(prepared.rows, context);
+      if (format === "pdf") await exportReportPdf(prepared.rows, context);
+      toast.success(`${prepared.title} exported as ${format.toUpperCase()}`);
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to export GST report"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title={info.title} description={info.description} icon={info.icon}>
         <Button variant="outline" asChild><Link href="/accounting/gst"><ArrowLeft className="h-4 w-4" /> GST Reports</Link></Button>
-        <Button variant="outline" disabled><Download className="h-4 w-4" /> Export</Button>
-        <Button variant="outline" disabled><Printer className="h-4 w-4" /> Print</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" disabled={loading || exporting || !data}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => void handleExport("excel")}><Sheet className="mr-2 h-4 w-4" /> Excel (.xlsx)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void handleExport("pdf")}><FileText className="mr-2 h-4 w-4" /> PDF</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void handleExport("csv")}><File className="mr-2 h-4 w-4" /> CSV</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button variant="outline" disabled={loading || !data} onClick={() => void handleExport("print")}><Printer className="h-4 w-4" /> Print</Button>
         <Button variant="outline" onClick={() => void load()} disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh</Button>
       </PageHeader>
       {data?.warning && <Card className="rounded-lg border-amber-300 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800">{data.warning}</CardContent></Card>}
       <Card className="rounded-lg"><CardContent className="grid gap-3 p-4 md:grid-cols-[180px_180px]"><Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /><Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} /></CardContent></Card>
       {loading ? <LoadingPanel label={`Loading ${info.title.toLowerCase()}...`} /> : data ? renderGST(kind, data) : null}
+      <ReportPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        title={printReport?.title || info.title}
+        subtitle={printReport?.subtitle}
+        columns={printReport?.columns || []}
+        rows={(printReport?.rows || []) as Record<string, ReportCell>[]}
+        totals={printReport?.totals as Record<string, ReportCell> | undefined}
+      />
     </div>
   );
 }

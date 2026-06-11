@@ -10,6 +10,7 @@ import {
   LoadingPanel,
   voucherStatusVariant,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,30 @@ export default function DayBookPage() {
     return Array.from(groups.entries());
   }, [dayBook]);
 
+  const exportRows = useMemo(() => (dayBook?.entries || []).map((entry) => ({
+    date: formatAccountingDate(entry.date),
+    voucherType: entry.voucherTypeCode,
+    voucherNo: entry.voucherNo,
+    ledger: entry.ledgerName,
+    referenceNo: entry.referenceNo || "-",
+    narration: entry.narration || "-",
+    debit: entry.debit ? formatAccountingMoney(entry.debit) : "-",
+    credit: entry.credit ? formatAccountingMoney(entry.credit) : "-",
+    status: entry.status,
+  })), [dayBook]);
+
+  const exportColumns = [
+    { key: "date", label: "Date" },
+    { key: "voucherType", label: "Voucher Type" },
+    { key: "voucherNo", label: "Voucher No" },
+    { key: "ledger", label: "Ledger / Party" },
+    { key: "referenceNo", label: "Reference No" },
+    { key: "narration", label: "Narration" },
+    { key: "debit", label: "Debit" },
+    { key: "credit", label: "Credit" },
+    { key: "status", label: "Status" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -104,6 +129,25 @@ export default function DayBookPage() {
         description="Posted accounting voucher entries date-wise."
         icon={BookOpen}
       >
+        <AccountingExportActions
+          title="Day Book"
+          subtitle={`${startDate ? formatAccountingDate(startDate) : "Beginning"} to ${endDate ? formatAccountingDate(endDate) : "Today"}`}
+          filename={`day-book-${new Date().toISOString().slice(0, 10)}`}
+          columns={exportColumns}
+          rows={exportRows}
+          totals={{
+            date: "TOTAL",
+            voucherType: "",
+            voucherNo: "",
+            ledger: "",
+            referenceNo: "",
+            narration: "",
+            debit: formatAccountingMoney(dayBook?.totals.totalDebit || 0),
+            credit: formatAccountingMoney(dayBook?.totals.totalCredit || 0),
+            status: "",
+          }}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadDayBook()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh

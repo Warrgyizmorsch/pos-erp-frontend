@@ -40,6 +40,13 @@ import { BankAccount } from "@/types";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 
+const emptyBankForm = {
+  accountName: "",
+  accountNumber: "",
+  ifscCode: "",
+  openingBalance: "",
+};
+
 export default function BankAccountsPage() {
   const router = useRouter();
 
@@ -47,12 +54,7 @@ export default function BankAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editBank, setEditBank] = useState<BankAccount | null>(null);
-  const [form, setForm] = useState({
-    accountName: "",
-    accountNumber: "",
-    ifscCode: "",
-    openingBalance: "",
-  });
+  const [form, setForm] = useState(emptyBankForm);
 
   const fetchBanks = useCallback(async () => {
     try {
@@ -75,9 +77,9 @@ export default function BankAccountsPage() {
   const handleEditClick = (bank: BankAccount) => {
     setEditBank(bank);
     setForm({
-      accountName: bank.accountName,
-      accountNumber: bank.accountNumber,
-      ifscCode: bank.ifscCode,
+      accountName: bank.accountName || "",
+      accountNumber: bank.accountNumber || "",
+      ifscCode: bank.ifscCode || "",
       openingBalance: bank.openingBalance?.toString() || "0",
     });
   };
@@ -100,12 +102,7 @@ export default function BankAccountsPage() {
         toast.success(editBank ? "Bank account updated successfully" : "Bank account added successfully");
         setIsAddModalOpen(false);
         setEditBank(null);
-        setForm({
-          accountName: "",
-          accountNumber: "",
-          ifscCode: "",
-          openingBalance: "",
-        });
+        setForm(emptyBankForm);
         fetchBanks();
       }
     } catch (error: any) {
@@ -150,7 +147,7 @@ export default function BankAccountsPage() {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             className="w-full sm:w-auto bg-primary hover:bg-primary/95 text-primary-foreground rounded-full shadow-md text-xs sm:text-sm font-semibold h-10 px-5"
-            onClick={() => { setEditBank(null); setForm({ accountName: "", accountNumber: "", ifscCode: "", openingBalance: "" }); setIsAddModalOpen(true); }}
+            onClick={() => { setEditBank(null); setForm(emptyBankForm); setIsAddModalOpen(true); }}
           >
             <Plus className="mr-1.5 h-4 w-4 shrink-0" /> Add Bank Account
           </Button>
@@ -245,7 +242,7 @@ export default function BankAccountsPage() {
 
             <Button
               className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-full px-8 py-5.5 shadow-md font-semibold text-sm"
-              onClick={() => { setEditBank(null); setForm({ accountName: "", accountNumber: "", ifscCode: "", openingBalance: "" }); setIsAddModalOpen(true); }}
+              onClick={() => { setEditBank(null); setForm(emptyBankForm); setIsAddModalOpen(true); }}
             >
               <Plus className="mr-2 h-4 w-4" /> Add Bank Account
             </Button>
@@ -359,7 +356,7 @@ export default function BankAccountsPage() {
                 id="name"
                 placeholder="Bank Name"
                 className="rounded-xl h-10"
-                value={form.accountName}
+                value={form.accountName || ""}
                 onChange={(e) =>
                   setForm({ ...form, accountName: e.target.value })
                 }
@@ -371,7 +368,7 @@ export default function BankAccountsPage() {
                 id="acc"
                 placeholder="Account Number"
                 className="rounded-xl h-10 font-mono"
-                value={form.accountNumber}
+                value={form.accountNumber || ""}
                 onChange={(e) =>
                   setForm({ ...form, accountNumber: e.target.value })
                 }
@@ -383,7 +380,7 @@ export default function BankAccountsPage() {
                 id="ifsc"
                 placeholder="IFSC Code"
                 className="rounded-xl h-10 uppercase"
-                value={form.ifscCode}
+                value={form.ifscCode || ""}
                 onChange={(e) => setForm({ ...form, ifscCode: e.target.value })}
               />
             </div>
@@ -394,7 +391,7 @@ export default function BankAccountsPage() {
                 type="number"
                 placeholder="₹ 0.00"
                 className="rounded-xl h-10"
-                value={form.openingBalance}
+                value={form.openingBalance || ""}
                 onChange={(e) =>
                   setForm({ ...form, openingBalance: e.target.value })
                 }

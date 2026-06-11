@@ -337,9 +337,17 @@ export interface CashBankReconciliationAccount {
     ledgerBalance: number | null;
     ledgerBalanceType?: BalanceType | null;
     transactionBalance: number;
+    calculatedCurrentBalance: number;
     difference: number;
     transactionDifference: number | null;
     openingBalanceDifference: number | null;
+    ledgerMasterOpeningDifference?: number | null;
+    openingPosted?: boolean;
+    openingVoucher?: {
+      voucherId: string;
+      voucherNo: string;
+      status: string;
+    } | null;
     status: string;
     suggestedFix: string;
     mappedLedger: {
@@ -364,26 +372,54 @@ export interface PartyReconciliationRow {
   partyName: string;
   businessBalance: number;
   partyLedgerBalance: number | null;
+  partyLedgerEntryCount?: number;
+  lastPartyLedgerEntry?: {
+    entryId: string;
+    type: string;
+    receiptNo?: string;
+    debitAmount: number;
+    creditAmount: number;
+    balanceAfter: number;
+    date?: string;
+  } | null;
   accountingBalance: number | null;
   difference: number;
   status: string;
   suggestedFix: string;
+  suggestedApi?: string;
 }
 
 export interface GSTReconciliation {
   checkedAt: string;
+  period?: {
+    startDate?: string | null;
+    endDate?: string | null;
+  };
   rows: Array<{
     ledgerCode: string;
     expected: number;
     actual: number | null;
     difference: number;
+    expectedType?: BalanceType;
+    actualType?: BalanceType | null;
     status: string;
+    ledger?: {
+      ledgerId: string;
+      ledgerName: string;
+      code: string;
+      debit: number;
+      credit: number;
+      signed: number;
+      balanceType?: BalanceType;
+    } | null;
   }>;
   mismatches: Array<{
     ledgerCode: string;
     expected: number;
     actual: number | null;
     difference: number;
+    expectedType?: BalanceType;
+    actualType?: BalanceType | null;
     status: string;
   }>;
   outputGST?: Record<string, number>;

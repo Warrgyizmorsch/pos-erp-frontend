@@ -8,14 +8,18 @@ import {
   Banknote,
   BarChart3,
   BookOpen,
+  ChevronDown,
   Building2,
   Download,
+  File,
+  FileText,
   Landmark,
   Loader2,
   Printer,
   ReceiptText,
   RefreshCw,
   Scale,
+  Sheet,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +34,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -41,6 +51,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { accountingService } from "@/services/accountingService";
+import { businessService } from "@/services/businessService";
+import { ReportPrintDialog } from "@/components/print/ReportPrintDialog";
+import type { ReportCell, ReportColumn } from "@/lib/print/templates/ReportPrintTemplate";
+import {
+  exportReportCsv,
+  exportReportExcel,
+  exportReportPdf,
+  type ExportRow,
+} from "@/lib/print/exportUtils";
+import type { BusinessProfile } from "@/types";
 import type {
   BalanceSheetReport,
   BookReport,
@@ -141,6 +161,15 @@ type ReportData =
   | LedgerSummaryReport
   | GroupSummaryReport;
 
+type PreparedReport = {
+  title: string;
+  subtitle: string;
+  filename: string;
+  rows: ExportRow[];
+  columns: ReportColumn[];
+  totals?: ExportRow;
+};
+
 const fetchReport = (kind: AccountingReportKind, filters: Record<string, string>) => {
   if (kind === "trial-balance") return accountingService.getTrialBalanceReport(filters);
   if (kind === "profit-loss") return accountingService.getProfitLossReport(filters);
@@ -155,6 +184,267 @@ const fetchReport = (kind: AccountingReportKind, filters: Record<string, string>
 
 function Amount({ value }: { value: number }) {
   return <span>{value ? formatAccountingMoney(value) : "-"}</span>;
+}
+
+const money = (value: number | undefined | null) => formatAccountingMoney(Number(value || 0));
+const moneyOrDash = (value: number | undefined | null) => Number(value || 0) ? money(value) : "-";
+const balanceText = (value: number, type?: string) => `${money(value)} ${type === "CREDIT" ? "Cr" : "Dr"}`;
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+const columns = (items: Array<[string, string]>): ReportColumn[] => items.map(([key, label]) => ({ key, label }));
+
+const periodSubtitle = (meta: typeof reportMeta[AccountingReportKind], data: ReportData, startDate: string, endDate: string, asOnDate: string) => {
+  if ("asOnDate" in data) return `As on ${formatAccountingDate(data.asOnDate)}`;
+  if (meta.mode === "asOn") return `As on ${formatAccountingDate(asOnDate)}`;
+  return `${formatAccountingDate(startDate)} to ${formatAccountingDate(endDate)}`;
+};
+
+function flattenGroupRows(section: string, groups: ReportGroupAmount[]) {
+  return groups.flatMap((group) => [
+    {
+      section,
+      group: group.groupName,
+      ledger: "Group Total",
+      amount: money(group.total),
+    },
+    ...group.ledgers.map((ledger) => ({
+      section,
+      group: group.groupName,
+      ledger: ledger.ledgerName,
+      amount: money(Math.abs(ledger.amount)),
+    })),
+  ]);
+}
+
+function prepareAccountingReport(
+  kind: AccountingReportKind,
+  data: ReportData,
+  meta: typeof reportMeta[AccountingReportKind],
+  dates: { startDate: string; endDate: string; asOnDate: string },
+): PreparedReport {
+  const subtitle = periodSubtitle(meta, data, dates.startDate, dates.endDate, dates.asOnDate);
+  const filename = `${slug(meta.title)}-${new Date().toISOString().slice(0, 10)}`;
+
+  if (kind === "trial-balance") {
+    const report = data as TrialBalanceReport;
+    const reportColumns = columns([
+      ["ledger", "Ledger"],
+      ["code", "Code"],
+      ["group", "Group"],
+      ["nature", "Nature"],
+      ["openingDebit", "Opening Dr"],
+      ["openingCredit", "Opening Cr"],
+      ["periodDebit", "Period Dr"],
+      ["periodCredit", "Period Cr"],
+      ["closingDebit", "Closing Dr"],
+      ["closingCredit", "Closing Cr"],
+    ]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: report.rows.map((row) => ({
+        ledger: row.ledgerName,
+        code: row.code,
+        group: row.groupName || "-",
+        nature: row.nature || "-",
+        openingDebit: moneyOrDash(row.openingDebit),
+        openingCredit: moneyOrDash(row.openingCredit),
+        periodDebit: moneyOrDash(row.periodDebit),
+        periodCredit: moneyOrDash(row.periodCredit),
+        closingDebit: moneyOrDash(row.closingDebit),
+        closingCredit: moneyOrDash(row.closingCredit),
+      })),
+      totals: {
+        ledger: "TOTAL",
+        code: "",
+        group: "",
+        nature: report.isBalanced ? "Balanced" : `Difference ${money(Math.abs(report.totals.difference))}`,
+        openingDebit: money(report.totals.openingDebit),
+        openingCredit: money(report.totals.openingCredit),
+        periodDebit: money(report.totals.periodDebit),
+        periodCredit: money(report.totals.periodCredit),
+        closingDebit: money(report.totals.closingDebit),
+        closingCredit: money(report.totals.closingCredit),
+      },
+    };
+  }
+
+  if (kind === "profit-loss") {
+    const report = data as ProfitLossReport;
+    const reportColumns = columns([["section", "Section"], ["group", "Group"], ["ledger", "Ledger"], ["amount", "Amount"]]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: [
+        ...flattenGroupRows("Income", report.income),
+        ...flattenGroupRows("Expenses", report.expenses),
+      ],
+      totals: {
+        section: "TOTAL",
+        group: `Income ${money(report.totals.totalIncome)}`,
+        ledger: `Expenses ${money(report.totals.totalExpenses)}`,
+        amount: report.totals.netProfit > 0 ? `Net Profit ${money(report.totals.netProfit)}` : `Net Loss ${money(report.totals.netLoss)}`,
+      },
+    };
+  }
+
+  if (kind === "balance-sheet") {
+    const report = data as BalanceSheetReport;
+    const reportColumns = columns([["section", "Section"], ["group", "Group"], ["ledger", "Ledger"], ["amount", "Amount"]]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: [
+        ...flattenGroupRows("Assets", report.assets),
+        ...flattenGroupRows("Liabilities", report.liabilities),
+      ],
+      totals: {
+        section: "TOTAL",
+        group: `Assets ${money(report.totals.totalAssets)}`,
+        ledger: `Liabilities ${money(report.totals.totalLiabilities)}`,
+        amount: report.isBalanced ? "Balanced" : `Difference ${money(Math.abs(report.totals.difference))}`,
+      },
+    };
+  }
+
+  if (kind === "cash-book" || kind === "bank-book") {
+    const report = data as BookReport;
+    const isBank = kind === "bank-book";
+    const reportColumns = columns([
+      ["date", "Date"],
+      ["voucher", "Voucher"],
+      ...(isBank ? [["bankLedger", "Bank Ledger"] as [string, string]] : []),
+      ["particulars", "Particulars"],
+      ["reference", "Reference"],
+      ["debit", isBank ? "Deposit" : "Receipt"],
+      ["credit", isBank ? "Withdrawal" : "Payment"],
+      ["balance", "Balance"],
+    ]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: report.entries.map((entry) => ({
+        date: formatAccountingDate(entry.date),
+        voucher: `${entry.voucherNo} (${entry.voucherTypeCode})`,
+        ...(isBank ? { bankLedger: entry.ledgerName } : {}),
+        particulars: entry.particulars,
+        reference: entry.referenceNo || "-",
+        debit: moneyOrDash(entry.debit),
+        credit: moneyOrDash(entry.credit),
+        balance: balanceText(entry.balance, entry.balanceType),
+      })),
+      totals: {
+        date: "TOTAL",
+        voucher: "",
+        ...(isBank ? { bankLedger: "" } : {}),
+        particulars: `Opening ${balanceText(report.openingBalance, report.openingBalanceType)}`,
+        reference: "",
+        debit: money(isBank ? report.totals.totalDeposits || 0 : report.totals.totalReceipts || 0),
+        credit: money(isBank ? report.totals.totalWithdrawals || 0 : report.totals.totalPayments || 0),
+        balance: balanceText(report.totals.closingBalance, report.totals.closingBalanceType),
+      },
+    };
+  }
+
+  if (kind === "receivables" || kind === "payables") {
+    const report = data as PartyOutstandingReport;
+    const primary = kind === "receivables" ? "receivable" : "payable";
+    const reportColumns = columns([
+      ["ledger", "Party Ledger"],
+      ["opening", "Opening"],
+      ["debit", "Debit"],
+      ["credit", "Credit"],
+      ["closing", "Closing"],
+      ["advance", "Advance / Debit Balance"],
+    ]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: report.rows.map((row) => ({
+        ledger: row.ledgerName,
+        opening: balanceText(row.openingBalance, row.openingBalanceType),
+        debit: moneyOrDash(row.debit),
+        credit: moneyOrDash(row.credit),
+        closing: balanceText(row[primary] || row.advance, row.balanceType),
+        advance: moneyOrDash(row.advance),
+      })),
+      totals: {
+        ledger: "TOTAL",
+        opening: "",
+        debit: "",
+        credit: "",
+        closing: money(kind === "receivables" ? report.totals.totalReceivable || 0 : report.totals.totalPayable || 0),
+        advance: money(report.totals.totalAdvance),
+      },
+    };
+  }
+
+  if (kind === "ledger-summary") {
+    const report = data as LedgerSummaryReport;
+    const reportColumns = columns([
+      ["ledger", "Ledger"],
+      ["code", "Code"],
+      ["group", "Group"],
+      ["opening", "Opening"],
+      ["debit", "Debit"],
+      ["credit", "Credit"],
+      ["closing", "Closing"],
+    ]);
+    return {
+      title: meta.title,
+      subtitle,
+      filename,
+      columns: reportColumns,
+      rows: report.rows.map((row) => ({
+        ledger: row.ledgerName,
+        code: row.code,
+        group: row.groupName || "-",
+        opening: balanceText(row.openingBalance, row.openingBalanceType),
+        debit: moneyOrDash(row.periodDebit),
+        credit: moneyOrDash(row.periodCredit),
+        closing: balanceText(row.closingBalance, row.closingBalanceType),
+      })),
+    };
+  }
+
+  const report = data as GroupSummaryReport;
+  return {
+    title: meta.title,
+    subtitle,
+    filename,
+    columns: columns([
+      ["group", "Group"],
+      ["code", "Code"],
+      ["nature", "Nature"],
+      ["openingDebit", "Opening Dr"],
+      ["openingCredit", "Opening Cr"],
+      ["periodDebit", "Period Dr"],
+      ["periodCredit", "Period Cr"],
+      ["closingDebit", "Closing Dr"],
+      ["closingCredit", "Closing Cr"],
+    ]),
+    rows: report.rows.map((row) => ({
+      group: row.groupName,
+      code: row.groupCode || "-",
+      nature: row.nature || "-",
+      openingDebit: moneyOrDash(row.openingDebit),
+      openingCredit: moneyOrDash(row.openingCredit),
+      periodDebit: moneyOrDash(row.periodDebit),
+      periodCredit: moneyOrDash(row.periodCredit),
+      closingDebit: moneyOrDash(row.closingDebit),
+      closingCredit: moneyOrDash(row.closingCredit),
+    })),
+  };
 }
 
 function SummaryCard({ label, value, accent }: { label: string; value: number; accent?: string }) {
@@ -494,6 +784,9 @@ export function AccountingReportPage({ kind }: { kind: AccountingReportKind }) {
   const meta = reportMeta[kind];
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printReport, setPrintReport] = useState<PreparedReport | null>(null);
   const [startDate, setStartDate] = useState(monthStart());
   const [endDate, setEndDate] = useState(today());
   const [asOnDate, setAsOnDate] = useState(today());
@@ -514,17 +807,73 @@ export function AccountingReportPage({ kind }: { kind: AccountingReportKind }) {
     void load();
   }, [load]);
 
+  const prepareCurrentReport = () => {
+    if (!data) return null;
+    return prepareAccountingReport(kind, data, meta, { startDate, endDate, asOnDate });
+  };
+
+  const handleExport = async (format: "csv" | "excel" | "pdf" | "print") => {
+    const prepared = prepareCurrentReport();
+    if (!prepared) {
+      toast.error("Load report data before exporting");
+      return;
+    }
+
+    try {
+      setExporting(true);
+      if (format === "print") {
+        setPrintReport(prepared);
+        setPrintOpen(true);
+        return;
+      }
+
+      const business: BusinessProfile | undefined = await businessService.getProfile().catch(() => undefined);
+      const context = {
+        title: prepared.title,
+        filename: prepared.filename,
+        dateRange: prepared.subtitle,
+        business,
+        totals: prepared.totals,
+      };
+
+      if (format === "csv") exportReportCsv(prepared.rows, context);
+      if (format === "excel") await exportReportExcel(prepared.rows, context);
+      if (format === "pdf") await exportReportPdf(prepared.rows, context);
+      toast.success(`${prepared.title} exported as ${format.toUpperCase()}`);
+    } catch (error) {
+      toast.error(getAccountingErrorMessage(error, "Failed to export report"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title={meta.title} description={meta.description} icon={meta.icon}>
         <Button variant="outline" asChild>
           <Link href="/accounting/reports"><ArrowLeft className="h-4 w-4" /> Reports</Link>
         </Button>
-        <Button variant="outline" disabled>
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
-        <Button variant="outline" disabled>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" disabled={loading || exporting || !data}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => void handleExport("excel")}>
+              <Sheet className="mr-2 h-4 w-4" /> Excel (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void handleExport("pdf")}>
+              <FileText className="mr-2 h-4 w-4" /> PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void handleExport("csv")}>
+              <File className="mr-2 h-4 w-4" /> CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button variant="outline" disabled={loading || !data} onClick={() => void handleExport("print")}>
           <Printer className="h-4 w-4" />
           Print
         </Button>
@@ -556,6 +905,15 @@ export function AccountingReportPage({ kind }: { kind: AccountingReportKind }) {
       ) : (
         renderReport(kind, data)
       )}
+      <ReportPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        title={printReport?.title || meta.title}
+        subtitle={printReport?.subtitle}
+        columns={printReport?.columns || []}
+        rows={(printReport?.rows || []) as Record<string, ReportCell>[]}
+        totals={printReport?.totals as Record<string, ReportCell> | undefined}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   getAccountingErrorMessage,
   LoadingPanel,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,22 @@ export default function BasicTrialBalancePage() {
     };
   }, [rows]);
 
+  const exportRows = useMemo(() => rows.map((row) => ({
+    ledger: row.ledgerName,
+    code: row.code,
+    group: row.groupName || "-",
+    debitBalance: row.debitBalance ? formatAccountingMoney(row.debitBalance) : "-",
+    creditBalance: row.creditBalance ? formatAccountingMoney(row.creditBalance) : "-",
+  })), [rows]);
+
+  const exportColumns = [
+    { key: "ledger", label: "Ledger" },
+    { key: "code", label: "Code" },
+    { key: "group", label: "Group" },
+    { key: "debitBalance", label: "Debit Balance" },
+    { key: "creditBalance", label: "Credit Balance" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -87,6 +104,21 @@ export default function BasicTrialBalancePage() {
         description="Validation-level trial balance by ledger."
         icon={BarChart3}
       >
+        <AccountingExportActions
+          title="Basic Trial Balance"
+          subtitle={`As on ${asOnDate}`}
+          filename={`basic-trial-balance-${asOnDate}`}
+          columns={exportColumns}
+          rows={exportRows}
+          totals={{
+            ledger: "TOTAL",
+            code: "",
+            group: filteredTotals.isBalanced ? "Balanced" : `Difference ${formatAccountingMoney(Math.abs(filteredTotals.difference))}`,
+            debitBalance: formatAccountingMoney(filteredTotals.totalDebit),
+            creditBalance: formatAccountingMoney(filteredTotals.totalCredit),
+          }}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadTrialBalance()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh

@@ -13,6 +13,7 @@ import {
   voucherStatusVariant,
   VoucherDetailsDrawer,
 } from "@/components/accounting/accounting-ui";
+import { AccountingExportActions } from "@/components/accounting/AccountingExportActions";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -142,6 +143,30 @@ export default function AccountingVouchersPage() {
     [pendingAction?.id, vouchers],
   );
 
+  const exportRows = useMemo(() => vouchers.map((voucher) => ({
+    date: formatAccountingDate(voucher.date),
+    voucherNo: voucher.voucherNo,
+    voucherType: voucher.voucherTypeCode,
+    referenceModule: voucher.referenceModule || "-",
+    referenceNo: voucher.referenceNo || "-",
+    narration: voucher.narration || "-",
+    totalDebit: formatAccountingMoney(voucher.totalDebit),
+    totalCredit: formatAccountingMoney(voucher.totalCredit),
+    status: getVoucherDisplayStatus(voucher),
+  })), [vouchers]);
+
+  const exportColumns = [
+    { key: "date", label: "Date" },
+    { key: "voucherNo", label: "Voucher No" },
+    { key: "voucherType", label: "Voucher Type" },
+    { key: "referenceModule", label: "Reference Module" },
+    { key: "referenceNo", label: "Reference No" },
+    { key: "narration", label: "Narration" },
+    { key: "totalDebit", label: "Total Debit" },
+    { key: "totalCredit", label: "Total Credit" },
+    { key: "status", label: "Status" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -149,6 +174,25 @@ export default function AccountingVouchersPage() {
         description="Accounting vouchers with filtering, posting, cancellation, reversal, and details view."
         icon={FileText}
       >
+        <AccountingExportActions
+          title="Accounting Vouchers"
+          subtitle={`${startDate ? formatAccountingDate(startDate) : "Beginning"} to ${endDate ? formatAccountingDate(endDate) : "Today"}`}
+          filename={`accounting-vouchers-${new Date().toISOString().slice(0, 10)}`}
+          columns={exportColumns}
+          rows={exportRows}
+          totals={{
+            date: "TOTAL",
+            voucherNo: "",
+            voucherType: "",
+            referenceModule: "",
+            referenceNo: "",
+            narration: "",
+            totalDebit: formatAccountingMoney(vouchers.reduce((sum, voucher) => sum + Number(voucher.totalDebit || 0), 0)),
+            totalCredit: formatAccountingMoney(vouchers.reduce((sum, voucher) => sum + Number(voucher.totalCredit || 0), 0)),
+            status: "",
+          }}
+          disabled={loading}
+        />
         <Button variant="outline" onClick={() => void loadVouchers()} disabled={loading}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           Refresh

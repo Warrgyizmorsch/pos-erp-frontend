@@ -45,6 +45,7 @@ import { purchaseService } from "@/services/purchaseService";
 import { cashBankService } from "@/services/cashBankService";
 import { categoryService } from "@/services/categoryService";
 import { subcategoryService } from "@/services/subcategoryService";
+import { businessService } from "@/services/businessService";
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import { SupplierModal } from "@/components/shared/SupplierModal";
 import { PrintPurchaseDialog } from "@/components/purchases/PrintPurchaseDialog";
@@ -130,6 +131,23 @@ const calcItemTotal = (item: ItemRow) => {
   const afterDisc = base - discAmt;
   const taxAmt = (afterDisc * item.taxRate) / 100;
   return afterDisc + taxAmt;
+};
+
+const roundMoney = (value: number) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+const normalizeState = (value = "") => value.trim().toLowerCase();
+
+const splitGST = (taxAmount: number, stateOfSupply: string, businessState: string) => {
+  const tax = roundMoney(taxAmount);
+  if (tax <= 0) return { cgst: 0, sgst: 0, igst: 0 };
+  if (
+    normalizeState(stateOfSupply) &&
+    normalizeState(businessState) &&
+    normalizeState(stateOfSupply) !== normalizeState(businessState)
+  ) {
+    return { cgst: 0, sgst: 0, igst: tax };
+  }
+  const cgst = roundMoney(tax / 2);
+  return { cgst, sgst: roundMoney(tax - cgst), igst: 0 };
 };
 
 // ---------- Component ----------
@@ -408,6 +426,7 @@ export default function CreatePurchasePage() {
   const [printPurchase, setPrintPurchase] = useState<Purchase | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
   const [stateOfSupply, setStateOfSupply] = useState("Rajasthan");
+  const [businessState, setBusinessState] = useState("Rajasthan");
   const [roundOff, setRoundOff] = useState(false);
   const [existingPayment, setExistingPayment] = useState<Pick<Purchase, "amountPaid" | "paymentStatus"> | null>(null);
 
@@ -417,6 +436,13 @@ export default function CreatePurchasePage() {
     productService.getAll({ limit: 500 }).then((r) => setProducts(r.data)).catch(() => {});
     categoryService.getAll().then((r) => setCategories(r)).catch(() => {});
     subcategoryService.getAll().then((r) => setSubcategories(r)).catch(() => {});
+    businessService.getProfile().then((profile) => {
+      const profileState = profile.state || "Rajasthan";
+      setBusinessState(profileState);
+      if (!editingPurchaseId) {
+        setStateOfSupply((current) => current && current !== "Rajasthan" ? current : profileState);
+      }
+    }).catch(() => {});
     cashBankService.getAccounts().then((res) => {
       if (res.success && res.data) {
         setBankAccounts(res.data.filter((a: any) => a.accountType === "bank" && a.status === "active"));
@@ -469,6 +495,7 @@ export default function CreatePurchasePage() {
       setSupplierId(exact._id);
       setSupplierPhone(exact.phone);
       setSupplierGst(exact.gstNumber || "");
+      if (exact.state) setStateOfSupply(exact.state);
       setIsSupplierMatched(true);
       setShowSupplierSuggestions(false);
     } else {
@@ -483,6 +510,7 @@ export default function CreatePurchasePage() {
     setSupplierSearch(s.name);
     setSupplierPhone(s.phone);
     setSupplierGst(s.gstNumber || "");
+    if (s.state) setStateOfSupply(s.state);
     setIsSupplierMatched(true);
     setShowSupplierSuggestions(false);
   };
@@ -970,6 +998,48 @@ export default function CreatePurchasePage() {
         ? "pending"
         : paidAmount >= finalTotal ? "paid" : paidAmount > 0 ? "partial" : "pending";
 
+      const purchaseLines = resolvedItems.map((i) => {
+        const taxMultiplier = 1 + i.taxRate / 100;
+        const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
+        const salesPrice = i.salesTaxType === "with" ? i.salesPrice / taxMultiplier : i.salesPrice;
+        const finalSubtotal = i.quantity * purchasePrice;
+        const discountAmt = (finalSubtotal * i.discount) / 100;
+        const finalAfterDisc = finalSubtotal - discountAmt;
+        const taxAmt = (finalAfterDisc * i.taxRate) / 100;
+        const gst = splitGST(taxAmt, stateOfSupply, businessState);
+        return {
+          product: i.product!._id,
+          name: i.product!.name,
+          sku: i.product!.sku,
+          quantity: i.quantity,
+          purchasePrice: roundMoney(purchasePrice),
+          salesPrice: roundMoney(salesPrice),
+          discount: i.discount,
+          discountAmount: roundMoney(discountAmt),
+          taxableAmount: roundMoney(finalAfterDisc),
+          taxRate: i.taxRate,
+          gstRate: i.taxRate,
+          cgst: gst.cgst,
+          cgstAmount: gst.cgst,
+          sgst: gst.sgst,
+          sgstAmount: gst.sgst,
+          igst: gst.igst,
+          igstAmount: gst.igst,
+          taxAmount: roundMoney(taxAmt),
+          total: roundMoney(finalAfterDisc + taxAmt),
+        };
+      });
+
+      const gstTotals = purchaseLines.reduce(
+        (acc, row) => ({
+          cgst: roundMoney(acc.cgst + row.cgst),
+          sgst: roundMoney(acc.sgst + row.sgst),
+          igst: roundMoney(acc.igst + row.igst),
+          totalTax: roundMoney(acc.totalTax + row.taxAmount),
+        }),
+        { cgst: 0, sgst: 0, igst: 0, totalTax: 0 },
+      );
+
       const payload = {
         supplier: finalSupplierId,
         supplierName: finalSupplierName,
@@ -978,40 +1048,16 @@ export default function CreatePurchasePage() {
         invoiceNumber,
         purchaseDate,
         stateOfSupply,
-        items: resolvedItems.map((i) => {
-          const taxMultiplier = 1 + i.taxRate / 100;
-          const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
-          const salesPrice = i.salesTaxType === "with" ? i.salesPrice / taxMultiplier : i.salesPrice;
-          const finalSubtotal = i.quantity * purchasePrice;
-          const discountAmt = (finalSubtotal * i.discount) / 100;
-          const finalAfterDisc = finalSubtotal - discountAmt;
-          const taxAmt = (finalAfterDisc * i.taxRate) / 100;
-          return {
-            product: i.product!._id,
-            name: i.product!.name,
-            sku: i.product!.sku,
-            quantity: i.quantity,
-            purchasePrice,
-            salesPrice,
-            discount: i.discount,
-            discountAmount: discountAmt,
-            taxRate: i.taxRate,
-            taxAmount: taxAmt,
-            total: finalAfterDisc + taxAmt,
-          };
-        }),
+        items: purchaseLines,
         subtotal: resolvedItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
           const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
           return s + i.quantity * purchasePrice;
         }, 0),
-        taxAmount: resolvedItems.reduce((s, i) => {
-          const taxMultiplier = 1 + i.taxRate / 100;
-          const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
-          const base = i.quantity * purchasePrice;
-          const disc = (base * i.discount) / 100;
-          return s + ((base - disc) * i.taxRate) / 100;
-        }, 0),
+        taxAmount: gstTotals.totalTax,
+        totalCgst: gstTotals.cgst,
+        totalSgst: gstTotals.sgst,
+        totalIgst: gstTotals.igst,
         discountAmount: resolvedItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
           const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
