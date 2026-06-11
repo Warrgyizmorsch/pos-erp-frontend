@@ -38,6 +38,8 @@ const sourceHref = (issue: AccountingHealthIssue) => {
   return "";
 };
 
+const EMPTY_HEALTH_ISSUES: AccountingHealthIssue[] = [];
+
 function SummaryCard({ label, value, tone }: { label: string; value: number | string; tone?: "bad" | "warn" | "ok" }) {
   return (
     <Card className="rounded-lg">
@@ -101,10 +103,8 @@ export default function AccountingHealthPage() {
     }
   };
 
-  if (loading && !health) return <LoadingPanel label="Running accounting health check..." />;
-
   const summary = health?.summary;
-  const issues = health?.issues || [];
+  const issues = health?.issues ?? EMPTY_HEALTH_ISSUES;
   const hasLedgerMismatch = issues.some((issue) => issue.type === "LEDGER_BALANCE_MISMATCH");
   const hasGSTMismatch = issues.some((issue) => issue.type === "GST_MISMATCH");
   const exportRows = useMemo(() => [
@@ -137,6 +137,8 @@ export default function AccountingHealthPage() {
     { key: "message", label: "Message" },
     { key: "suggestedFix", label: "Suggested Fix" },
   ];
+
+  if (loading && !health) return <LoadingPanel label="Running accounting health check..." />;
 
   return (
     <div className="space-y-6">
