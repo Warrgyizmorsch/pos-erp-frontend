@@ -614,7 +614,7 @@ export default function OpeningStockPage() {
   }, 0);
 
   return (
-    <div className="bg-slate-50/50 pb-32 relative">
+    <div className="bg-background pb-32 relative">
       {/* Top Header */}
       <div className="mb-4">
         <PageHeader
