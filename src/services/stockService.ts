@@ -49,6 +49,19 @@ export const stockService = {
     return data.data;
   },
 
+  createOpeningStock: async (payload: Record<string, unknown>): Promise<{
+    data: any;
+    createdProducts: any[];
+    reusedProducts: any[];
+  }> => {
+    const { data } = await api.post<ApiResponse<any>>("/inventory/opening-stock", payload);
+    return {
+      data: data.data,
+      createdProducts: (data as any).createdProducts || [],
+      reusedProducts: (data as any).reusedProducts || [],
+    };
+  },
+
   // Low stock alerts
   getLowStockAlerts: async (): Promise<Product[]> => {
     const { data } = await api.get<ApiResponse<Product[]>>("/stock/alerts");

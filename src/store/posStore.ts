@@ -18,21 +18,31 @@ export const WALK_IN_CUSTOMER: Customer = {
 
 export interface POSItem {
   id: string;
-  productId?: string;
+  productId?: string | null;
   product?: Product;
+  productRef?: string | null;
+  itemType: "inventory" | "non_stock_product" | "service";
+  affectsInventory: boolean;
   itemCode: string;
   itemName: string;
+  name?: string;
+  description?: string;
   barcode?: string;
   customItem: boolean;
   quantity: number;
   unit: string;
   pricePerUnit: number;
+  rate: number;
   purchasePrice: number;
   taxPercent: number;
+  taxRate: number;
+  taxableAmount: number;
   taxAmount: number;
   total: number;
+  totalAmount: number;
   discount: number;
   isInclusive: boolean; // if price includes tax
+  incomeLedger?: string | null;
 }
 
 export interface POSBill {
@@ -74,26 +84,72 @@ interface POSStore {
   setCustomer: (customer: Customer | null) => void;
   setPaymentMode: (mode: string) => void;
   setAmountReceived: (amount: number) => void;
-  updateBillField: (field: keyof POSBill, value: any) => void;
+  updateBillField: (field: keyof POSBill, value: POSBill[keyof POSBill]) => void;
   resetActiveBill: () => void;
 }
 
 export const createPlaceholderItem = (): POSItem => ({
   id: crypto.randomUUID(),
+  productId: null,
+  productRef: null,
+  itemType: 'inventory',
+  affectsInventory: true,
   itemCode: '',
   itemName: '',
+  name: '',
+  description: '',
   barcode: '',
   customItem: true,
   quantity: 1,
   unit: 'Pcs',
   pricePerUnit: 0,
+  rate: 0,
   purchasePrice: 0,
   taxPercent: 0,
+  taxRate: 0,
+  taxableAmount: 0,
   taxAmount: 0,
   total: 0,
+  totalAmount: 0,
   discount: 0,
   isInclusive: false,
+  incomeLedger: null,
 });
+
+export const calculatePOSItemAmounts = (item: POSItem): POSItem => {
+  const quantity = Math.max(0, Number(item.quantity || 0));
+  const rate = Math.max(0, Number(item.pricePerUnit ?? item.rate ?? 0));
+  const discount = Math.max(0, Math.min(100, Number(item.discount || 0)));
+  const taxPercent = Math.max(0, Number(item.taxPercent ?? item.taxRate ?? 0));
+  const grossAmount = quantity * rate;
+  const discountAmount = grossAmount * (discount / 100);
+  const taxableAmount = Math.max(0, grossAmount - discountAmount);
+
+  let taxAmount = 0;
+  let totalAmount = 0;
+  if (item.isInclusive && taxPercent > 0) {
+    const baseWithoutTax = taxableAmount / (1 + taxPercent / 100);
+    taxAmount = taxableAmount - baseWithoutTax;
+    totalAmount = taxableAmount;
+  } else {
+    taxAmount = taxableAmount * (taxPercent / 100);
+    totalAmount = taxableAmount + taxAmount;
+  }
+
+  return {
+    ...item,
+    quantity,
+    pricePerUnit: rate,
+    rate,
+    discount,
+    taxPercent,
+    taxRate: taxPercent,
+    taxableAmount: Number(taxableAmount.toFixed(2)),
+    taxAmount: Number(taxAmount.toFixed(2)),
+    total: Number(totalAmount.toFixed(2)),
+    totalAmount: Number(totalAmount.toFixed(2)),
+  };
+};
 
 const createEmptyBill = (id: string, billNo: number): POSBill => ({
   id,
@@ -155,23 +211,39 @@ export const usePOSStore = create<POSStore>((set, get) => ({
       bills: state.bills.map((bill) => {
         if (bill.id !== state.activeBillId) return bill;
 
-        const items: POSItem[] = sale.items.map((item) => ({
-          id: crypto.randomUUID(),
-          productId: typeof item.product === 'string' ? item.product : item.product._id,
-          product: typeof item.product === 'string' ? undefined : item.product,
-          itemCode: item.sku,
-          itemName: item.name,
-          customItem: false,
-          quantity: item.quantity,
-          unit: 'Pcs',
-          pricePerUnit: item.unitPrice,
-          purchasePrice: item.purchasePrice,
-          taxPercent: item.taxRate || 0,
-          taxAmount: 0,
-          total: item.total,
-          discount: 0,
-          isInclusive: false,
-        }));
+        const items: POSItem[] = sale.items.map((item) => {
+          const product = typeof item.product === 'object' && item.product ? item.product : undefined;
+          const productId = typeof item.product === 'string' ? item.product : product?._id || null;
+          const itemType = item.itemType || (productId ? 'inventory' : 'non_stock_product');
+          const rate = item.rate ?? item.unitPrice ?? 0;
+          return calculatePOSItemAmounts({
+            id: crypto.randomUUID(),
+            productId,
+            productRef: productId,
+            product,
+            itemType,
+            affectsInventory: item.affectsInventory ?? itemType === 'inventory',
+            itemCode: item.sku || '',
+            itemName: item.itemName || item.name || product?.name || 'Custom Item',
+            name: item.name || item.itemName || product?.name || 'Custom Item',
+            description: item.description || '',
+            customItem: itemType !== 'inventory',
+            quantity: item.quantity,
+            unit: 'Pcs',
+            pricePerUnit: rate,
+            rate,
+            purchasePrice: item.purchasePrice || 0,
+            taxPercent: item.taxRate || item.gstRate || 0,
+            taxRate: item.taxRate || item.gstRate || 0,
+            taxableAmount: item.taxableAmount || 0,
+            taxAmount: item.taxAmount || 0,
+            total: item.totalAmount ?? item.total ?? 0,
+            totalAmount: item.totalAmount ?? item.total ?? 0,
+            discount: item.discount || 0,
+            isInclusive: false,
+            incomeLedger: item.incomeLedger || null,
+          });
+        });
 
         return {
           ...bill,
@@ -205,67 +277,55 @@ export const usePOSStore = create<POSStore>((set, get) => ({
     set((state) => {
       const newItem: POSItem = {
         id: crypto.randomUUID(),
+        productId: null,
+        productRef: null,
+        itemType: 'inventory',
+        affectsInventory: true,
         itemCode: '',
         itemName: '',
+        name: '',
+        description: '',
         customItem: false,
         quantity: 1,
         unit: 'Pcs',
         pricePerUnit: 0,
+        rate: 0,
         purchasePrice: 0,
         taxPercent: 0,
+        taxRate: 0,
+        taxableAmount: 0,
         taxAmount: 0,
         total: 0,
+        totalAmount: 0,
         discount: 0,
         isInclusive: false,
+        incomeLedger: null,
         ...itemData,
       };
 
-      // Calculate totals (with discount)
-      const baseAmt = newItem.quantity * newItem.pricePerUnit;
-      const discountAmt = baseAmt * (newItem.discount / 100);
-      const afterDiscount = baseAmt - discountAmt;
-      if (newItem.isInclusive && newItem.taxPercent > 0) {
-        const baseWithoutTax = afterDiscount / (1 + newItem.taxPercent / 100);
-        newItem.taxAmount = afterDiscount - baseWithoutTax;
-        newItem.total = afterDiscount;
-      } else {
-        newItem.taxAmount = afterDiscount * (newItem.taxPercent / 100);
-        newItem.total = afterDiscount + newItem.taxAmount;
-      }
+      const calculatedItem = calculatePOSItemAmounts(newItem);
 
       return {
         bills: state.bills.map((b) => {
           if (b.id !== state.activeBillId) return b;
           
           // Check if item already exists (if it's a product)
-          if (newItem.productId) {
-            const existingIndex = b.items.findIndex(i => i.productId === newItem.productId);
+          if (calculatedItem.itemType === 'inventory' && calculatedItem.productId) {
+            const existingIndex = b.items.findIndex(i => i.itemType === 'inventory' && i.productId === calculatedItem.productId);
             if (existingIndex >= 0) {
               const items = [...b.items];
               const existing = items[existingIndex];
-              items[existingIndex] = {
+              items[existingIndex] = calculatePOSItemAmounts({
                 ...existing,
                 quantity: existing.quantity + 1,
-              };
-              // Recalculate
-              const eBase = items[existingIndex].quantity * items[existingIndex].pricePerUnit;
-              const eDiscAmt = eBase * (items[existingIndex].discount / 100);
-              const eAfterDisc = eBase - eDiscAmt;
-              if (items[existingIndex].isInclusive && items[existingIndex].taxPercent > 0) {
-                const eBaseWithoutTax = eAfterDisc / (1 + items[existingIndex].taxPercent / 100);
-                items[existingIndex].taxAmount = eAfterDisc - eBaseWithoutTax;
-                items[existingIndex].total = eAfterDisc;
-              } else {
-                items[existingIndex].taxAmount = eAfterDisc * (items[existingIndex].taxPercent / 100);
-                items[existingIndex].total = eAfterDisc + items[existingIndex].taxAmount;
-              }
+              });
               return { ...b, items, selectedRowIndex: existingIndex };
             }
           }
           
           return {
             ...b,
-            items: [...b.items, newItem],
+            items: [...b.items, calculatedItem],
             selectedRowIndex: b.items.length - 1, // Keep focus on the row we just added
           };
         })
@@ -282,19 +342,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
           items: b.items.map((item) => {
             if (item.id !== id) return item;
             const updated = { ...item, ...updates };
-            // Recalculate with discount
-            const baseAmt = updated.quantity * updated.pricePerUnit;
-            const discountAmt = baseAmt * (updated.discount / 100);
-            const afterDiscount = baseAmt - discountAmt;
-            if (updated.isInclusive && updated.taxPercent > 0) {
-              const baseWithoutTax = afterDiscount / (1 + updated.taxPercent / 100);
-              updated.taxAmount = afterDiscount - baseWithoutTax;
-              updated.total = afterDiscount;
-            } else {
-              updated.taxAmount = afterDiscount * (updated.taxPercent / 100);
-              updated.total = afterDiscount + updated.taxAmount;
-            }
-            return updated;
+            return calculatePOSItemAmounts(updated);
           })
         };
       })
@@ -315,49 +363,25 @@ export const usePOSStore = create<POSStore>((set, get) => ({
         ...updates,
       };
 
-      // Calculate totals with discount
-      const baseAmt = updatedItem.quantity * updatedItem.pricePerUnit;
-      const discountAmt = baseAmt * (updatedItem.discount / 100);
-      const afterDiscount = baseAmt - discountAmt;
-      if (updatedItem.isInclusive && updatedItem.taxPercent > 0) {
-        const baseWithoutTax = afterDiscount / (1 + updatedItem.taxPercent / 100);
-        updatedItem.taxAmount = afterDiscount - baseWithoutTax;
-        updatedItem.total = afterDiscount;
-      } else {
-        updatedItem.taxAmount = afterDiscount * (updatedItem.taxPercent / 100);
-        updatedItem.total = afterDiscount + updatedItem.taxAmount;
-      }
+      const calculatedItem = calculatePOSItemAmounts(updatedItem);
 
-      let updatedItems = [...activeBill.items];
-      updatedItems[itemIndex] = updatedItem;
+      const updatedItems = [...activeBill.items];
+      updatedItems[itemIndex] = calculatedItem;
 
       let selectedIndex = itemIndex;
-      if (updatedItem.productId) {
+      if (calculatedItem.itemType === 'inventory' && calculatedItem.productId) {
         const duplicateIndex = updatedItems.findIndex(
-          (i, idx) => idx !== itemIndex && i.productId === updatedItem.productId
+          (i, idx) => idx !== itemIndex && i.itemType === 'inventory' && i.productId === calculatedItem.productId
         );
 
         if (duplicateIndex >= 0) {
           const existing = updatedItems[duplicateIndex];
-          const newQty = existing.quantity + updatedItem.quantity;
+          const newQty = existing.quantity + calculatedItem.quantity;
           
-          const mergedItem = {
+          const mergedItem = calculatePOSItemAmounts({
             ...existing,
             quantity: newQty,
-          };
-
-          // Recalculate merged totals
-          const eBase = mergedItem.quantity * mergedItem.pricePerUnit;
-          const eDiscAmt2 = eBase * (mergedItem.discount / 100);
-          const eAfterDisc2 = eBase - eDiscAmt2;
-          if (mergedItem.isInclusive && mergedItem.taxPercent > 0) {
-            const eBaseWithoutTax = eAfterDisc2 / (1 + mergedItem.taxPercent / 100);
-            mergedItem.taxAmount = eAfterDisc2 - eBaseWithoutTax;
-            mergedItem.total = eAfterDisc2;
-          } else {
-            mergedItem.taxAmount = eAfterDisc2 * (mergedItem.taxPercent / 100);
-            mergedItem.total = eAfterDisc2 + mergedItem.taxAmount;
-          }
+          });
 
           updatedItems[duplicateIndex] = mergedItem;
           selectedIndex = duplicateIndex;

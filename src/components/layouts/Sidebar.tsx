@@ -79,12 +79,14 @@ const navEntries: NavEntry[] = [
     ],
   },
   {
-    label: "Items",
+    label: "Inventory Master",
     icon: Package,
     children: [
       { label: "Products", href: "/products", icon: Package },
       { label: "Categories", href: "/categories", icon: Tags },
       { label: "Subcategories", href: "/subcategories", icon: Layers },
+      { label: "Opening Stock", href: "/inventory/opening-stock", icon: Boxes },
+      { label: "Inventory Manager", href: "/inventory", icon: Warehouse },
     ],
   },
   {
@@ -98,23 +100,23 @@ const navEntries: NavEntry[] = [
     ],
   },
   {
-    label: "Purchase & Expense",
+    label: "Purchase",
     icon: Receipt,
     children: [
       { label: "Purchase Bills", href: "/purchases", icon: FileText },
       { label: "Payment-Out", href: "/purchases/payment-out", icon: Wallet },
-      { label: "Expenses", href: "/expenses", icon: IndianRupee },
+      // { label: "Expenses", href: "/expenses", icon: IndianRupee },
       { label: "Purchase Return / Debit Note", href: "/purchases/return", icon: Receipt },
     ],
   },
-  {
-    label: "Inventory",
-    icon: Warehouse,
-    children: [
-      { label: "Inventory Manager", href: "/inventory", icon: Warehouse },
-      { label: "Opening Stock", href: "/inventory/opening-stock", icon: Boxes },
-    ],
-  },
+  // {
+  //   label: "Inventory",
+  //   icon: Warehouse,
+  //   children: [
+  //     { label: "Inventory Manager", href: "/inventory", icon: Warehouse },
+  //     { label: "Opening Stock", href: "/inventory/opening-stock", icon: Boxes },
+  //   ],
+  // },
   {
     label: "Cash & Bank",
     icon: Wallet,
@@ -124,6 +126,14 @@ const navEntries: NavEntry[] = [
       { label: "Cash", href: "/cash", icon: IndianRupee },
       { label: "Cheques", href: "/cheques", icon: Receipt },
       { label: "Loan Accounts", href: "/loans", icon: Building },
+    ],
+  },
+  {
+    label: "Expenses / Income",
+    icon: ArrowDownUp,
+    children: [
+      { label: "Expenses", href: "/expenses", icon: IndianRupee },
+      { label: "Income", href: "/expenses/income", icon: Wallet },
     ],
   },
   {

@@ -12,7 +12,7 @@ export function thermalPageStyle(width: ThermalWidth): string {
 }
 
 export const a4PageStyle = `
-  @page { size: A4; margin: 12mm; }
+  @page { size: A4; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .print-a4 { width: 100% !important; max-width: 186mm !important; margin: 0 auto !important; box-shadow: none !important; }

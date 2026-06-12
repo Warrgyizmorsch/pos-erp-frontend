@@ -160,12 +160,20 @@ function POSRightPanelContent() {
           const discountAmount = base * (i.discount / 100);
           const taxableAmount = i.isInclusive ? Math.max(0, i.total - i.taxAmount) : Math.max(0, base - discountAmount);
           const split = splitLineTax(i.taxAmount || 0);
+          const isInventory = i.itemType === "inventory";
+          const productId = isInventory ? i.productId : null;
 
           return {
-            product: i.productId || undefined,
+            product: productId,
+            productId,
+            itemType: i.itemType || "inventory",
+            affectsInventory: isInventory,
+            itemName: i.itemName,
             name: i.itemName,
+            description: i.description || "",
             sku: i.itemCode,
             quantity: i.quantity,
+            rate: i.pricePerUnit,
             unitPrice: i.pricePerUnit,
             purchasePrice: i.purchasePrice,
             discount: i.discount,
@@ -173,13 +181,15 @@ function POSRightPanelContent() {
             gstRate: i.taxPercent,
             taxableAmount,
             taxAmount: i.taxAmount,
+            totalAmount: i.total,
             cgst: split.cgst,
             cgstAmount: split.cgst,
             sgst: split.sgst,
             sgstAmount: split.sgst,
             igst: split.igst,
             igstAmount: split.igst,
-            hsn: i.product?.hsnCode || "",
+            hsn: isInventory ? i.product?.hsnCode || "" : "",
+            incomeLedger: i.itemType === "service" ? i.incomeLedger || null : null,
             total: i.total,
           };
         }),

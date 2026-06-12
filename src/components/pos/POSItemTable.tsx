@@ -10,7 +10,20 @@ import type { Customer, Product } from "@/types";
 import { toast } from "sonner";
 import { SimpleProductModal } from "@/components/shared/SimpleProductModal";
 import { CustomerModal } from "@/components/shared/CustomerModal";
+import { AddCustomItemModal } from "@/components/pos/AddCustomItemModal";
 
+
+const getItemTypeLabel = (item: POSItem) => {
+  if (item.itemType === "service") return "Service";
+  if (item.itemType === "non_stock_product") return "Non-Stock";
+  return "Inventory";
+};
+
+const getItemTypeClass = (item: POSItem) => {
+  if (item.itemType === "service") return "bg-sky-500/10 text-sky-600 border-sky-500/20";
+  if (item.itemType === "non_stock_product") return "bg-violet-500/10 text-violet-600 border-violet-500/20";
+  return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+};
 
 const TableCellInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => {
   return (
@@ -27,7 +40,7 @@ const TableCellInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
 });
 TableCellInput.displayName = "TableCellInput";
 
-function POSBillTopBar() {
+function POSBillTopBar({ onAddCustomItem }: { onAddCustomItem: () => void }) {
   const { bills, activeBillId, setActiveBill, createNewBill, closeBill, getActiveBill, setCustomer } = usePOSStore();
   const bill = getActiveBill();
 
@@ -117,6 +130,13 @@ function POSBillTopBar() {
             <Plus className="h-3.5 w-3.5" />
             New Bill
             <span className="text-[9px] opacity-70 font-mono ml-0.5 hidden sm:inline">Ctrl+T</span>
+          </button>
+          <button
+            onClick={onAddCustomItem}
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-border/70 bg-card px-2.5 text-xs font-bold text-foreground shadow-sm transition-colors hover:bg-muted"
+          >
+            <PackagePlus className="h-3.5 w-3.5" />
+            Add Custom Item
           </button>
         </div>
 
@@ -246,6 +266,7 @@ export function POSItemTable() {
   const resetBarcodeScannerRef = useRef<(() => void) | null>(null);
 
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showCustomItemModal, setShowCustomItemModal] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
 
   const debouncedBarcodeQuery = useDebounce(barcodeQuery, 250);
@@ -305,13 +326,20 @@ export function POSItemTable() {
       const p = await productService.getPricing(product._id);
       updateItemProduct(targetItemId, {
         productId: product._id,
+        productRef: product._id,
         product,
+        itemType: "inventory",
+        affectsInventory: true,
         itemCode: product.sku,
         itemName: product.name,
+        name: product.name,
+        description: product.description || "",
         barcode: product.barcode,
         pricePerUnit: p.salesPrice ?? price,
+        rate: p.salesPrice ?? price,
         purchasePrice: p.purchasePrice ?? 0,
         taxPercent: p.taxPercent ?? tax,
+        taxRate: p.taxPercent ?? tax,
         unit: product.unit || "Pcs",
         isInclusive: p.salesTaxType === "with",
         customItem: false,
@@ -320,13 +348,20 @@ export function POSItemTable() {
     } catch {
       updateItemProduct(targetItemId, {
         productId: product._id,
+        productRef: product._id,
         product,
+        itemType: "inventory",
+        affectsInventory: true,
         itemCode: product.sku,
         itemName: product.name,
+        name: product.name,
+        description: product.description || "",
         barcode: product.barcode,
         pricePerUnit: price,
+        rate: price,
         purchasePrice: 0,
         taxPercent: tax,
+        taxRate: tax,
         unit: product.unit || "Pcs",
         isInclusive: incl,
         customItem: false,
@@ -357,12 +392,19 @@ export function POSItemTable() {
             // All rows filled, add a new item
             addItem({
               productId: match._id,
+              productRef: match._id,
               product: match,
+              itemType: "inventory",
+              affectsInventory: true,
               itemCode: match.sku,
               itemName: match.name,
+              name: match.name,
+              description: match.description || "",
               barcode: match.barcode,
               pricePerUnit: match.salesPrice || 0,
+              rate: match.salesPrice || 0,
               taxPercent: match.taxRate || 0,
+              taxRate: match.taxRate || 0,
               unit: match.unit || "Pcs",
             });
             toast.success(`Scanned: ${match.name}`);
@@ -484,7 +526,7 @@ export function POSItemTable() {
 
   return (
     <div ref={barcodeDropdownRef} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
-      <POSBillTopBar />
+      <POSBillTopBar onAddCustomItem={() => setShowCustomItemModal(true)} />
 
       {/* Mobile Card-based Cart List */}
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background p-3 lg:hidden">
@@ -515,7 +557,13 @@ export function POSItemTable() {
                       {item.barcode || item.itemCode || "—"}
                     </span>
                   </div>
-                  <h4 className="text-sm font-bold text-foreground mt-1.5">{item.itemName || "—"}</h4>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <h4 className="text-sm font-bold text-foreground">{item.itemName || "—"}</h4>
+                    <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-black uppercase", getItemTypeClass(item))}>
+                      {getItemTypeLabel(item)}
+                    </span>
+                  </div>
+                  {item.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>}
                 </div>
                 
                 <button
@@ -724,6 +772,14 @@ export function POSItemTable() {
                     )}>
                       {isPlaceholder ? "" : (item.itemName || "—")}
                     </span>
+                    {!isPlaceholder && (
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase leading-none", getItemTypeClass(item))}>
+                          {getItemTypeLabel(item)}
+                        </span>
+                        {item.description && <span className="truncate text-[9px] text-muted-foreground">{item.description}</span>}
+                      </div>
+                    )}
                   </td>
 
                   {/* Qty */}
@@ -871,18 +927,31 @@ export function POSItemTable() {
             } else {
               addItem({
                 productId: product._id,
+                productRef: product._id,
                 product,
+                itemType: "inventory",
+                affectsInventory: true,
                 itemCode: product.sku,
                 itemName: product.name,
+                name: product.name,
+                description: product.description || "",
                 barcode: product.barcode,
                 pricePerUnit: product.salesPrice || 0,
+                rate: product.salesPrice || 0,
                 taxPercent: product.taxRate || 0,
+                taxRate: product.taxRate || 0,
                 unit: product.unit || "Pcs",
               });
             }
           }
           toast.success("Product created and added to cart!");
         }}
+      />
+
+      <AddCustomItemModal
+        open={showCustomItemModal}
+        onOpenChange={setShowCustomItemModal}
+        onAdd={(item) => addItem(item)}
       />
 
       {/* Action Modals for keyboard shortcuts */}
@@ -909,6 +978,7 @@ function ModifyItemModal({ item, onClose }: ModifyItemModalProps) {
   const [discPercent, setDiscPercent] = useState(0);
   const [discRupee, setDiscRupee] = useState(0);
   const [newPrice, setNewPrice] = useState(0);
+  const [taxPercent, setTaxPercent] = useState(0);
   const [freeQty, setFreeQty] = useState(0);
   const [updatePermanently, setUpdatePermanently] = useState(false);
 
@@ -921,6 +991,7 @@ function ModifyItemModal({ item, onClose }: ModifyItemModalProps) {
     setDiscPercent(item.discount || 0);
     setDiscRupee(0);
     setNewPrice(item.pricePerUnit);
+    setTaxPercent(item.taxPercent || 0);
     setFreeQty(0);
   }, [item]);
 
@@ -943,7 +1014,10 @@ function ModifyItemModal({ item, onClose }: ModifyItemModalProps) {
       quantity: qty,
       unit,
       pricePerUnit: newPrice,
+      rate: newPrice,
       discount: discPercent,
+      taxPercent,
+      taxRate: taxPercent,
     });
     toast.success(`Updated ${item.itemName}`);
     onClose();
@@ -1069,6 +1143,21 @@ function ModifyItemModal({ item, onClose }: ModifyItemModalProps) {
                 />
               </div>
             </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">GST %</label>
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                value={taxPercent || ""}
+                onChange={(e) => setTaxPercent(Math.max(0, Number(e.target.value)))}
+                placeholder="0"
+                className="w-full h-11 px-3 text-sm font-medium bg-muted/30 border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">Free Quantity</label>
               <input

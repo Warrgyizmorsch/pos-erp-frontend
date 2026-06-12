@@ -23,12 +23,12 @@ export const purchaseService = {
 
   create: async (payload: Record<string, unknown>): Promise<Purchase> => {
     const { data } = await api.post<ApiResponse<Purchase>>("/purchases", payload);
-    return data.data;
+    return { ...data.data, createdProducts: (data as any).createdProducts, reusedProducts: (data as any).reusedProducts } as Purchase;
   },
 
   update: async (id: string, payload: Record<string, unknown>): Promise<Purchase> => {
     const { data } = await api.put<ApiResponse<Purchase>>(`/purchases/${id}`, payload);
-    return data.data;
+    return { ...data.data, createdProducts: (data as any).createdProducts, reusedProducts: (data as any).reusedProducts } as Purchase;
   },
 
   delete: async (id: string): Promise<void> => {
@@ -41,7 +41,7 @@ export const purchaseService = {
       ...payload,
       status: "draft",
     });
-    return data.data;
+    return { ...data.data, createdProducts: (data as any).createdProducts, reusedProducts: (data as any).reusedProducts } as Purchase;
   },
 
   getDrafts: async (): Promise<{ data: Purchase[]; pagination: Pagination }> => {

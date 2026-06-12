@@ -42,6 +42,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -115,12 +116,19 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-const amount = (value: number) => (value ? formatAccountingMoney(value) : "-");
+const amount = (value: number) => formatAccountingMoney(Number(value || 0));
 const money = (value: number | undefined | null) => formatAccountingMoney(Number(value || 0));
-const moneyOrDash = (value: number | undefined | null) => Number(value || 0) ? money(value) : "-";
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const label = (key: string) => key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()).trim();
 const columns = (keys: string[]): ReportColumn[] => keys.map((key) => ({ key, label: label(key) }));
+const moneyKey = (key: string) => ["amount", "tax", "total", "value", "cgst", "sgst", "igst", "debit", "credit", "balance", "payable", "itc", "taxable"].some((part) => key.toLowerCase().includes(part));
+const textFallback = (key: string, value: unknown) => {
+  if (value === undefined || value === null || value === "") {
+    if (key.toLowerCase().includes("hsn")) return "Unclassified";
+    return "-";
+  }
+  return String(value);
+};
 
 type PreparedGSTReport = {
   title: string;
@@ -221,13 +229,19 @@ function GenericTable({ rows }: { rows: Array<Record<string, any>> }) {
     );
   }
   const keys = Object.keys(rows[0]).slice(0, 12);
+  const totals = keys.reduce<Record<string, number>>((acc, key) => {
+    if (!moneyKey(key)) return acc;
+    acc[key] = rows.reduce((sum, row) => sum + (typeof row[key] === "number" ? Number(row[key] || 0) : 0), 0);
+    return acc;
+  }, {});
+  const hasTotals = Object.keys(totals).some((key) => totals[key] !== 0);
   return (
     <Card className="rounded-lg">
       <CardContent className="overflow-x-auto p-0">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-card">
             <TableRow>
-              {keys.map((key) => <TableHead key={key}>{key.replace(/([A-Z])/g, " $1")}</TableHead>)}
+              {keys.map((key) => <TableHead key={key} className={moneyKey(key) ? "text-right" : ""}>{label(key)}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -235,17 +249,33 @@ function GenericTable({ rows }: { rows: Array<Record<string, any>> }) {
               <TableRow key={index}>
                 {keys.map((key) => {
                   const value = row[key];
-                  const isMoney = ["amount", "tax", "total", "value", "cgst", "sgst", "igst", "debit", "credit", "balance", "payable", "itc"].some((part) => key.toLowerCase().includes(part));
+                  const isMoney = moneyKey(key);
                   const isDate = key.toLowerCase().includes("date");
+                  const isSeverity = key.toLowerCase().includes("severity");
+                  const isStatus = key.toLowerCase().includes("status");
                   return (
                     <TableCell key={key} className={isMoney ? "text-right" : ""}>
-                      {isDate ? formatAccountingDate(value) : isMoney && typeof value === "number" ? amount(value) : String(value ?? "-")}
+                      {isDate ? formatAccountingDate(value)
+                        : isMoney && typeof value === "number" ? amount(value)
+                        : isSeverity || isStatus ? <Badge variant={String(value).toLowerCase().includes("high") || String(value).toLowerCase().includes("error") ? "destructive" : "outline"}>{textFallback(key, value)}</Badge>
+                        : textFallback(key, value)}
                     </TableCell>
                   );
                 })}
               </TableRow>
             ))}
           </TableBody>
+          {hasTotals && (
+            <TableFooter>
+              <TableRow>
+                {keys.map((key, index) => (
+                  <TableCell key={key} className={moneyKey(key) ? "text-right" : ""}>
+                    {index === 0 ? "Total" : moneyKey(key) ? money(totals[key]) : ""}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </CardContent>
     </Card>
@@ -332,7 +362,10 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
   }, [endDate, kind, startDate]);
 
   useEffect(() => {
-    void load();
+    const timer = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   const prepareCurrentReport = () => data ? prepareGSTReport(kind, data, info, startDate, endDate) : null;

@@ -267,10 +267,10 @@ export default function SalesPage() {
                   <tbody>
                     {selectedSale.items.map((item, idx) => (
                       <tr key={idx} className="border-b last:border-0">
-                        <td className="p-3">{item.name}</td>
+                        <td className="p-3">{item.itemName || item.name || "Custom Item"}</td>
                         <td className="p-3 text-center">{item.quantity}</td>
-                        <td className="p-3 text-right">{formatCurrency(item.unitPrice)}</td>
-                        <td className="p-3 text-right font-medium">{formatCurrency(item.total)}</td>
+                        <td className="p-3 text-right">{formatCurrency(item.rate ?? item.unitPrice ?? 0)}</td>
+                        <td className="p-3 text-right font-medium">{formatCurrency(item.totalAmount ?? item.total ?? 0)}</td>
                       </tr>
                     ))}
                   </tbody>

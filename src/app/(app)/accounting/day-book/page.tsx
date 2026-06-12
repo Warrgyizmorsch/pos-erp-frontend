@@ -95,7 +95,12 @@ export default function DayBookPage() {
       const key = entry.date.slice(0, 10);
       groups.set(key, [...(groups.get(key) || []), entry]);
     });
-    return Array.from(groups.entries());
+    return Array.from(groups.entries()).map(([date, entries]) => ({
+      date,
+      entries,
+      debit: entries.reduce((sum, entry) => sum + Number(entry.debit || 0), 0),
+      credit: entries.reduce((sum, entry) => sum + Number(entry.credit || 0), 0),
+    }));
   }, [dayBook]);
 
   const exportRows = useMemo(() => (dayBook?.entries || []).map((entry) => ({
@@ -191,15 +196,14 @@ export default function DayBookPage() {
           <CardHeader>
             <CardTitle>Posted Entries</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="overflow-x-auto p-0">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-card">
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Voucher Type</TableHead>
                   <TableHead>Voucher No</TableHead>
-                  <TableHead>Ledger / Party</TableHead>
-                  <TableHead>Reference No</TableHead>
+                  <TableHead>Voucher Type</TableHead>
+                  <TableHead>Party / Ledger</TableHead>
                   <TableHead>Narration</TableHead>
                   <TableHead className="text-right">Debit</TableHead>
                   <TableHead className="text-right">Credit</TableHead>
@@ -208,20 +212,19 @@ export default function DayBookPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {entriesByDate.flatMap(([date, entries]) => [
-                  <TableRow key={`date-${date}`} className="bg-muted/40">
-                    <TableCell colSpan={10} className="font-semibold">{formatAccountingDate(date)}</TableCell>
+                {entriesByDate.flatMap((group) => [
+                  <TableRow key={`date-${group.date}`} className="bg-muted/40">
+                    <TableCell colSpan={9} className="font-semibold">{formatAccountingDate(group.date)}</TableCell>
                   </TableRow>,
-                  ...entries.map((entry) => (
+                  ...group.entries.map((entry) => (
                     <TableRow key={`${entry.voucherId}-${entry.ledgerId || entry.ledgerName}-${entry.debit}-${entry.credit}`}>
                       <TableCell>{formatAccountingDate(entry.date)}</TableCell>
-                      <TableCell>{entry.voucherTypeCode}</TableCell>
                       <TableCell className="font-medium">{entry.voucherNo}</TableCell>
+                      <TableCell><Badge variant="outline">{entry.voucherTypeCode}</Badge></TableCell>
                       <TableCell>{entry.ledgerName}</TableCell>
-                      <TableCell>{entry.referenceNo || "-"}</TableCell>
-                      <TableCell className="max-w-[280px] truncate">{entry.narration || "-"}</TableCell>
-                      <TableCell className="text-right">{entry.debit ? formatAccountingMoney(entry.debit) : "-"}</TableCell>
-                      <TableCell className="text-right">{entry.credit ? formatAccountingMoney(entry.credit) : "-"}</TableCell>
+                      <TableCell className="max-w-[280px] truncate">{entry.narration || entry.referenceNo || "-"}</TableCell>
+                      <TableCell className="text-right">{formatAccountingMoney(entry.debit || 0)}</TableCell>
+                      <TableCell className="text-right">{formatAccountingMoney(entry.credit || 0)}</TableCell>
                       <TableCell><Badge variant={voucherStatusVariant(entry.status)}>{entry.status}</Badge></TableCell>
                       <TableCell>
                         <Button variant="outline" size="icon-sm" title="View voucher">
@@ -230,10 +233,16 @@ export default function DayBookPage() {
                       </TableCell>
                     </TableRow>
                   )),
+                  <TableRow key={`total-${group.date}`} className="bg-muted/20 font-semibold">
+                    <TableCell colSpan={5}>Day Total</TableCell>
+                    <TableCell className="text-right">{formatAccountingMoney(group.debit)}</TableCell>
+                    <TableCell className="text-right">{formatAccountingMoney(group.credit)}</TableCell>
+                    <TableCell colSpan={2}></TableCell>
+                  </TableRow>,
                 ])}
                 {dayBook?.entries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="h-28 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="h-28 text-center text-muted-foreground">
                       No posted day book entries found.
                     </TableCell>
                   </TableRow>
@@ -241,7 +250,7 @@ export default function DayBookPage() {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={6}>Totals</TableCell>
+                  <TableCell colSpan={5}>Grand Total</TableCell>
                   <TableCell className="text-right">{formatAccountingMoney(dayBook?.totals.totalDebit || 0)}</TableCell>
                   <TableCell className="text-right">{formatAccountingMoney(dayBook?.totals.totalCredit || 0)}</TableCell>
                   <TableCell colSpan={2} />

@@ -31,6 +31,11 @@ import {
 import { accountingService, type AccountingAuditLog } from "@/services/accountingService";
 
 const pretty = (value?: Record<string, unknown>) => JSON.stringify(value || {}, null, 2);
+const compact = (value?: Record<string, unknown>) => {
+  if (!value || Object.keys(value).length === 0) return "-";
+  const text = JSON.stringify(value);
+  return text.length > 80 ? `${text.slice(0, 80)}...` : text;
+};
 
 export default function AccountingAuditLogsPage() {
   const [logs, setLogs] = useState<AccountingAuditLog[]>([]);
@@ -109,16 +114,18 @@ export default function AccountingAuditLogsPage() {
       </Card>
 
       <Card className="rounded-lg">
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card">
               <TableRow>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Action</TableHead>
                 <TableHead>Module</TableHead>
-                <TableHead>Reference No</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead>Reference</TableHead>
+                <TableHead>Old Value</TableHead>
+                <TableHead>New Value</TableHead>
+                <TableHead>IP / Device</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,8 +136,16 @@ export default function AccountingAuditLogsPage() {
                   <TableCell>{log.user?.name || log.userName || "-"}</TableCell>
                   <TableCell><Badge variant="outline">{log.action}</Badge></TableCell>
                   <TableCell>{log.module}</TableCell>
-                  <TableCell>{log.referenceNo || log.referenceId || "-"}</TableCell>
-                  <TableCell className="max-w-[360px] truncate">{log.description}</TableCell>
+                  <TableCell>
+                    <p className="font-medium">{log.referenceNo || log.referenceId || "-"}</p>
+                    <p className="max-w-[260px] truncate text-xs text-muted-foreground">{log.description || "-"}</p>
+                  </TableCell>
+                  <TableCell className="max-w-[240px] truncate font-mono text-xs">{compact(log.oldData)}</TableCell>
+                  <TableCell className="max-w-[240px] truncate font-mono text-xs">{compact(log.newData)}</TableCell>
+                  <TableCell>
+                    <p>{log.ipAddress || "-"}</p>
+                    <p className="max-w-[220px] truncate text-xs text-muted-foreground">{log.userAgent || "-"}</p>
+                  </TableCell>
                   <TableCell>
                     <Button variant="outline" size="icon-sm" title="View details" onClick={() => setSelected(log)}>
                       <Eye className="h-4 w-4" />
@@ -140,7 +155,7 @@ export default function AccountingAuditLogsPage() {
               ))}
               {logs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No accounting audit logs found.</TableCell>
+                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">No accounting audit logs found.</TableCell>
                 </TableRow>
               )}
             </TableBody>

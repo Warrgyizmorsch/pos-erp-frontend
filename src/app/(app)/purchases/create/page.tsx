@@ -942,10 +942,6 @@ export default function CreatePurchasePage() {
     if (status === "confirmed" && paymentMethod !== "cash" && !cashBankAccountId) {
       toast.error("Please select a bank account for non-cash payment"); return;
     }
-    if (validItems.some((i) => !i.product) && categories.length === 0) {
-      toast.error("Please create at least one category before adding new products"); return;
-    }
-
     try {
       setSaving(true);
 
@@ -963,34 +959,6 @@ export default function CreatePurchasePage() {
         finalSupplierName = matched?.name || "";
       }
 
-      const defaultCategoryId = categories[0]?._id;
-
-      const resolvedItems = await Promise.all(
-          validItems.map(async (item) => {
-            if (item.product) return item;
-
-            const taxMultiplier = 1 + item.taxRate / 100;
-            const purchasePrice = item.purchaseTaxType === "with" ? item.purchaseRate / taxMultiplier : item.purchaseRate;
-            const salesPrice = item.salesTaxType === "with" ? item.salesPrice / taxMultiplier : item.salesPrice;
-            const finalBarcode = item.barcode.trim();
-            const finalSku = item.sku.trim() || finalBarcode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
-
-            const savedProduct = await productService.create({
-              name: item.newProductName!.trim(),
-              sku: finalSku,
-              barcode: finalBarcode,
-              category: defaultCategoryId,
-              stock: 0,
-              purchasePrice,
-              salesPrice,
-              taxRate: item.taxRate,
-              unit: item.unit || "piece",
-            });
-            setProducts((prev) => [...prev, savedProduct]);
-            return { ...item, product: savedProduct };
-          })
-      );
-
       const paidAmount = editingPurchaseId && existingPayment
         ? existingPayment.amountPaid
         : status === "confirmed" ? finalTotal : 0;
@@ -998,7 +966,7 @@ export default function CreatePurchasePage() {
         ? "pending"
         : paidAmount >= finalTotal ? "paid" : paidAmount > 0 ? "partial" : "pending";
 
-      const purchaseLines = resolvedItems.map((i) => {
+      const purchaseLines = validItems.map((i) => {
         const taxMultiplier = 1 + i.taxRate / 100;
         const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
         const salesPrice = i.salesTaxType === "with" ? i.salesPrice / taxMultiplier : i.salesPrice;
@@ -1007,11 +975,19 @@ export default function CreatePurchasePage() {
         const finalAfterDisc = finalSubtotal - discountAmt;
         const taxAmt = (finalAfterDisc * i.taxRate) / 100;
         const gst = splitGST(taxAmt, stateOfSupply, businessState);
+        const itemName = i.product?.name || i.newProductName?.trim() || "";
+        const sku = i.product?.sku || i.sku?.trim() || undefined;
+        const barcode = i.product?.barcode || i.barcode?.trim() || null;
         return {
-          product: i.product!._id,
-          name: i.product!.name,
-          sku: i.product!.sku,
+          product: i.product?._id || null,
+          productId: i.product?._id || null,
+          name: itemName,
+          itemName,
+          productName: itemName,
+          sku,
+          barcode,
           quantity: i.quantity,
+          unit: i.unit || "piece",
           purchasePrice: roundMoney(purchasePrice),
           salesPrice: roundMoney(salesPrice),
           discount: i.discount,
@@ -1049,7 +1025,7 @@ export default function CreatePurchasePage() {
         purchaseDate,
         stateOfSupply,
         items: purchaseLines,
-        subtotal: resolvedItems.reduce((s, i) => {
+        subtotal: validItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
           const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
           return s + i.quantity * purchasePrice;
@@ -1058,7 +1034,7 @@ export default function CreatePurchasePage() {
         totalCgst: gstTotals.cgst,
         totalSgst: gstTotals.sgst,
         totalIgst: gstTotals.igst,
-        discountAmount: resolvedItems.reduce((s, i) => {
+        discountAmount: validItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
           const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
           const base = i.quantity * purchasePrice;
@@ -1084,7 +1060,10 @@ export default function CreatePurchasePage() {
         toast.success("Draft saved!");
       } else {
         savedPurchase = await purchaseService.create(payload);
-        toast.success(savedPurchase.accountingPosted
+        const createdCount = ((savedPurchase as any).createdProducts || []).length;
+        toast.success(createdCount > 0
+          ? `Purchase saved. ${createdCount} new product${createdCount === 1 ? "" : "s"} created.`
+          : savedPurchase.accountingPosted
           ? "Purchase saved and accounting voucher posted."
           : "Purchase created! Stock updated automatically.");
       }
@@ -1362,14 +1341,22 @@ export default function CreatePurchasePage() {
                         {item.product.name}
                       </span>
                     ) : (
-                      <TableCellInput
-                        ref={(el) => { nameRefs.current[item.id] = el; }}
-                        value={item.newProductName}
-                        onChange={(e) => updateItem(idx, "newProductName", e.target.value)}
-                        onKeyDown={(e) => handleCustomTab(e, item.id, "name", idx)}
-                        placeholder="New product name..."
-                        className="h-8 text-left text-xs font-semibold bg-amber-500/5 border border-amber-500/20 text-amber-500 placeholder:text-amber-500/40 rounded-lg px-2.5 w-full focus:bg-background focus:border-amber-500/45 focus:ring-1 focus:ring-amber-500/20 focus:shadow-sm"
-                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <TableCellInput
+                            ref={(el) => { nameRefs.current[item.id] = el; }}
+                            value={item.newProductName}
+                            onChange={(e) => updateItem(idx, "newProductName", e.target.value)}
+                            onKeyDown={(e) => handleCustomTab(e, item.id, "name", idx)}
+                            placeholder="New product name..."
+                            className="h-8 text-left text-xs font-semibold bg-amber-500/5 border border-amber-500/20 text-amber-500 placeholder:text-amber-500/40 rounded-lg px-2.5 w-full focus:bg-background focus:border-amber-500/45 focus:ring-1 focus:ring-amber-500/20 focus:shadow-sm"
+                          />
+                          {item.newProductName?.trim() && <Badge variant="outline" className="h-5 shrink-0 border-amber-500/40 px-1.5 text-[9px] font-bold text-amber-600">New</Badge>}
+                        </div>
+                        {item.newProductName?.trim() && !item.barcode.trim() && (
+                          <p className="px-1 text-[9px] font-medium text-muted-foreground">Barcode will be auto-generated</p>
+                        )}
+                      </div>
                     )}
                   </td>
 

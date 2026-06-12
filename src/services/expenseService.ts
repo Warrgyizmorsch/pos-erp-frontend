@@ -1,8 +1,15 @@
 import api from "./api";
 import type { Expense, ExpenseCategory, ApiResponse, Pagination } from "@/types";
 
+export interface LedgerOption {
+  _id: string;
+  name: string;
+  code: string;
+  ledgerType: string;
+}
+
 export const expenseService = {
-  // Expenses
+  // Expenses & Income
   getAll: async (params?: {
     page?: number;
     limit?: number;
@@ -11,6 +18,10 @@ export const expenseService = {
     startDate?: string;
     endDate?: string;
     paymentMethod?: string;
+    entryType?: string;
+    nature?: string;
+    status?: string;
+    ledgerId?: string;
   }): Promise<{ data: Expense[]; pagination: Pagination }> => {
     const { data } = await api.get<ApiResponse<Expense[]>>("/expenses", { params });
     return { data: data.data, pagination: data.pagination! };
@@ -33,6 +44,23 @@ export const expenseService = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/expenses/${id}`);
+  },
+
+  // Ledger helpers
+  getLedgersByGroup: async (groupCode: string): Promise<LedgerOption[]> => {
+    const { data } = await api.get<ApiResponse<LedgerOption[]>>("/expenses/ledgers", {
+      params: { group: groupCode },
+    });
+    return data.data;
+  },
+
+  quickCreateLedger: async (payload: {
+    name: string;
+    entryType: string;
+    nature: string;
+  }): Promise<LedgerOption> => {
+    const { data } = await api.post<ApiResponse<LedgerOption>>("/expenses/ledgers/quick-create", payload);
+    return data.data;
   },
 
   // Expense Categories
@@ -60,6 +88,7 @@ export const expenseService = {
     startDate?: string;
     endDate?: string;
     groupBy?: string;
+    entryType?: string;
   }) => {
     const { data } = await api.get("/expenses/reports/summary", { params });
     return data.data;

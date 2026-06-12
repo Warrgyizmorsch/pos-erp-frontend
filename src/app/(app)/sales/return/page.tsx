@@ -43,7 +43,10 @@ import { ReturnPrintDialog } from "@/components/print/ReturnPrintDialog";
 
 interface FormItem {
   id: string;
-  product: string;
+  product?: string | null;
+  saleItemId?: string;
+  itemType: "inventory" | "non_stock_product" | "service";
+  affectsInventory: boolean;
   barcode: string;
   itemName: string;
   soldQty: number;
@@ -56,6 +59,12 @@ interface FormItem {
   reason: "Damaged" | "Wrong item" | "Expired" | "Customer cancelled" | "Exchange" | "Other";
   stockAction: "restore_stock" | "damaged_stock" | "no_stock";
 }
+
+const getReturnItemBadge = (item: Pick<FormItem, "itemType"> | Pick<SaleReturnItem, "itemType">) => {
+  if (item.itemType === "service") return { label: "Service", className: "bg-sky-500/10 text-sky-600 border-sky-500/20" };
+  if (item.itemType === "non_stock_product") return { label: "Non-Stock", className: "bg-violet-500/10 text-violet-600 border-violet-500/20" };
+  return { label: "Inventory", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" };
+};
 
 export default function SaleReturnPage() {
   const router = useRouter();
@@ -208,7 +217,10 @@ export default function SaleReturnPage() {
       
       const formItems: FormItem[] = res.items.map((i: any) => ({
         id: crypto.randomUUID(),
-        product: i.product,
+        product: i.product || null,
+        saleItemId: i.saleItemId,
+        itemType: i.itemType || (i.product ? "inventory" : "non_stock_product"),
+        affectsInventory: Boolean(i.affectsInventory),
         barcode: i.barcode || "",
         itemName: i.itemName,
         soldQty: i.soldQty,
@@ -219,7 +231,7 @@ export default function SaleReturnPage() {
         discountAmount: i.discountAmount / i.soldQty, // Original unit discount
         taxPercent: i.taxPercent,
         reason: "Other",
-        stockAction: "restore_stock"
+        stockAction: i.affectsInventory ? (i.stockAction || "restore_stock") : "no_stock"
       }));
 
       setItems(formItems);
@@ -308,6 +320,9 @@ export default function SaleReturnPage() {
         stateOfSupply,
         items: activeItems.map(x => ({
           product: x.product,
+          saleItemId: x.saleItemId,
+          itemType: x.itemType,
+          affectsInventory: x.affectsInventory,
           barcode: x.barcode,
           itemName: x.itemName,
           soldQty: x.soldQty,
@@ -318,7 +333,7 @@ export default function SaleReturnPage() {
           discountAmount: x.discountAmount * x.returnQty,
           taxPercent: x.taxPercent,
           reason: x.reason,
-          stockAction: x.stockAction
+          stockAction: x.affectsInventory ? x.stockAction : "no_stock"
         })),
         subtotal,
         totalDiscount,
@@ -729,11 +744,15 @@ export default function SaleReturnPage() {
                         <tbody>
                           {items.map((item, idx) => {
                             const maxReturn = item.soldQty - item.alreadyReturnedQty;
+                            const badge = getReturnItemBadge(item);
                             return (
                               <tr key={item.id} className="border-b border-border/30">
                                 <td className="p-3 text-muted-foreground">{idx + 1}</td>
                                 <td className="p-3">
-                                  <p className="font-medium">{item.itemName}</p>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-medium">{item.itemName}</p>
+                                    <Badge variant="outline" className={badge.className}>{badge.label}</Badge>
+                                  </div>
                                   <span className="text-[10px] text-muted-foreground font-mono">{item.barcode}</span>
                                 </td>
                                 <td className="p-3 text-center">{item.soldQty}</td>
@@ -783,6 +802,7 @@ export default function SaleReturnPage() {
                                 <td className="p-3">
                                   <Select
                                     value={item.stockAction}
+                                    disabled={!item.affectsInventory}
                                     onValueChange={(val: any) => {
                                       setItems(prev => prev.map(o => o.id === item.id ? { ...o, stockAction: val } : o));
                                     }}
@@ -1038,7 +1058,10 @@ export default function SaleReturnPage() {
                     {selectedReturn.items.map((item, idx) => (
                       <tr key={idx} className="border-b last:border-0 border-border/30">
                         <td className="p-3">
-                          <p className="font-medium">{item.itemName}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">{item.itemName}</p>
+                            <Badge variant="outline" className={getReturnItemBadge(item).className}>{getReturnItemBadge(item).label}</Badge>
+                          </div>
                           <span className="text-[10px] text-muted-foreground font-mono">{item.barcode}</span>
                         </td>
                         <td className="p-3 text-center font-semibold">{item.returnQty}</td>

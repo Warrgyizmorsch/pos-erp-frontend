@@ -105,18 +105,33 @@ export interface Customer {
 }
 
 export interface SaleItem {
-  product: string | Product;
+  product?: string | Product | null;
+  productId?: string | null;
+  itemType?: "inventory" | "non_stock_product" | "service";
+  affectsInventory?: boolean;
+  itemName?: string;
+  description?: string;
   name: string;
   sku: string;
   quantity: number;
   unitPrice: number; // Sales Price
+  rate?: number;
   purchasePrice: number; // Avg purchase price for this transaction
   profitAmount: number;
   taxRate?: number;
+  gstRate?: number;
+  taxableAmount?: number;
+  taxAmount?: number;
   cgst?: number;
+  cgstAmount?: number;
   sgst?: number;
+  sgstAmount?: number;
   igst?: number;
+  igstAmount?: number;
+  discount?: number;
   total: number;
+  totalAmount?: number;
+  incomeLedger?: string | null;
 }
 
 export interface Sale {
@@ -358,16 +373,28 @@ export interface ExpenseCategory {
 
 export interface Expense {
   _id: string;
+  entryType: 'expense' | 'income';
+  nature: 'direct' | 'indirect';
   title: string;
   amount: number;
   category: ExpenseCategory | string;
   categoryName: string;
+  ledgerId?: string;
+  ledgerName?: string;
   date: string;
   description?: string;
   receiptImage?: string;
   paymentMethod: "cash" | "card" | "upi" | "bank_transfer";
   reference?: string;
   cashBankAccountId?: string;
+  paymentAccountId?: string;
+  gstApplicable: boolean;
+  gstRate: number;
+  gstType: 'cgst_sgst' | 'igst';
+  taxableAmount: number;
+  gstAmount: number;
+  totalAmount: number;
+  status: 'active' | 'cancelled';
   createdBy: User | string;
   accountingVoucherId?: string | {
     _id: string;
@@ -533,7 +560,10 @@ export interface BusinessProfile {
 
 // --- Sale Return / Credit Note ---
 export interface SaleReturnItem {
-  product: string | Product;
+  product?: string | Product | null;
+  saleItemId?: string;
+  itemType?: "inventory" | "non_stock_product" | "service";
+  affectsInventory?: boolean;
   barcode?: string;
   itemName: string;
   soldQty: number;

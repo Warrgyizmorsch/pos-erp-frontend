@@ -4,6 +4,10 @@ import { asNumber, printCurrency, printDateTime, printGSTIN, printQty, showValue
 
 interface Props { sale: Sale; business: BusinessProfile; width: ThermalWidth; }
 
+const getItemName = (item: Sale["items"][number]) => item.itemName || item.name || (typeof item.product === "object" ? item.product?.name : "") || "Custom Item";
+const getItemRate = (item: Sale["items"][number]) => item.rate ?? item.unitPrice ?? 0;
+const getItemTotal = (item: Sale["items"][number]) => item.totalAmount ?? item.total ?? 0;
+
 export function ThermalReceiptTemplate({ sale, business, width }: Props) {
   const padding = width === 58 ? "2.5mm" : "4mm";
   const balance = Math.max(0, asNumber(sale.totalAmount) - asNumber(sale.amountPaid));
@@ -28,12 +32,13 @@ export function ThermalReceiptTemplate({ sale, business, width }: Props) {
         <thead><tr className="border-b border-dashed border-black"><th className="pb-1 text-left">Item</th><th className="w-[30%] pb-1 text-right">Amount</th></tr></thead>
         <tbody>
           {sale.items.map((item, index) => (
-            <tr key={`${item.sku}-${index}`} className="align-top">
+            <tr key={`${item.sku || item.itemName || item.name || "item"}-${index}`} className="align-top">
               <td className="py-1 pr-1 break-words">
-                <div>{item.name}</div>
-                <div className="opacity-75">{printQty(item.quantity)} x {printCurrency(item.unitPrice)}</div>
+                <div>{getItemName(item)}</div>
+                {item.description && <div className="opacity-75">{item.description}</div>}
+                <div className="opacity-75">{printQty(item.quantity)} x {printCurrency(getItemRate(item))}</div>
               </td>
-              <td className="py-1 text-right whitespace-nowrap">{printCurrency(item.total)}</td>
+              <td className="py-1 text-right whitespace-nowrap">{printCurrency(getItemTotal(item))}</td>
             </tr>
           ))}
         </tbody>

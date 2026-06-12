@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { accountingService, type AccountingDashboard } from "@/services/accountingService";
+import { accountingService, type AccountingDashboard, type AccountingReportDashboard } from "@/services/accountingService";
 import { useAuthStore } from "@/store/authStore";
 
 const quickActions = [
@@ -65,8 +65,20 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
   );
 }
 
+function MoneyCard({ label, value }: { label: string; value: number }) {
+  return (
+    <Card className="rounded-lg">
+      <CardContent className="p-5">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="mt-2 text-xl font-semibold tracking-tight">{formatAccountingMoney(value || 0)}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AccountingPage() {
   const [dashboard, setDashboard] = useState<AccountingDashboard | null>(null);
+  const [reportDashboard, setReportDashboard] = useState<AccountingReportDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -75,8 +87,12 @@ export default function AccountingPage() {
   const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await accountingService.getAccountingDashboard();
+      const [data, reports] = await Promise.all([
+        accountingService.getAccountingDashboard(),
+        accountingService.getAccountingReportDashboard().catch(() => null),
+      ]);
       setDashboard(data);
+      setReportDashboard(reports);
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to load accounting dashboard"));
     } finally {
@@ -215,6 +231,23 @@ export default function AccountingPage() {
           ))}
         </CardContent>
       </Card>
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-base font-semibold">Financial Summary</h2>
+          <p className="text-sm text-muted-foreground">Tally-style control totals from posted accounting reports.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MoneyCard label="Cash Balance" value={reportDashboard?.cashBalance || 0} />
+          <MoneyCard label="Bank Balance" value={reportDashboard?.bankBalance || 0} />
+          <MoneyCard label="Receivables" value={reportDashboard?.receivables || 0} />
+          <MoneyCard label="Payables" value={reportDashboard?.payables || 0} />
+          <MoneyCard label="Income / Sales" value={reportDashboard?.totalIncome || 0} />
+          <MoneyCard label="Expenses / Purchases" value={reportDashboard?.totalExpenses || 0} />
+          <MoneyCard label={Number(reportDashboard?.netProfit || 0) > 0 ? "Net Profit" : "Net Loss"} value={reportDashboard?.netProfit || reportDashboard?.netLoss || 0} />
+          <MoneyCard label="Trial Balance Difference" value={reportDashboard?.trialBalanceDifference || 0} />
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <SummaryCard label="Account Groups" value={counts?.accountGroups ?? 0} />

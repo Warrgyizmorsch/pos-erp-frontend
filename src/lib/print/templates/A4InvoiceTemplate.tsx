@@ -3,6 +3,10 @@ import type { BusinessProfile, Customer, Sale } from "@/types";
 import { asNumber, printCurrency, printDate, printGSTIN, printQty, showValue } from "../printUtils";
 import { PrintAuthorizedSignature } from "./PrintBranding";
 
+const getItemName = (item: Sale["items"][number]) => item.itemName || item.name || (typeof item.product === "object" ? item.product?.name : "") || "Custom Item";
+const getItemRate = (item: Sale["items"][number]) => item.rate ?? item.unitPrice ?? 0;
+const getItemTotal = (item: Sale["items"][number]) => item.totalAmount ?? item.total ?? 0;
+
 export function A4InvoiceTemplate({ sale, business }: { sale: Sale; business: BusinessProfile }) {
   const customer = typeof sale.customer === "object" ? sale.customer as Customer : undefined;
   const due = Math.max(0, asNumber(sale.totalAmount) - asNumber(sale.amountPaid));
@@ -21,7 +25,7 @@ export function A4InvoiceTemplate({ sale, business }: { sale: Sale; business: Bu
       </section>
       <table className="w-full border-collapse text-xs">
         <thead><tr className="bg-indigo-600 text-white"><th className="p-2 text-left">#</th><th className="p-2 text-left">Item / SKU</th><th className="p-2 text-right">Qty</th><th className="p-2 text-right">Rate</th><th className="p-2 text-right">Tax</th><th className="p-2 text-right">Amount</th></tr></thead>
-        <tbody>{sale.items.map((item, i) => <tr key={`${item.sku}-${i}`} className="border-b border-slate-200"><td className="p-2">{i + 1}</td><td className="p-2"><p className="font-semibold">{item.name}</p><p className="text-slate-500">{item.sku || "-"}</p></td><td className="p-2 text-right">{printQty(item.quantity)}</td><td className="p-2 text-right">{printCurrency(item.unitPrice)}</td><td className="p-2 text-right">{item.taxRate || 0}%</td><td className="p-2 text-right font-semibold">{printCurrency(item.total)}</td></tr>)}</tbody>
+        <tbody>{sale.items.map((item, i) => <tr key={`${item.sku || item.itemName || item.name || "item"}-${i}`} className="border-b border-slate-200"><td className="p-2">{i + 1}</td><td className="p-2"><p className="font-semibold">{getItemName(item)}</p>{item.description && <p className="text-slate-500">{item.description}</p>}<p className="text-slate-500">{item.sku || "-"}</p></td><td className="p-2 text-right">{printQty(item.quantity)}</td><td className="p-2 text-right">{printCurrency(getItemRate(item))}</td><td className="p-2 text-right">{item.taxRate || item.gstRate || 0}%</td><td className="p-2 text-right font-semibold">{printCurrency(getItemTotal(item))}</td></tr>)}</tbody>
       </table>
       <section className="avoid-break mt-6 ml-auto w-[76mm] space-y-2 text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{printCurrency(sale.subtotal)}</span></div>{asNumber(sale.discountAmount) > 0 && <div className="flex justify-between text-rose-600"><span>Discount</span><span>-{printCurrency(sale.discountAmount)}</span></div>}<div className="flex justify-between"><span>Tax</span><span>{printCurrency(sale.taxAmount)}</span></div><div className="flex justify-between rounded bg-indigo-600 p-3 text-base font-bold text-white"><span>Grand Total</span><span>{printCurrency(sale.totalAmount)}</span></div></section>
       <footer className="avoid-break mt-12 flex justify-between border-t pt-5 text-xs"><div className="max-w-[90mm]"><p className="font-bold uppercase">Terms & Conditions</p><p className="mt-2 text-slate-500">{sale.notes || "Goods sold are subject to applicable terms and taxes. Thank you for your business."}</p></div><PrintAuthorizedSignature business={business} /></footer>

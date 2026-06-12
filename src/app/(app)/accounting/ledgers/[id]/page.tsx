@@ -19,6 +19,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -142,14 +143,14 @@ export default function LedgerStatementPage() {
       </Card>
 
       <Card className="rounded-lg">
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card">
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Voucher Type</TableHead>
                 <TableHead>Voucher No</TableHead>
-                <TableHead>Reference No</TableHead>
+                <TableHead>Voucher Type</TableHead>
+                <TableHead>Particulars</TableHead>
                 <TableHead>Narration</TableHead>
                 <TableHead className="text-right">Debit</TableHead>
                 <TableHead className="text-right">Credit</TableHead>
@@ -158,15 +159,28 @@ export default function LedgerStatementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {statement && (
+                <TableRow className="bg-muted/40 font-semibold">
+                  <TableCell>{startDate ? formatAccountingDate(startDate) : "-"}</TableCell>
+                  <TableCell>Opening</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>Opening Balance</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell className="text-right">₹0.00</TableCell>
+                  <TableCell className="text-right">₹0.00</TableCell>
+                  <TableCell className="text-right">{formatBalance(statement.ledger.openingBalance, statement.ledger.openingBalanceType)}</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              )}
               {(statement?.entries || []).map((entry, index) => (
                 <TableRow key={entry.entryId || `${entry.voucherId}-${index}`}>
                   <TableCell>{formatAccountingDate(entry.date)}</TableCell>
-                  <TableCell><Badge variant="outline">{entry.voucherTypeCode}</Badge></TableCell>
                   <TableCell className="font-medium">{entry.voucherNo}</TableCell>
-                  <TableCell>{entry.referenceNo || "-"}</TableCell>
+                  <TableCell><Badge variant="outline">{entry.voucherTypeCode}</Badge></TableCell>
+                  <TableCell>{entry.referenceNo || entry.voucherTypeName || "-"}</TableCell>
                   <TableCell className="max-w-[300px] truncate">{entry.narration || "-"}</TableCell>
-                  <TableCell className="text-right">{entry.debit ? formatAccountingMoney(entry.debit) : "-"}</TableCell>
-                  <TableCell className="text-right">{entry.credit ? formatAccountingMoney(entry.credit) : "-"}</TableCell>
+                  <TableCell className="text-right">{formatAccountingMoney(entry.debit || 0)}</TableCell>
+                  <TableCell className="text-right">{formatAccountingMoney(entry.credit || 0)}</TableCell>
                   <TableCell className="text-right font-medium">
                     {formatBalance(entry.runningBalance, entry.runningBalanceType)}
                   </TableCell>
@@ -185,6 +199,17 @@ export default function LedgerStatementPage() {
                 </TableRow>
               )}
             </TableBody>
+            {statement && (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>Closing Balance</TableCell>
+                  <TableCell className="text-right">{formatAccountingMoney(statement.totals.totalDebit || 0)}</TableCell>
+                  <TableCell className="text-right">{formatAccountingMoney(statement.totals.totalCredit || 0)}</TableCell>
+                  <TableCell className="text-right">{formatBalance(statement.totals.closingBalance, statement.totals.closingBalanceType)}</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableFooter>
+            )}
           </Table>
         </CardContent>
       </Card>

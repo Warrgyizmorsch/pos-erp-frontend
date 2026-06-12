@@ -42,6 +42,15 @@ const accountingColors = {
   not_posted: "bg-slate-500/10 text-slate-500 border-slate-500/20",
 };
 
+const getSaleItemName = (item: Sale["items"][number]) => item.itemName || item.name || (typeof item.product === "object" ? item.product?.name : "") || "Custom Item";
+const getSaleItemRate = (item: Sale["items"][number]) => item.rate ?? item.unitPrice ?? 0;
+const getSaleItemTotal = (item: Sale["items"][number]) => item.totalAmount ?? item.total ?? 0;
+const getSaleItemBadge = (item: Sale["items"][number]) => {
+  if (item.itemType === "service") return { label: "Service", className: "bg-sky-500/10 text-sky-600 border-sky-500/20" };
+  if (item.itemType === "non_stock_product") return { label: "Non-Stock", className: "bg-violet-500/10 text-violet-600 border-violet-500/20" };
+  return { label: "Inventory", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" };
+};
+
 export default function SaleDetailsPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
@@ -190,14 +199,24 @@ export default function SaleDetailsPage() {
             <th className="p-4 text-right font-medium text-muted-foreground">Tax</th>
             <th className="p-4 text-right font-medium text-muted-foreground">Total</th>
           </tr></thead>
-          <tbody>{sale.items.map((item, index) => <tr key={`${item.sku}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
+          <tbody>{sale.items.map((item, index) => {
+            const badge = getSaleItemBadge(item);
+            return <tr key={`${item.sku || item.itemName || item.name || "item"}-${index}`} className="border-b last:border-0 hover:bg-muted/50">
             <td className="p-4 text-muted-foreground">{index + 1}</td>
-            <td className="p-4"><p className="font-medium">{item.name}</p>{item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}</td>
+            <td className="p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{getSaleItemName(item)}</p>
+                <Badge variant="outline" className={badge.className}>{badge.label}</Badge>
+              </div>
+              {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+              {item.sku && <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>}
+            </td>
             <td className="p-4 text-center">{item.quantity}</td>
-            <td className="p-4 text-right">{formatCurrency(item.unitPrice)}</td>
-            <td className="p-4 text-right">{item.taxRate || 0}%</td>
-            <td className="p-4 text-right font-bold">{formatCurrency(item.total)}</td>
-          </tr>)}</tbody>
+            <td className="p-4 text-right">{formatCurrency(getSaleItemRate(item))}</td>
+            <td className="p-4 text-right">{item.taxRate || item.gstRate || 0}%</td>
+            <td className="p-4 text-right font-bold">{formatCurrency(getSaleItemTotal(item))}</td>
+          </tr>;
+          })}</tbody>
         </table>
       </div>
       <div className="border-t bg-muted/20 p-6">

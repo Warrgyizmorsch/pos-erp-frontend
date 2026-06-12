@@ -309,7 +309,7 @@ h6 {
 /* Print styles */
 @media print {
   @page {
-    margin: 10mm;
+    margin: 0;
     size: auto;
   }
 

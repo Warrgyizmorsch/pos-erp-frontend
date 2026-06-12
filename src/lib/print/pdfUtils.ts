@@ -101,7 +101,7 @@ export async function downloadSalePdf(sale: Sale, business: BusinessProfile) {
   pdf.setTextColor(15, 23, 42);
   pdf.text(`Customer: ${sale.customerName || "Walk-in Customer"}`, 14, 40);
   pdf.text(`Date: ${printDate(sale.createdAt)}    Payment: ${sale.paymentMethod.toUpperCase()} (${sale.paymentStatus.toUpperCase()})`, 14, 46);
-  await table(pdf, ["#", "Item / SKU", "Qty", "Rate", "Tax", "Amount"], sale.items.map((item, i) => [String(i + 1), `${item.name}\n${item.sku || ""}`, String(item.quantity), pdfCurrency(item.unitPrice), `${item.taxRate || 0}%`, pdfCurrency(item.total)]), 54);
+  await table(pdf, ["#", "Item / SKU", "Qty", "Rate", "Tax", "Amount"], sale.items.map((item, i) => [String(i + 1), `${item.itemName || item.name || "Custom Item"}\n${item.sku || ""}`, String(item.quantity), pdfCurrency(item.rate ?? item.unitPrice ?? 0), `${item.taxRate || item.gstRate || 0}%`, pdfCurrency(item.totalAmount ?? item.total ?? 0)]), 54);
   const totalY = totalBlock(pdf, [["Subtotal", pdfCurrency(sale.subtotal)], ["Discount", `- ${pdfCurrency(sale.discountAmount)}`], ["Tax", pdfCurrency(sale.taxAmount)], ["Grand Total", pdfCurrency(sale.totalAmount)]]);
   await authorizedSignature(pdf, business, totalY + 8);
   pdf.save(`Sale-Invoice-${sale.invoiceNumber}.pdf`);

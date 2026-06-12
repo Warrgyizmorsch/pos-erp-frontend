@@ -28,7 +28,7 @@ export function PrintSaleDialog({ open, onOpenChange, sale }: { open: boolean; o
 
   const print = useReactToPrint({
     contentRef: printRef,
-    documentTitle: sale ? `Sale-Invoice-${sale.invoiceNumber}` : "Sale-Invoice",
+    documentTitle: " ",
     pageStyle: format === "thermal" ? thermalPageStyle(width) : a4PageStyle,
   });
 

@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { productService } from "@/services/productService";
+import { stockService } from "@/services/stockService";
 import { categoryService } from "@/services/categoryService";
 import { subcategoryService } from "@/services/subcategoryService";
 import { ImageUploader } from "@/components/shared/ImageUploader";
@@ -552,46 +553,42 @@ export default function OpeningStockPage() {
       toast.error("Price and tax values cannot be negative"); return;
     }
 
-    const hasNewProducts = validItems.some((i) => !i.product);
-    if (hasNewProducts && categories.length === 0) {
-      toast.error("Please create at least one category before adding new products"); return;
-    }
-
     try {
       setSaving(true);
-      const defaultCategoryId = categories[0]?._id;
 
-      await Promise.all(
-        validItems.map(async (item) => {
+      const payloadItems = validItems.map((item) => {
           const taxMultiplier = 1 + item.taxRate / 100;
           const purchasePrice = item.purchaseTaxType === "with" ? item.purchaseRate / taxMultiplier : item.purchaseRate;
           const salesPrice = item.salesTaxType === "with" ? item.salesPrice / taxMultiplier : item.salesPrice;
+          const itemName = item.product?.name || item.newProductName?.trim() || "";
+          return {
+            product: item.product?._id || null,
+            productId: item.product?._id || null,
+            itemName,
+            productName: itemName,
+            name: itemName,
+            sku: item.product?.sku || item.sku.trim() || undefined,
+            barcode: item.product?.barcode || item.barcode.trim() || null,
+            unit: item.unit,
+            quantity: item.quantity,
+            purchasePrice,
+            salesPrice,
+            taxRate: item.taxRate,
+            hsnCode: null,
+            openingStockDate,
+            isNewProduct: !item.product,
+          };
+        });
 
-          if (item.product) {
-            return productService.update(item.product._id, {
-              stock: (item.product.stock || 0) + item.quantity,
-              openingStockDate,
-            });
-          } else {
-            const finalBarcode = item.barcode.trim();
-            const finalSku = item.sku.trim() || finalBarcode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
-            return productService.create({
-              name: item.newProductName!.trim(),
-              sku: finalSku,
-              barcode: finalBarcode,
-              category: defaultCategoryId,
-              stock: item.quantity,
-              purchasePrice,
-              salesPrice,
-              taxRate: item.taxRate,
-              unit: item.unit,
-              openingStockPrice: purchasePrice,
-              openingStockDate,
-            });
-          }
-        })
-      );
-      toast.success("Opening stock saved! Inventory updated.");
+      const result = await stockService.createOpeningStock({
+        openingStockDate,
+        notes,
+        items: payloadItems,
+      });
+      const createdCount = result.createdProducts.length;
+      toast.success(createdCount > 0
+        ? `Opening stock saved. ${createdCount} new product${createdCount === 1 ? "" : "s"} created.`
+        : "Opening stock saved! Inventory updated.");
       router.push("/inventory");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to save opening stock");
@@ -736,14 +733,22 @@ export default function OpeningStockPage() {
                         {item.product.name}
                       </span>
                     ) : (
-                      <TableCellInput
-                        ref={(el) => { nameRefs.current[item.id] = el; }}
-                        value={item.newProductName || ""}
-                        onChange={(e) => updateItem(idx, "newProductName", e.target.value)}
-                        onKeyDown={(e) => handleCustomTab(e, item.id, "name", idx)}
-                        placeholder="New product name..."
-                        className="h-8 text-left text-xs font-semibold bg-amber-500/5 border border-amber-500/20 text-amber-500 placeholder:text-amber-500/40 rounded-lg px-2.5 w-full focus:bg-background focus:border-amber-500/45 focus:ring-1 focus:ring-amber-500/20 focus:shadow-sm"
-                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <TableCellInput
+                            ref={(el) => { nameRefs.current[item.id] = el; }}
+                            value={item.newProductName || ""}
+                            onChange={(e) => updateItem(idx, "newProductName", e.target.value)}
+                            onKeyDown={(e) => handleCustomTab(e, item.id, "name", idx)}
+                            placeholder="New product name..."
+                            className="h-8 text-left text-xs font-semibold bg-amber-500/5 border border-amber-500/20 text-amber-500 placeholder:text-amber-500/40 rounded-lg px-2.5 w-full focus:bg-background focus:border-amber-500/45 focus:ring-1 focus:ring-amber-500/20 focus:shadow-sm"
+                          />
+                          {item.newProductName?.trim() && <Badge variant="outline" className="h-5 shrink-0 border-amber-500/40 px-1.5 text-[9px] font-bold text-amber-600">New</Badge>}
+                        </div>
+                        {item.newProductName?.trim() && !item.barcode.trim() && (
+                          <p className="px-1 text-[9px] font-medium text-muted-foreground">Auto barcode</p>
+                        )}
+                      </div>
                     )}
                   </td>
                   <td className="py-0.5 px-1 border-r border-border/15">
