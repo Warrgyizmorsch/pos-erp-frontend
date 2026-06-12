@@ -128,30 +128,30 @@ export function AddCustomItemModal({ open, onOpenChange, onAdd }: AddCustomItemM
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden bg-card border border-border">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-foreground font-bold">
             <ReceiptText className="h-5 w-5 text-primary" />
             Add Custom Item
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-muted-foreground text-xs">
             Add a non-inventory line that appears on the invoice and does not affect stock.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2 sm:grid-cols-2">
+        <div className="flex-1 overflow-y-auto grid gap-4 py-2 pr-1 sm:grid-cols-2 min-h-0">
           <div className="space-y-1.5">
-            <Label>Custom Item Type</Label>
+            <Label className="text-foreground">Custom Item Type</Label>
             <Select value={form.itemType} onValueChange={(value: CustomItemType) => setForm((prev) => ({ ...prev, itemType: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-card border-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="non_stock_product">Non-Stock Product</SelectItem>
                 <SelectItem value="service">Service / Charge</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               {form.itemType === "service"
                 ? "Posts to Service Income / Indirect Income and does not affect stock."
                 : "Posts to Sales A/c and does not affect stock."}
@@ -159,12 +159,12 @@ export function AddCustomItemModal({ open, onOpenChange, onAdd }: AddCustomItemM
           </div>
 
           <div className="space-y-1.5">
-            <Label>GST %</Label>
+            <Label className="text-foreground">GST %</Label>
             <Select value={form.taxRate} onValueChange={(value) => setForm((prev) => ({ ...prev, taxRate: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-card border-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border-border">
                 {taxOptions.map((rateOption) => (
                   <SelectItem key={rateOption} value={String(rateOption)}>{rateOption}%</SelectItem>
                 ))}
@@ -173,38 +173,41 @@ export function AddCustomItemModal({ open, onOpenChange, onAdd }: AddCustomItemM
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Item Name</Label>
+            <Label className="text-foreground">Item Name</Label>
             <Input
               value={form.itemName}
               onChange={(e) => setForm((prev) => ({ ...prev, itemName: e.target.value }))}
               placeholder="Example: Special Product / Mill Charge"
+              className="bg-card border-border"
               autoFocus
             />
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Description</Label>
+            <Label className="text-foreground">Description</Label>
             <Textarea
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Optional"
+              className="bg-card border-border"
               rows={2}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Quantity</Label>
+            <Label className="text-foreground">Quantity</Label>
             <Input
               type="number"
               min="0.01"
               step="any"
               value={form.quantity}
               onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
+              className="bg-card border-border"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Rate</Label>
+            <Label className="text-foreground">Rate</Label>
             <Input
               type="number"
               min="0"
@@ -212,11 +215,12 @@ export function AddCustomItemModal({ open, onOpenChange, onAdd }: AddCustomItemM
               value={form.rate}
               onChange={(e) => setForm((prev) => ({ ...prev, rate: e.target.value }))}
               placeholder="0.00"
+              className="bg-card border-border"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Discount %</Label>
+            <Label className="text-foreground">Discount %</Label>
             <Input
               type="number"
               min="0"
@@ -224,21 +228,22 @@ export function AddCustomItemModal({ open, onOpenChange, onAdd }: AddCustomItemM
               step="0.5"
               value={form.discount}
               onChange={(e) => setForm((prev) => ({ ...prev, discount: e.target.value }))}
+              className="bg-card border-border"
             />
           </div>
 
-          <div className="rounded-lg border bg-muted/25 p-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Taxable</span><span className="font-semibold">{formatCurrency(preview.taxableAmount)}</span></div>
-            <div className="mt-1 flex justify-between"><span className="text-muted-foreground">GST</span><span className="font-semibold">{formatCurrency(preview.taxAmount)}</span></div>
-            <div className="mt-2 flex justify-between border-t pt-2 font-bold"><span>Total</span><span>{formatCurrency(preview.totalAmount)}</span></div>
+          <div className="rounded-lg border bg-muted/25 p-3 text-sm border-border">
+            <div className="flex justify-between"><span className="text-muted-foreground">Taxable</span><span className="font-semibold text-foreground">{formatCurrency(preview.taxableAmount)}</span></div>
+            <div className="mt-1 flex justify-between"><span className="text-muted-foreground">GST</span><span className="font-semibold text-foreground">{formatCurrency(preview.taxAmount)}</span></div>
+            <div className="mt-2 flex justify-between border-t pt-2 font-bold text-foreground border-border"><span>Total</span><span>{formatCurrency(preview.totalAmount)}</span></div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} className="gap-2">
+        <DialogFooter className="shrink-0 border-t pt-3 mt-2 border-border gap-2">
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} className="gap-2 border-border hover:bg-muted text-foreground">
             <X className="h-4 w-4" /> Cancel
           </Button>
-          <Button type="button" onClick={handleAdd} className="gap-2">
+          <Button type="button" onClick={handleAdd} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
             <Plus className="h-4 w-4" /> Add Item
           </Button>
         </DialogFooter>

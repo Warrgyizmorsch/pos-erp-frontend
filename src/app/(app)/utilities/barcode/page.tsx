@@ -1,51 +1,67 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Settings, ScanBarcode, Trash2, Printer } from "lucide-react";
+import { Settings, ScanBarcode, Trash2, Printer, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import Barcode from "react-barcode";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useReactToPrint } from "react-to-print";
 import { productService } from "@/services/productService";
+import { businessService } from "@/services/businessService";
 import type { Product } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { BarcodeLabelTemplate } from "@/lib/print/templates/BarcodeLabelTemplate";
+import { BarcodeLabelTemplate, type BarcodeDisplaySettings } from "@/lib/print/templates/BarcodeLabelTemplate";
 import { barcodePageStyle, type BarcodeLabelSize, type BarcodePrinterType } from "@/lib/print/barcodePrintUtils";
 
-type BarcodeItem = {
+type BarcodeRow = {
   id: string;
-  itemName: string;
-  itemCode: string;
-  noOfLabels: number;
-  header: string;
-  line1: string;
-  line2: string;
-  line3: string;
-  line4: string;
-  selected: boolean;
+  productId: string | null;
+  productName: string;
+  productCode: string;
+  barcode: string;
+  price: number;
+  printQty: number;
 };
 
 export default function BarcodeGeneratorPage() {
-  const [form, setForm] = useState({
-    itemName: "", itemCode: "", noOfLabels: "1", header: "",
-    line1: "", line2: "", line3: "", line4: ""
+  const createBlankRow = (): BarcodeRow => ({
+    id: Math.random().toString(36).substring(7),
+    productId: null,
+    productName: "",
+    productCode: "",
+    barcode: "",
+    price: 0,
+    printQty: 1,
   });
-  
+
+  const [rows, setRows] = useState<BarcodeRow[]>([createBlankRow()]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [addedItems, setAddedItems] = useState<BarcodeItem[]>([]);
-  const [printModalOpen, setPrintModalOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [businessName, setBusinessName] = useState("ROYAL COLLECTION");
+  const [scannerInput, setScannerInput] = useState("");
   const [labelSize, setLabelSize] = useState<BarcodeLabelSize>("50x25");
+  const [layoutColumns, setLayoutColumns] = useState<number>(2); // Default: 2UP (2 labels per row)
   const [printerType, setPrinterType] = useState<BarcodePrinterType>("label");
-  const [includePrice, setIncludePrice] = useState(true);
-  const [includeSku, setIncludeSku] = useState(true);
+  
+  const [displaySettings, setDisplaySettings] = useState<BarcodeDisplaySettings>({
+    showHeader: true,
+    showItemName: true,
+    showPrice: true,
+    showBarcodeNumber: true,
+    showExtraLines: true,
+  });
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [rowSearchTerms, setRowSearchTerms] = useState<Record<string, string>>({});
+  const [activeRowSearchIdx, setActiveRowSearchIdx] = useState<number | null>(null);
+
   const printRef = useRef<HTMLDivElement>(null);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -53,324 +69,486 @@ export default function BarcodeGeneratorPage() {
     pageStyle: barcodePageStyle(labelSize, printerType),
   });
 
+  // Load products & business details on mount
   useEffect(() => {
     productService.getAll({ limit: 1000 }).then(res => {
       setProducts(res.data || []);
     }).catch(() => {});
+
+    businessService.getProfile().then(profile => {
+      if (profile && profile.businessName) {
+        setBusinessName(profile.businessName);
+      }
+    }).catch(() => {});
   }, []);
 
-  const handleAdd = () => {
-    if (!form.itemName || !form.itemCode) {
-      toast.error("Item name and code are required");
+  // Click outside listener for searchable dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setActiveRowSearchIdx(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Keyboard shortcuts (F2 to add new line, F10 to print)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        handleAddBlankRow();
+      } else if (e.key === "F10") {
+        e.preventDefault();
+        handlePrintLabels();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [rows, labelSize, printerType, displaySettings, layoutColumns, businessName]);
+
+  const handleAddBlankRow = () => {
+    setRows(prev => [...prev, createBlankRow()]);
+    toast.success("New line added");
+  };
+
+  const handlePrintLabels = () => {
+    const validCount = rows.filter(r => r.productId !== null && r.productName !== "").length;
+    if (validCount === 0) {
+      toast.error("Please add at least one valid product before printing");
       return;
     }
-    const labelCount = parseInt(form.noOfLabels);
-    if (Number.isNaN(labelCount) || labelCount <= 0) {
-      toast.error("Number of labels must be greater than 0");
-      return;
+    handlePrint();
+  };
+
+  // Barcode Scanner logic
+  const handleScannerKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const code = scannerInput.trim();
+      if (!code) return;
+
+      try {
+        // Find locally first
+        let foundProduct = products.find(p => p.barcode === code || p.sku === code);
+        
+        // Try fallback to API if not loaded
+        if (!foundProduct) {
+          try {
+            foundProduct = await productService.getByBarcode(code);
+          } catch (err) {
+            // Ignore API error
+          }
+        }
+
+        if (foundProduct) {
+          // Check if already in table
+          const existingIdx = rows.findIndex(r => r.productId === foundProduct._id);
+          
+          if (existingIdx !== -1) {
+            setRows(prev => prev.map((r, i) => i === existingIdx ? { ...r, printQty: r.printQty + 1 } : r));
+            toast.success(`Qty increased to ${rows[existingIdx].printQty + 1} for ${foundProduct.name}`);
+          } else {
+            // Add to first empty row or append new row
+            const emptyIdx = rows.findIndex(r => r.productId === null && r.productName === "");
+            if (emptyIdx !== -1) {
+              setRows(prev => prev.map((r, i) => i === emptyIdx ? {
+                ...r,
+                productId: foundProduct._id,
+                productName: foundProduct.name,
+                productCode: foundProduct.barcode || foundProduct.sku,
+                barcode: foundProduct.barcode || "",
+                price: foundProduct.salesPrice || 0,
+                printQty: 1,
+              } : r));
+              toast.success(`Selected product: ${foundProduct.name}`);
+            } else {
+              setRows(prev => [
+                ...prev,
+                {
+                  id: Math.random().toString(36).substring(7),
+                  productId: foundProduct._id,
+                  productName: foundProduct.name,
+                  productCode: foundProduct.barcode || foundProduct.sku,
+                  barcode: foundProduct.barcode || "",
+                  price: foundProduct.salesPrice || 0,
+                  printQty: 1,
+                }
+              ]);
+              toast.success(`Selected product: ${foundProduct.name}`);
+            }
+          }
+        } else {
+          toast.error(`Product not found for barcode: ${code}`);
+        }
+      } catch (err) {
+        toast.error("Failed to lookup barcode product");
+      }
+
+      setScannerInput("");
+      scannerInputRef.current?.focus();
     }
-    setAddedItems(prev => [...prev, {
-      id: Math.random().toString(36).substring(7),
-      ...form,
-      noOfLabels: labelCount,
-      selected: true
-    }]);
-    setForm({ ...form, itemCode: "", noOfLabels: "1" }); // keep settings but reset code
   };
 
-  const removeRow = (id: string) => {
-    setAddedItems(prev => prev.filter(item => item.id !== id));
+  const selectProductForRow = (idx: number, product: Product) => {
+    setRows(prev => prev.map((row, i) => {
+      if (i !== idx) return row;
+      return {
+        ...row,
+        productId: product._id,
+        productName: product.name,
+        productCode: product.barcode || product.sku,
+        barcode: product.barcode || "",
+        price: product.salesPrice || 0,
+      };
+    }));
+    setActiveRowSearchIdx(null);
   };
 
-  const toggleSelect = (id: string) => {
-    setAddedItems(prev => prev.map(item => item.id === id ? { ...item, selected: !item.selected } : item));
+  const removeRow = (idx: number) => {
+    const updated = rows.filter((_, i) => i !== idx);
+    setRows(updated.length === 0 ? [createBlankRow()] : updated);
   };
 
-  const toggleSelectAll = (checked: boolean) => {
-    setAddedItems(prev => prev.map(item => ({ ...item, selected: checked })));
-  };
+  // Build printing lines flat array
+  const itemsToPrint = rows
+    .filter(r => r.productId !== null && r.productName !== "")
+    .flatMap(r => Array.from({ length: r.printQty }, () => r));
 
-  const selectedCount = addedItems.filter(item => item.selected).length;
-  const allSelected = addedItems.length > 0 && selectedCount === addedItems.length;
-
-  // Flatten selected items by quantity for printing
-  const itemsToPrint = addedItems
-    .filter(item => item.selected)
-    .flatMap(item => Array.from({ length: item.noOfLabels }, () => item));
-
-  // Static seed pattern for mock barcode width
-  const mockBarcodeWidths = [1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 1, 3, 2, 2, 4, 1, 3, 1, 2, 4, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2];
+  const totalLabelsCount = itemsToPrint.length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+    <div className="flex flex-col space-y-4 h-full overflow-hidden">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-3 shrink-0">
         <div className="flex items-center gap-3">
           <div className="page-icon-tile">
             <ScanBarcode />
           </div>
           <h1 className="page-title flex items-center gap-2">
-            Barcode Generator <span className="text-muted-foreground text-sm font-normal border rounded-full px-2">i</span>
+            Barcode Generator <span className="text-muted-foreground text-sm font-normal border rounded-full px-2 cursor-help" title="F2 for New Line, F10 to Print">i</span>
           </h1>
         </div>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Printer</span>
-            <span className="font-medium capitalize">{printerType.replace("_", " ")}</span>
+            <span className="font-medium capitalize">{printerType === "label" ? "Label Printer" : `A4 (${printerType === "a4_30" ? "30" : "24"}-up)`}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Size</span>
             <span className="font-medium">{labelSize}mm</span>
           </div>
-          <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setSettingsOpen(true)}>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-muted" onClick={() => setSettingsOpen(true)}>
             <Settings className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6 bg-card shadow-sm border-0">
-          <h2 className="text-base font-semibold mb-6">Enter item details to add for barcode</h2>
-          
-          <div className="space-y-6">
-            {/* Auto-fill Lookup dropdown */}
-            <div className="bg-muted/30 p-4 rounded-xl border border-border/50 space-y-2">
-              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Existing Product (Auto-fill)</Label>
-              <Select onValueChange={(val) => {
-                const prod = products.find(p => p._id === val);
-                if (prod) {
-                  setForm(prev => ({
-                    ...prev,
-                    itemName: prod.name,
-                    itemCode: prod.barcode || prod.sku,
-                    line1: prod.sku,
-                    line2: `Price: INR ${prod.salesPrice || 0}`
-                  }));
-                  toast.info(`Auto-filled details for ${prod.name}`);
-                }
-              }}>
-                <SelectTrigger className="bg-card">
-                  <SelectValue placeholder="Search or select a product to auto-fill..." />
-                </SelectTrigger>
-                <SelectContent align="start">
-                  {products.map((p) => (
-                    <SelectItem key={p._id} value={p._id}>
-                      {p.name} ({p.barcode || p.sku})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Main Layout Flex Container: Fits on single screen on desktop */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-130px)] min-h-0 overflow-hidden">
+        {/* Left Column: Scanner and Table */}
+        <div className="flex-1 lg:max-w-[58%] flex flex-col gap-4 min-h-0 overflow-hidden">
+          {/* Scanner Card */}
+          <Card className="p-3 bg-card shadow-sm border border-border/80 shrink-0">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Barcode Scanner</Label>
+              <Input
+                ref={scannerInputRef}
+                placeholder="Scan here and press Enter..."
+                value={scannerInput}
+                onChange={(e) => setScannerInput(e.target.value)}
+                onKeyDown={handleScannerKeyDown}
+                className="bg-card w-full h-9"
+                autoFocus
+              />
             </div>
+          </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Item Name<span className="text-red-500">*</span></Label>
-                <Input placeholder="Enter Item Name" value={form.itemName} onChange={(e) => setForm({...form, itemName: e.target.value})} className="bg-transparent" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Item Code<span className="text-red-500">*</span></Label>
-                <Input placeholder="Enter Item Code" value={form.itemCode} onChange={(e) => setForm({...form, itemCode: e.target.value})} className="bg-transparent" />
-              </div>
+          {/* Product Entry Table Card */}
+          <Card className="flex-1 bg-card shadow-sm border border-border/80 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10">
+                  <tr className="border-b bg-muted/40">
+                    <th className="p-2 w-12 text-center text-xs font-bold text-muted-foreground uppercase">#</th>
+                    <th className="text-left p-2 text-xs font-bold text-muted-foreground uppercase">Product Description</th>
+                    <th className="text-center p-2 w-28 text-xs font-bold text-muted-foreground uppercase">Print Qty</th>
+                    <th className="text-center p-2 w-16 text-xs font-bold text-muted-foreground uppercase">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, idx) => {
+                    const searchStr = rowSearchTerms[row.id] ?? "";
+                    const filteredProducts = products.filter(p => {
+                      const q = searchStr.toLowerCase().trim();
+                      if (!q) return true;
+                      return (
+                        p.name.toLowerCase().includes(q) ||
+                        p.sku.toLowerCase().includes(q) ||
+                        (p.barcode && p.barcode.toLowerCase().includes(q))
+                      );
+                    }).slice(0, 8);
+
+                    return (
+                      <tr key={row.id} className="border-b hover:bg-muted/10">
+                        <td className="p-2 text-center font-medium text-muted-foreground">{idx + 1}</td>
+                        <td className="p-2">
+                          {/* Searchable select dropdown container */}
+                          <div className="relative w-full" ref={activeRowSearchIdx === idx ? dropdownRef : null}>
+                            {activeRowSearchIdx === idx ? (
+                              <div className="relative w-full">
+                                <Input
+                                  className="w-full bg-card h-9"
+                                  placeholder="Type name or code to search..."
+                                  value={rowSearchTerms[row.id] ?? ""}
+                                  autoFocus
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setRowSearchTerms(prev => ({ ...prev, [row.id]: val }));
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                      setActiveRowSearchIdx(null);
+                                    }
+                                  }}
+                                />
+                                <div className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card border rounded-md shadow-lg py-1 border-border">
+                                  {filteredProducts.length === 0 ? (
+                                    <div className="px-3 py-2 text-xs text-muted-foreground">No products found</div>
+                                  ) : (
+                                    filteredProducts.map((p) => (
+                                      <button
+                                        key={p._id}
+                                        type="button"
+                                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer block"
+                                        onClick={() => selectProductForRow(idx, p)}
+                                      >
+                                        <div className="font-semibold">{p.name}</div>
+                                        <div className="text-[10px] text-muted-foreground">
+                                          SKU: {p.sku} {p.barcode ? `| Barcode: ${p.barcode}` : ""}
+                                        </div>
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="w-full flex items-center justify-between px-3 py-1.5 rounded-md border border-input bg-card text-xs text-left hover:bg-accent/30 cursor-pointer h-9"
+                                onClick={() => {
+                                  setActiveRowSearchIdx(idx);
+                                  setRowSearchTerms(prev => ({ ...prev, [row.id]: row.productName }));
+                                }}
+                              >
+                                <span className={cn("truncate", row.productName ? "text-foreground font-medium" : "text-muted-foreground")}>
+                                  {row.productName
+                                    ? `${row.productName}${row.productCode ? ` [${row.productCode}]` : ""}`
+                                    : "-- Select Product --"}
+                                </span>
+                                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          <Input
+                            type="number"
+                            min="1"
+                            value={row.printQty}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              setRows(prev => prev.map((r, i) => i === idx ? { ...r, printQty: Number.isNaN(val) || val < 1 ? 1 : val } : r));
+                            }}
+                            className="w-20 h-9 text-center bg-card mx-auto"
+                          />
+                        </td>
+                        <td className="p-2 text-center">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10" onClick={() => removeRow(idx)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">No of Labels<span className="text-red-500">*</span></Label>
-                <Input type="number" min="1" placeholder="Labels" value={form.noOfLabels} onChange={(e) => setForm({...form, noOfLabels: e.target.value})} className="bg-transparent" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Header</Label>
-                <Input placeholder="Header" value={form.header} onChange={(e) => setForm({...form, header: e.target.value})} className="bg-transparent" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Line 1</Label>
-                <Input placeholder="Line 1" value={form.line1} onChange={(e) => setForm({...form, line1: e.target.value})} className="bg-transparent" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Line 2</Label>
-                <Input placeholder="Line 2" value={form.line2} onChange={(e) => setForm({...form, line2: e.target.value})} className="bg-transparent" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Line 3</Label>
-                <Input placeholder="Line 3" value={form.line3} onChange={(e) => setForm({...form, line3: e.target.value})} className="bg-transparent" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Line 4</Label>
-                <Input placeholder="Line 4" value={form.line4} onChange={(e) => setForm({...form, line4: e.target.value})} className="bg-transparent" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Right Preview Area */}
-        <Card className="p-6 bg-muted/20 border-0 shadow-sm flex flex-col items-center">
-          <div className="w-full flex justify-center items-center gap-2 mb-6">
-            <h2 className="text-sm font-semibold">Preview</h2>
-          </div>
-
-          <div className="bg-card border rounded-lg w-full max-w-[240px] aspect-[4/3] flex flex-col items-center justify-center p-2 shadow-sm relative overflow-hidden mb-8">
-            <div className="text-[10px] font-bold mb-1">{form.header || "Header"}</div>
             
-            {form.itemCode ? (
-              <Barcode value={form.itemCode} format="CODE128" width={1.5} height={40} displayValue={true} fontSize={12} background="transparent" />
-            ) : (
-              <div className="w-full h-12 flex justify-center items-end gap-[2px] mb-1 opacity-20">
-                {mockBarcodeWidths.map((w, i) => (
-                  <div key={i} className="bg-foreground h-full" style={{ width: `${w}px` }}></div>
+            {/* Table Footer with New Line Button */}
+            <div className="p-3 border-t bg-muted/10 flex justify-between items-center shrink-0">
+              <Button onClick={handleAddBlankRow} variant="outline" size="sm" className="bg-card text-foreground font-semibold h-9">
+                + New Line (F2)
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column: Live Preview & Print button */}
+        <div className="w-full lg:w-[42%] flex flex-col min-h-0">
+          <Card className="bg-card shadow-sm border border-border/80 flex flex-col h-full min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between p-3.5 border-b shrink-0">
+              <h2 className="text-xs font-bold text-foreground uppercase tracking-wide">Live Preview</h2>
+              <span className="text-[10px] font-bold bg-primary/20 text-primary px-2 py-1 rounded-full">
+                Labels: {totalLabelsCount}
+              </span>
+            </div>
+
+            {/* Preview Labels Sheet Wrapper */}
+            <div className="flex-1 p-4 bg-slate-100 dark:bg-slate-900/60 overflow-y-auto min-h-0">
+              <div className={cn(
+                "grid gap-4 justify-center justify-items-center w-full",
+                layoutColumns === 2 ? "grid-cols-2" : "grid-cols-1"
+              )}>
+                {itemsToPrint.map((item, idx) => (
+                  <BarcodeLabelTemplate
+                    key={idx}
+                    size={labelSize}
+                    settings={displaySettings}
+                    item={{
+                      itemName: item.productName,
+                      itemCode: item.barcode || item.productCode,
+                      sku: item.productCode,
+                      price: item.price,
+                      header: businessName,
+                    }}
+                  />
                 ))}
+                {itemsToPrint.length === 0 && (
+                  <div className="col-span-full h-48 flex flex-col items-center justify-center text-muted-foreground text-center">
+                    <ScanBarcode className="h-10 w-10 opacity-20 mb-2" />
+                    <p className="text-[11px]">No active barcodes to display.<br />Select products to generate previews.</p>
+                  </div>
+                )}
               </div>
-            )}
-            
-            <div className="text-[10px] mt-1 text-center font-medium">
-              <div>{form.line1}</div>
-              <div>{form.line2}</div>
-              <div>{form.line3}</div>
-              <div>{form.line4}</div>
             </div>
-          </div>
 
-          <Button 
-            className="w-full bg-primary/20 text-primary hover:bg-primary/30 rounded-full font-medium" 
-            disabled={!form.itemName || !form.itemCode}
-            onClick={handleAdd}
-          >
-            Add for Barcode
-          </Button>
-        </Card>
+            {/* Bottom Actions inside the card */}
+            <div className="p-3 border-t shrink-0">
+              <Button
+                onClick={handlePrintLabels}
+                disabled={totalLabelsCount === 0}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-semibold py-5 text-sm flex items-center justify-center gap-2 cursor-pointer h-10"
+              >
+                <Printer className="h-4 w-4" /> Print Labels (F10)
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
 
-      {/* Item Details Table */}
-      <Card className="border-0 shadow-sm bg-card overflow-hidden flex flex-col min-h-[300px]">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold text-sm">Item Details ({addedItems.length})</h3>
-        </div>
-
-        <div className="overflow-x-auto flex-1">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <th className="p-4 w-12 text-center">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} disabled={addedItems.length === 0} />
-                </th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Item Name</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Labels</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Header</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Line 1</th>
-                <th className="text-left p-4 font-medium text-muted-foreground">Line 2</th>
-                <th className="text-right p-4 font-medium text-muted-foreground">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {addedItems.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-16">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <ScanBarcode className="h-16 w-16 opacity-20 mb-4" />
-                      <p className="text-sm">Added items for Barcode generation will appear here.</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                addedItems.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-muted/30">
-                    <td className="p-4 text-center">
-                      <Checkbox checked={item.selected} onCheckedChange={() => toggleSelect(item.id)} />
-                    </td>
-                    <td className="p-4 font-medium">{item.itemName}</td>
-                    <td className="p-4">{item.noOfLabels}</td>
-                    <td className="p-4">{item.header}</td>
-                    <td className="p-4">{item.line1}</td>
-                    <td className="p-4">{item.line2}</td>
-                    <td className="p-4 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10" onClick={() => removeRow(item.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="p-4 border-t bg-muted/10 flex justify-end gap-4">
-          <Button 
-            className="rounded-full px-8 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            disabled={selectedCount === 0}
-            onClick={() => setPrintModalOpen(true)}
+      {/* Hidden print element container to avoid showing on page */}
+      <div className="absolute left-[-9999px] top-[-9999px] pointer-events-none" aria-hidden="true">
+        <div ref={printRef} className="bg-white text-black p-4">
+          <div
+            className="barcode-sheet"
+            style={{
+              display: "grid",
+              gap: "3mm",
+              gridTemplateColumns: layoutColumns === 2 ? "repeat(2, max-content)" : "1fr",
+            }}
           >
-            <Printer className="mr-2 h-4 w-4" /> Generate & Print ({selectedCount})
-          </Button>
+            {itemsToPrint.map((item, idx) => (
+              <BarcodeLabelTemplate
+                key={idx}
+                size={labelSize}
+                settings={displaySettings}
+                item={{
+                  itemName: item.productName,
+                  itemCode: item.barcode || item.productCode,
+                  sku: item.productCode,
+                  price: item.price,
+                  header: businessName,
+                }}
+              />
+            ))}
+          </div>
         </div>
-      </Card>
+      </div>
 
       {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Barcode Label Settings</DialogTitle>
-            <Description className="hidden">Change printer type and size dimensions for barcode sheet templates</Description>
+        <DialogContent className="sm:max-w-md bg-card border border-border max-h-[85vh] flex flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="text-foreground font-bold">Barcode Label Settings</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4 text-sm">
+          <div className="flex-1 overflow-y-auto space-y-4 py-4 text-sm pr-1">
+            {/* Label Size Option */}
             <div className="space-y-2">
-              <Label>Printer Type</Label>
-              <Select value={printerType} onValueChange={(value) => setPrinterType(value as BarcodePrinterType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="label">Thermal Label Printer</SelectItem>
-                  <SelectItem value="a4_30">A4 Sheet (30 labels/page)</SelectItem>
-                  <SelectItem value="a4_24">A4 Sheet (24 labels/page)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Label Size</Label>
+              <Label className="text-foreground font-medium">Label Size</Label>
               <Select value={labelSize} onValueChange={(value) => setLabelSize(value as BarcodeLabelSize)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectTrigger className="bg-card border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-border">
                   <SelectItem value="50x25">50mm × 25mm</SelectItem>
                   <SelectItem value="40x20">40mm × 20mm</SelectItem>
                   <SelectItem value="38x25">38mm × 25mm</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="barcode-sku">Include SKU</Label><Checkbox id="barcode-sku" checked={includeSku} onCheckedChange={(checked) => setIncludeSku(Boolean(checked))} /></div>
-            <div className="flex items-center justify-between rounded-lg border p-3"><Label htmlFor="barcode-price">Include Price</Label><Checkbox id="barcode-price" checked={includePrice} onCheckedChange={(checked) => setIncludePrice(Boolean(checked))} /></div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button onClick={() => setSettingsOpen(false)}>Save Settings</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Print Modal */}
-      <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Print Barcodes</DialogTitle>
-            <DialogDescription>Review labels layout before executing system print callback.</DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end mb-4">
-            <Button onClick={handlePrint} className="gap-2">
-              <Printer className="h-4 w-4" /> Print Labels
-            </Button>
-          </div>
-          <div className="bg-white text-black p-8 rounded-md" ref={printRef}>
-            <div className="barcode-sheet grid gap-3 justify-center" style={{ gridTemplateColumns: printerType === "label" ? "1fr" : "repeat(3, max-content)" }}>
-              {itemsToPrint.map((item, idx) => (
-                <BarcodeLabelTemplate key={idx} size={labelSize} includeSku={includeSku} includePrice={includePrice} item={{ itemName: item.itemName, itemCode: item.itemCode, header: item.header, sku: item.line1, price: item.line2 }} />
-              ))}
+            {/* Layout Options */}
+            <div className="space-y-2">
+              <Label className="text-foreground font-medium">Layout</Label>
+              <Select value={layoutColumns.toString()} onValueChange={(value) => setLayoutColumns(parseInt(value))}>
+                <SelectTrigger className="bg-card border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="1">1 label per row</SelectItem>
+                  <SelectItem value="2">2 labels per row (2 UP)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Printer Type Option */}
+            <div className="space-y-2">
+              <Label className="text-foreground font-medium">Printer Type</Label>
+              <Select value={printerType} onValueChange={(value) => setPrinterType(value as BarcodePrinterType)}>
+                <SelectTrigger className="bg-card border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="label">Thermal Label Printer</SelectItem>
+                  <SelectItem value="a4_30">A4 Sheet (30 labels/page)</SelectItem>
+                  <SelectItem value="a4_24">A4 Sheet (24 labels/page)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Display Options Toggles */}
+            <div className="space-y-3 pt-2">
+              <Label className="text-foreground font-semibold block border-b pb-1 text-xs uppercase tracking-wide text-muted-foreground">Display Options</Label>
+              
+              <div className="flex items-center justify-between rounded-lg border p-3 border-border">
+                <Label htmlFor="toggle-header" className="text-foreground cursor-pointer">Show Header (Business Name)</Label>
+                <Checkbox id="toggle-header" checked={displaySettings.showHeader} onCheckedChange={(checked) => setDisplaySettings(prev => ({ ...prev, showHeader: Boolean(checked) }))} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 border-border">
+                <Label htmlFor="toggle-item-name" className="text-foreground cursor-pointer">Show Item Name</Label>
+                <Checkbox id="toggle-item-name" checked={displaySettings.showItemName} onCheckedChange={(checked) => setDisplaySettings(prev => ({ ...prev, showItemName: Boolean(checked) }))} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 border-border">
+                <Label htmlFor="toggle-price" className="text-foreground cursor-pointer">Show Price / MRP</Label>
+                <Checkbox id="toggle-price" checked={displaySettings.showPrice} onCheckedChange={(checked) => setDisplaySettings(prev => ({ ...prev, showPrice: Boolean(checked) }))} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 border-border">
+                <Label htmlFor="toggle-barcode-number" className="text-foreground cursor-pointer">Show Barcode Number</Label>
+                <Checkbox id="toggle-barcode-number" checked={displaySettings.showBarcodeNumber} onCheckedChange={(checked) => setDisplaySettings(prev => ({ ...prev, showBarcodeNumber: Boolean(checked) }))} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3 border-border">
+                <Label htmlFor="toggle-extra-lines" className="text-foreground cursor-pointer">Show Extra Lines (SKU)</Label>
+                <Checkbox id="toggle-extra-lines" checked={displaySettings.showExtraLines} onCheckedChange={(checked) => setDisplaySettings(prev => ({ ...prev, showExtraLines: Boolean(checked) }))} />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-border shrink-0">
+            <Button onClick={() => setSettingsOpen(false)} className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6">
+              Save Settings
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
-
-// Simple fallback for Description component when next.js triggers lint warning for Dialog/DialogTitle
-function Description({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <p className={cn("text-sm text-muted-foreground", className)}>{children}</p>;
 }
