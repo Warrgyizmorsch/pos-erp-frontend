@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuthStore } from "@/store/authStore";
 import {
   Table,
   TableBody,
@@ -54,6 +55,8 @@ function SummaryCard({ label, value, tone }: { label: string; value: number | st
 }
 
 export default function AccountingHealthPage() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
   const [health, setHealth] = useState<AccountingHealthCheck | null>(null);
   const [loading, setLoading] = useState(true);
   const [fixingId, setFixingId] = useState<string | null>(null);
@@ -186,7 +189,7 @@ export default function AccountingHealthPage() {
                 </Link>
               </Button>
             )}
-            {hasLedgerMismatch && (
+            {isAdmin && hasLedgerMismatch && (
               <Button variant="outline" onClick={() => void fixLedgers()} disabled={fixingId === "ledger-fix"}>
                 {fixingId === "ledger-fix" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
                 Recalculate Ledger Balances
@@ -242,7 +245,7 @@ export default function AccountingHealthPage() {
                           <Link href={`/accounting/vouchers?voucherId=${issue.voucherId}`}><FileText className="h-4 w-4" /></Link>
                         </Button>
                       )}
-                      {issue.type === "MISSING_POSTING" && (
+                      {isAdmin && issue.type === "MISSING_POSTING" && (
                         <Button variant="outline" size="icon-sm" title="Repost accounting" onClick={() => void repost(issue)} disabled={fixingId === issue.id}>
                           {fixingId === issue.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
                         </Button>

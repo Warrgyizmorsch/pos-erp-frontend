@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export default function FastPOSPage() {
   const searchParams = useSearchParams();
   const { sidebarCollapsed } = useThemeStore();
-  const { setActiveModal, getActiveBill, removeItem, addItem, loadSaleForEditing } = usePOSStore();
+  const { setActiveModal, loadSaleForEditing } = usePOSStore();
   const [activeTab, setActiveTab] = useState<"cart" | "pay">("cart");
   const [isMobile, setIsMobile] = useState(false);
   const loadedEditSaleId = useRef<string | null>(null);
@@ -69,20 +69,15 @@ export default function FastPOSPage() {
   }, []);
 
   usePOSShortcuts({
-    onFocusSearch: () => { // F1 → Remove Item
-      const bill = getActiveBill();
-      if (bill && bill.items.length > 0) {
-        const lastItem = bill.items[bill.items.length - 1];
-        removeItem(lastItem.id);
-        toast.success("Row removed");
-      }
+    onFocusSearch: () => {
+      const input = document.querySelector<HTMLInputElement>('[data-barcode-input="true"]');
+      input?.focus({ preventScroll: true });
+      input?.select();
     },
-    onFocusCustomer: () => { // F2 → Add New Row
-      const bill = getActiveBill();
-      if (bill) {
-        addItem({ itemName: "", customItem: true, unit: "Pcs" });
-        toast.success("New row added");
-      }
+    onFocusCustomer: () => {
+      const input = document.querySelector<HTMLInputElement>('[data-pos-customer-input="true"]');
+      input?.focus({ preventScroll: true });
+      input?.select();
     },
     onHoldSale: () => setActiveModal("qty"), // F3 → Change Quantity
     // F4 → No function
@@ -100,7 +95,7 @@ export default function FastPOSPage() {
       className="fixed bottom-0 right-0 z-10 flex flex-col overflow-hidden bg-muted/20 dark:bg-background"
       style={{
         top: 64,
-        left: isMobile ? 0 : (sidebarCollapsed ? 72 : 256),
+        left: isMobile ? 0 : (sidebarCollapsed ? 72 : 272),
         transition: "left 0.3s ease-in-out",
       }}
     >

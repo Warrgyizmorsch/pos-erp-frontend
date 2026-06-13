@@ -28,6 +28,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Customer, BankAccount, Sale } from "@/types";
 import { Loader2, Calendar as CalendarIcon, Wallet, Plus, Receipt } from "lucide-react";
 
+const isCashPaymentMode = (paymentMode: string) => paymentMode.toLowerCase() === "cash";
+
 const formSchema = z.object({
   partyId: z.string().min(1, "Customer is required"),
   amountReceived: z.coerce.number().min(0.01, "Amount must be greater than 0"),
@@ -37,6 +39,14 @@ const formSchema = z.object({
   linkedInvoiceId: z.string().optional(),
   description: z.string().optional(),
   referenceNo: z.string().optional(),
+}).superRefine((values, ctx) => {
+  if (!isCashPaymentMode(values.paymentMode) && !values.cashBankAccountId?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["cashBankAccountId"],
+      message: "Bank account is required for non-cash payments",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -115,9 +125,6 @@ export function AddPaymentInModal({ open, onOpenChange, onSuccess, paymentId }: 
         description: payment.description,
         referenceNo: payment.referenceNo,
       });
-      if (partyId) {
-        fetchUnpaidInvoices(partyId);
-      }
     } catch (error) {
       console.error("Failed to load payment", error);
       toast.error("Failed to load payment details");
@@ -131,6 +138,12 @@ export function AddPaymentInModal({ open, onOpenChange, onSuccess, paymentId }: 
       setUnpaidInvoices([]);
     }
   }, [selectedPartyId]);
+
+  useEffect(() => {
+    if (isCashPaymentMode(selectedPaymentMode)) {
+      form.setValue("cashBankAccountId", "");
+    }
+  }, [form, selectedPaymentMode]);
 
   const loadInitialData = async () => {
     try {
@@ -159,7 +172,9 @@ export function AddPaymentInModal({ open, onOpenChange, onSuccess, paymentId }: 
 
   const normalizeOptionalIds = (values: z.infer<typeof formSchema>) => ({
     ...values,
-    cashBankAccountId: values.cashBankAccountId?.trim() ? values.cashBankAccountId : undefined,
+    cashBankAccountId: isCashPaymentMode(values.paymentMode)
+      ? undefined
+      : values.cashBankAccountId?.trim() ? values.cashBankAccountId : undefined,
     linkedInvoiceId: values.linkedInvoiceId?.trim() ? values.linkedInvoiceId : undefined,
   });
 

@@ -27,6 +27,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Supplier, BankAccount, Purchase } from "@/types";
 import { Loader2, Calendar as CalendarIcon, Wallet, Plus, Receipt } from "lucide-react";
 
+const isCashPaymentMode = (paymentMode: string) => paymentMode.toLowerCase() === "cash";
+
 const formSchema = z.object({
   partyId: z.string().min(1, "Supplier is required"),
   amountPaid: z.coerce.number().min(0.01, "Amount must be greater than 0"),
@@ -36,6 +38,14 @@ const formSchema = z.object({
   linkedPurchaseId: z.string().optional(),
   description: z.string().optional(),
   referenceNo: z.string().optional(),
+}).superRefine((values, ctx) => {
+  if (!isCashPaymentMode(values.paymentMode) && !values.cashBankAccountId?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["cashBankAccountId"],
+      message: "Bank account is required for non-cash payments",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -114,9 +124,6 @@ export function AddPaymentOutModal({ open, onOpenChange, onSuccess, paymentId }:
         description: payment.description,
         referenceNo: payment.referenceNo,
       });
-      if (partyId) {
-        fetchUnpaidBills(partyId);
-      }
     } catch (error) {
       console.error("Failed to load payment", error);
       toast.error("Failed to load payment details");
@@ -130,6 +137,12 @@ export function AddPaymentOutModal({ open, onOpenChange, onSuccess, paymentId }:
       setUnpaidBills([]);
     }
   }, [selectedPartyId]);
+
+  useEffect(() => {
+    if (isCashPaymentMode(selectedPaymentMode)) {
+      form.setValue("cashBankAccountId", "");
+    }
+  }, [form, selectedPaymentMode]);
 
   const loadInitialData = async () => {
     try {
@@ -156,14 +169,23 @@ export function AddPaymentOutModal({ open, onOpenChange, onSuccess, paymentId }:
     }
   };
 
+  const normalizeOptionalIds = (values: z.infer<typeof formSchema>) => ({
+    ...values,
+    cashBankAccountId: isCashPaymentMode(values.paymentMode)
+      ? undefined
+      : values.cashBankAccountId?.trim() ? values.cashBankAccountId : undefined,
+    linkedPurchaseId: values.linkedPurchaseId?.trim() ? values.linkedPurchaseId : undefined,
+  });
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
+      const payload = normalizeOptionalIds(values);
       if (isEditing && paymentId) {
-        await paymentOutService.update(paymentId, values);
+        await paymentOutService.update(paymentId, payload);
         toast.success("Payment-Out updated successfully");
       } else {
-        await paymentOutService.create(values);
+        await paymentOutService.create(payload);
         toast.success("Payment-Out recorded successfully");
       }
       onSuccess?.();

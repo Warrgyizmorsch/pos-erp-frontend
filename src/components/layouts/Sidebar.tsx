@@ -43,6 +43,7 @@ import {
   Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import { useAccountingPreferenceStore } from "@/store/accountingPreferenceStore";
 import { useBusinessStore } from "@/store/businessStore";
 import { useThemeStore } from "@/store/themeStore";
@@ -211,6 +212,7 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useThemeStore();
+  const { user } = useAuthStore();
   const { profile, fetchProfile } = useBusinessStore();
   const { accountingEnabled, fetchAccountingPreference } = useAccountingPreferenceStore();
   const [manualOpenGroups, setManualOpenGroups] = useState<Record<string, boolean>>({});
@@ -224,8 +226,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   }, [fetchAccountingPreference]);
 
   const visibleNavEntries = useMemo(
-    () => navEntries.filter((entry) => entry.label !== "Accounting" || accountingEnabled !== false),
-    [accountingEnabled],
+    () => navEntries.filter((entry) => {
+      if (entry.label === "Accounting" && accountingEnabled === false) return false;
+      if (entry.label === "Activity Logs" && user?.role !== "admin") return false;
+      return true;
+    }),
+    [accountingEnabled, user?.role],
   );
 
   const openGroups = useMemo(() => {

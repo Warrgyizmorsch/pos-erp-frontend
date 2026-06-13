@@ -39,6 +39,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import type { Supplier, Purchase, PurchaseReturnModel, BankAccount } from "@/types";
 import { getSocket } from "@/lib/socket";
 import { ReturnPrintDialog } from "@/components/print/ReturnPrintDialog";
+import { useAuthStore } from "@/store/authStore";
 
 interface FormItem {
   id: string;
@@ -57,6 +58,8 @@ interface FormItem {
 
 export default function PurchaseReturnPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
 
   // Page mode state: "list" | "create"
   const [mode, setMode] = useState<"list" | "create">("list");
@@ -270,7 +273,11 @@ export default function PurchaseReturnPage() {
       toast.error("Please specify return quantity for at least one item");
       return;
     }
-    if (refundType === "refund_received" && paymentMode !== "Cash" && !cashBankAccountId) {
+    const refundAccountId = refundType === "refund_received" && paymentMode !== "Cash"
+      ? cashBankAccountId
+      : undefined;
+
+    if (refundType === "refund_received" && paymentMode !== "Cash" && !refundAccountId) {
       toast.error("Please select an account for non-cash refund");
       return;
     }
@@ -323,7 +330,7 @@ export default function PurchaseReturnPage() {
         grandTotal: finalTotal,
         refundType,
         paymentMode: refundType === "refund_received" ? paymentMode : "Credit",
-        cashBankAccountId: refundType === "refund_received" ? cashBankAccountId : undefined,
+        cashBankAccountId: refundAccountId,
         referenceNo,
         notes
       };
@@ -583,7 +590,7 @@ export default function PurchaseReturnPage() {
                                 <Ban className="h-4 w-4" />
                               </Button>
                             )}
-                            {ret.status !== "cancelled" && (ret.accountingStatus || "not_posted") !== "posted" && (
+                            {isAdmin && ret.status !== "cancelled" && (ret.accountingStatus || "not_posted") !== "posted" && (
                               <Button
                                 variant="ghost"
                                 size="icon-sm"

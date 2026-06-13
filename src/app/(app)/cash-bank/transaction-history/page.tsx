@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCashBankStore } from "@/store/cashBankStore";
+import { useAuthStore } from "@/store/authStore";
 import { getSocket } from "@/lib/socket";
 import { cashBankService } from "@/services/cashBankService";
 import { accountingService } from "@/services/accountingService";
@@ -58,6 +59,8 @@ export default function TransactionHistoryPage() {
 }
 
 function TransactionHistoryContent() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
   const {
     summary,
     transactions,
@@ -779,7 +782,7 @@ function TransactionHistoryContent() {
                       {/* Actions */}
                       <td className="p-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                          {(tx.accountingStatus || "not_posted") !== "posted" && (
+                          {isAdmin && (tx.accountingStatus || "not_posted") !== "posted" && (
                             <Button
                               variant="ghost"
                               size="icon"

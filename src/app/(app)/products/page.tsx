@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -64,11 +65,12 @@ import type { Product, Category, Subcategory } from "@/types";
 import { getSocket } from "@/lib/socket";
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -99,6 +101,8 @@ export default function ProductsPage() {
     openingStockPrice: "0",
     openingStockDate: new Date().toISOString().split("T")[0],
   });
+  const querySearch = searchParams.get("search") || "";
+  const currentSearch = search ?? querySearch;
 
   const generateSKU = () => {
     const random = Math.floor(1000 + Math.random() * 9000);
@@ -113,7 +117,7 @@ export default function ProductsPage() {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const params: Record<string, unknown> = { page, limit: 15, search };
+      const params: Record<string, unknown> = { page, limit: 15, search: currentSearch };
       if (selectedCategory !== "all") params.category = selectedCategory;
       const result = await productService.getAll(
         params as Parameters<typeof productService.getAll>[0],
@@ -125,7 +129,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, selectedCategory]);
+  }, [currentSearch, page, selectedCategory]);
 
   const loadDependencies = useCallback(async () => {
     try {
@@ -307,7 +311,7 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
         <div className="flex-1 max-w-sm relative">
           <SearchInput
-            value={search}
+            value={currentSearch}
             onChange={(v) => {
               setSearch(v);
               setPage(1);

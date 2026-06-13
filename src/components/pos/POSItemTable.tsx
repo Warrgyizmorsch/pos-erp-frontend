@@ -146,6 +146,7 @@ function POSBillTopBar({ onAddCustomItem }: { onAddCustomItem: () => void }) {
           <div className="relative flex items-center">
             <User className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
             <input
+              data-pos-customer-input="true"
               value={isWalkIn ? custSearch : customerDisplayName}
               onChange={(e) => { setCustSearch(e.target.value); setShowDD(true); if (!isWalkIn) setCustomer(WALK_IN_CUSTOMER); }}
               onFocus={() => setShowDD(true)}

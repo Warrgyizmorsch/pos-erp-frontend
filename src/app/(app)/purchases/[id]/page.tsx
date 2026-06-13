@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { accountingService } from "@/services/accountingService";
 import { purchaseService } from "@/services/purchaseService";
+import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Purchase, PurchaseStatus, PurchasePaymentStatus } from "@/types";
 import { PrintPurchaseDialog } from "@/components/purchases/PrintPurchaseDialog";
@@ -42,6 +43,8 @@ export default function PurchaseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [printOpen, setPrintOpen] = useState(false);
   const [reposting, setReposting] = useState(false);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
 
   const load = useCallback(async () => {
     try {
@@ -181,7 +184,7 @@ export default function PurchaseDetailsPage() {
                   View Voucher
                 </Button>
               )}
-              {accountingStatus !== "posted" && (
+              {isAdmin && accountingStatus !== "posted" && (
                 <Button variant="outline" className="gap-2" disabled={reposting} onClick={handleRepostAccounting}>
                   <RefreshCw className={`h-4 w-4 ${reposting ? "animate-spin" : ""}`} />
                   Repost

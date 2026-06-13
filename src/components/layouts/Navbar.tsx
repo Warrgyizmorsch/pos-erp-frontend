@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -34,10 +34,19 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuthStore();
   const { toggleTheme } = useThemeStore();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleLogout = () => {
     logout();
     router.push("/login");
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = searchTerm.trim();
+    if (!query) return;
+    router.push(`/products?search=${encodeURIComponent(query)}`);
+    setSearchOpen(false);
   };
 
   return (
@@ -59,21 +68,24 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       {/* Search */}
       <div className="flex-1 flex items-center">
         {searchOpen ? (
-          <motion.div
+          <motion.form
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: "100%" }}
             className="max-w-md"
+            onSubmit={handleSearchSubmit}
           >
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products, customers, invoices..."
                 className="pl-10 bg-background/80"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 autoFocus
                 onBlur={() => setSearchOpen(false)}
               />
             </div>
-          </motion.div>
+          </motion.form>
         ) : (
           <Button
             variant="ghost"

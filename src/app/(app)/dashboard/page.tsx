@@ -68,20 +68,23 @@ export default function DashboardPage() {
   }, []);
 
   const salesChartData =
-    stats?.salesByMonth.map((item) => ({
+    (stats?.salesByMonth ?? []).map((item) => ({
       name: monthNames[item._id.month - 1],
       revenue: item.totalRevenue,
       sales: item.totalSales,
     })) || [];
 
   const dailyChartData =
-    stats?.salesByDay.map((item) => ({
+    (stats?.salesByDay ?? []).map((item) => ({
       name: new Date(item._id).toLocaleDateString("en-IN", {
         weekday: "short",
       }),
       revenue: item.totalRevenue,
       sales: item.totalSales,
     })) || [];
+
+  const recentSales = stats?.recentSales ?? [];
+  const lowStockProducts = stats?.lowStockProducts ?? [];
 
   if (loading) {
     return (
@@ -112,15 +115,15 @@ export default function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Today's Sales"
-          value={stats?.today.totalSales || 0}
-          subtitle={formatCurrency(stats?.today.totalRevenue || 0)}
+          value={stats?.today?.totalSales || 0}
+          subtitle={formatCurrency(stats?.today?.totalRevenue || 0)}
           icon={ShoppingCart}
           color="orange"
         />
         <StatCard
           title="Monthly Revenue"
-          value={formatCurrency(stats?.monthly.totalRevenue || 0)}
-          subtitle={`${stats?.monthly.totalSales || 0} orders`}
+          value={formatCurrency(stats?.monthly?.totalRevenue || 0)}
+          subtitle={`${stats?.monthly?.totalSales || 0} orders`}
           icon={DollarSign}
           color="emerald"
         />
@@ -138,7 +141,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Low Stock"
-          value={stats?.lowStockProducts.length || 0}
+          value={lowStockProducts.length}
           subtitle="Items need restock"
           icon={AlertTriangle}
           color="rose"
@@ -294,12 +297,12 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats?.recentSales.length === 0 && (
+                {recentSales.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No sales yet
                   </p>
                 )}
-                {stats?.recentSales.slice(0, 6).map((sale) => (
+                {recentSales.slice(0, 6).map((sale) => (
                   <div
                     key={sale._id}
                     className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
@@ -347,12 +350,12 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {stats?.lowStockProducts.length === 0 && (
+                {lowStockProducts.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     All products are well stocked
                   </p>
                 )}
-                {stats?.lowStockProducts.map((product) => (
+                {lowStockProducts.map((product) => (
                   <div
                     key={product._id}
                     className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"

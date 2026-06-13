@@ -54,8 +54,8 @@ export const purchaseService = {
   // Returns
   createReturn: async (purchaseId: string, payload: Record<string, unknown>): Promise<PurchaseReturn> => {
     const { data } = await api.post<ApiResponse<PurchaseReturn>>(
-      `/purchases/${purchaseId}/return`,
-      payload
+      "/purchases-returns",
+      { ...payload, originalPurchaseId: purchaseId }
     );
     return data.data;
   },
@@ -70,7 +70,7 @@ export const purchaseService = {
 
   // Stats
   getStats: async () => {
-    const { data } = await api.get("/purchases/stats/overview");
+    const { data } = await api.get("/analytics/purchases");
     return data.data;
   },
 

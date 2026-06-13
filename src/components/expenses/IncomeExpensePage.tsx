@@ -24,6 +24,7 @@ import { expenseService } from "@/services/expenseService";
 import type { LedgerOption } from "@/services/expenseService";
 import { cashBankService } from "@/services/cashBankService";
 import { accountingService } from "@/services/accountingService";
+import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/types";
 
@@ -77,6 +78,8 @@ const emptyForm = {
 };
 
 export default function IncomeExpensePage({ entryType }: IncomeExpensePageProps) {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
   const isIncome = entryType === "income";
   const pageTitle = isIncome ? "Income" : "Expenses";
   const pageDesc = isIncome ? "Track and manage business income" : "Track and manage business expenses";
@@ -426,7 +429,7 @@ export default function IncomeExpensePage({ entryType }: IncomeExpensePageProps)
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {(e.accountingStatus || "not_posted") !== "posted" && (
+                          {isAdmin && (e.accountingStatus || "not_posted") !== "posted" && (
                             <Button variant="ghost" size="icon-sm" onClick={() => handleRepostAccounting(e._id)} title="Repost accounting">
                               <IndianRupee className="h-4 w-4 text-primary" />
                             </Button>

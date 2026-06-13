@@ -329,8 +329,8 @@ export const createShortcuts = (
     // POS Billing Shortcuts
     'pos.focusSearch': {
       id: 'pos.focusSearch',
-      name: 'Remove Item',
-      description: 'Remove the selected cart item',
+      name: 'Focus Product Search',
+      description: 'Focus the product scan/search field',
       keys: { key: 'F1' },
       scope: 'pos',
       action: () => handlers['pos.focusSearch']?.(),
@@ -339,8 +339,8 @@ export const createShortcuts = (
     
     'pos.focusCustomer': {
       id: 'pos.focusCustomer',
-      name: 'Add New Row',
-      description: 'Add a new empty item row',
+      name: 'Focus Customer Search',
+      description: 'Focus the customer search field',
       keys: { key: 'F2' },
       scope: 'pos',
       action: () => handlers['pos.focusCustomer']?.(),

@@ -40,6 +40,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import type { Customer, Sale, SaleReturn, SaleReturnItem, BankAccount } from "@/types";
 import { getSocket } from "@/lib/socket";
 import { ReturnPrintDialog } from "@/components/print/ReturnPrintDialog";
+import { useAuthStore } from "@/store/authStore";
 
 interface FormItem {
   id: string;
@@ -68,6 +69,8 @@ const getReturnItemBadge = (item: Pick<FormItem, "itemType"> | Pick<SaleReturnIt
 
 export default function SaleReturnPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
 
   // Page mode state: "list" | "create"
   const [mode, setMode] = useState<"list" | "create">("list");
@@ -285,7 +288,11 @@ export default function SaleReturnPage() {
       toast.error("Please specify return quantity for at least one item");
       return;
     }
-    if (refundType === "refund_now" && paymentMode !== "Cash" && !cashBankAccountId) {
+    const refundAccountId = refundType === "refund_now" && paymentMode !== "Cash"
+      ? cashBankAccountId
+      : undefined;
+
+    if (refundType === "refund_now" && paymentMode !== "Cash" && !refundAccountId) {
       toast.error("Please select an account for non-cash refund");
       return;
     }
@@ -342,7 +349,7 @@ export default function SaleReturnPage() {
         grandTotal: finalTotal,
         refundType,
         paymentMode: refundType === "refund_now" ? paymentMode : "Credit",
-        cashBankAccountId: refundType === "refund_now" ? cashBankAccountId : undefined,
+        cashBankAccountId: refundAccountId,
         referenceNo,
         notes
       };
@@ -602,7 +609,7 @@ export default function SaleReturnPage() {
                                 <Ban className="h-4 w-4" />
                               </Button>
                             )}
-                            {ret.status !== "cancelled" && (ret.accountingStatus || "not_posted") !== "posted" && (
+                            {isAdmin && ret.status !== "cancelled" && (ret.accountingStatus || "not_posted") !== "posted" && (
                               <Button
                                 variant="ghost"
                                 size="icon-sm"

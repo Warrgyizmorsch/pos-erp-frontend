@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintSaleDialog } from "@/components/sales/PrintSaleDialog";
 import { accountingService } from "@/services/accountingService";
 import { saleService } from "@/services/saleService";
+import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Sale } from "@/types";
 
@@ -58,6 +59,8 @@ export default function SaleDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [printOpen, setPrintOpen] = useState(false);
   const [reposting, setReposting] = useState(false);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     let active = true;
@@ -175,7 +178,7 @@ export default function SaleDetailsPage() {
           </div>}
           {sale.accountingError && <p className="max-w-2xl text-sm text-red-500">{sale.accountingError}</p>}
         </div>
-        {accountingStatus !== "posted" && <Button
+        {isAdmin && accountingStatus !== "posted" && <Button
           variant="outline"
           className="gap-2 self-start sm:self-center"
           disabled={reposting}
