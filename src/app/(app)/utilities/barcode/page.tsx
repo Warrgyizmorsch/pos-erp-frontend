@@ -219,9 +219,34 @@ export default function BarcodeGeneratorPage() {
   const totalLabelsCount = itemsToPrint.length;
 
   return (
-    <div className="flex flex-col space-y-4 h-full overflow-hidden">
+    <div className="flex flex-col space-y-3 lg:h-[calc(100vh-145px)] lg:max-h-[calc(100vh-145px)] overflow-hidden pt-2 lg:pt-0">
+      {/* Global CSS style block for standard browser print (Cmd+P) alignment */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #barcode-print-container,
+          #barcode-print-container * {
+            visibility: visible !important;
+          }
+          #barcode-print-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            background: white !important;
+            color: black !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+        }
+      `}} />
+
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-3 shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-2 shrink-0">
         <div className="flex items-center gap-3">
           <div className="page-icon-tile">
             <ScanBarcode />
@@ -246,9 +271,9 @@ export default function BarcodeGeneratorPage() {
       </div>
 
       {/* Main Layout Flex Container: Fits on single screen on desktop */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-130px)] min-h-0 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-hidden">
         {/* Left Column: Scanner and Table */}
-        <div className="flex-1 lg:max-w-[58%] flex flex-col gap-4 min-h-0 overflow-hidden">
+        <div className="flex-1 lg:max-w-[58%] flex flex-col gap-3 min-h-0 overflow-hidden">
           {/* Scanner Card */}
           <Card className="p-3 bg-card shadow-sm border border-border/80 shrink-0">
             <div className="space-y-1.5">
@@ -440,7 +465,7 @@ export default function BarcodeGeneratorPage() {
 
       {/* Hidden print element container to avoid showing on page */}
       <div className="absolute left-[-9999px] top-[-9999px] pointer-events-none" aria-hidden="true">
-        <div ref={printRef} className="bg-white text-black p-4">
+        <div ref={printRef} id="barcode-print-container" className="bg-white text-black p-4">
           <div
             className="barcode-sheet"
             style={{

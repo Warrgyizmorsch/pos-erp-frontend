@@ -78,14 +78,14 @@ export function BarcodeLabelTemplate({
     >
       {/* 1. Header (Business Name) */}
       {settings.showHeader && item.header && (
-        <div className="w-full text-center leading-none truncate font-bold text-slate-900" style={{ fontSize: compact ? "6px" : "8px" }}>
+        <div className="w-full text-center leading-none truncate font-bold text-slate-950 uppercase tracking-wide" style={{ fontSize: compact ? "7px" : "9.5px" }}>
           {item.header}
         </div>
       )}
       
       {/* 2. Product Name */}
       {settings.showItemName && item.itemName && (
-        <div className="w-full text-center leading-none truncate font-semibold text-slate-800" style={{ fontSize: compact ? "6px" : "7.5px" }}>
+        <div className="w-full text-center leading-none truncate font-semibold text-slate-900" style={{ fontSize: compact ? "7px" : "9px" }}>
           {item.itemName}
         </div>
       )}
@@ -96,27 +96,27 @@ export function BarcodeLabelTemplate({
           <Barcode
             value={item.itemCode}
             format="CODE128"
-            width={compact ? 0.7 : 0.85}
+            width={compact ? 1.05 : 1.35}
             height={finalBarcodeHeight}
             displayValue={false}
             margin={0}
             background="transparent"
           />
         ) : (
-          <div className="text-slate-300 text-[8px]">No Code</div>
+          <div className="text-slate-400 text-[8px] font-medium">No Code</div>
         )}
       </div>
 
       {/* 4. Barcode Number digits (if enabled) */}
       {settings.showBarcodeNumber && item.itemCode && (
-        <div className="w-full text-center leading-none font-bold tracking-wider text-slate-800" style={{ fontSize: compact ? "5.5px" : "7px" }}>
+        <div className="w-full text-center leading-none font-extrabold tracking-widest text-slate-950 font-mono" style={{ fontSize: compact ? "7px" : "8.5px" }}>
           {item.itemCode}
         </div>
       )}
 
       {/* 5. Bottom Extra / Price Line */}
       {(settings.showPrice || settings.showExtraLines) && (
-        <div className="w-full flex justify-between items-center px-1 font-bold text-slate-900 leading-none" style={{ fontSize: compact ? "5.5px" : "7px" }}>
+        <div className="w-full flex justify-between items-center px-1 font-extrabold text-slate-950 leading-none" style={{ fontSize: compact ? "6.5px" : "8.5px" }}>
           {settings.showExtraLines && item.sku ? (
             <span className="truncate max-w-[50%]">{item.sku}</span>
           ) : (
