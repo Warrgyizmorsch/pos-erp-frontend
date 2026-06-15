@@ -33,7 +33,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -170,6 +170,14 @@ type PreparedReport = {
   totals?: ExportRow;
 };
 
+type BalanceSheetSideLine = {
+  label: string;
+  amount: number;
+  code?: string;
+  ledgerId?: string;
+  kind: "group" | "ledger" | "subtotal" | "difference";
+};
+
 const fetchReport = (kind: AccountingReportKind, filters: Record<string, string>) => {
   if (kind === "trial-balance") return accountingService.getTrialBalanceReport(filters);
   if (kind === "profit-loss") return accountingService.getProfitLossReport(filters);
@@ -190,6 +198,7 @@ const money = (value: number | undefined | null) => formatAccountingMoney(Number
 const moneyOrDash = (value: number | undefined | null) => Number(value || 0) ? money(value) : "-";
 const balanceText = (value: number, type?: string) => `${money(value)} ${type === "CREDIT" ? "Cr" : "Dr"}`;
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+const hasAmount = (value: number | undefined | null) => Math.abs(Number(value || 0)) > 0.009;
 
 const columns = (items: Array<[string, string]>): ReportColumn[] => items.map(([key, label]) => ({ key, label }));
 
@@ -214,6 +223,61 @@ function flattenGroupRows(section: string, groups: ReportGroupAmount[]) {
       amount: money(Math.abs(ledger.amount)),
     })),
   ]);
+}
+
+function balanceSheetSideLines(groups: ReportGroupAmount[]) {
+  return groups
+    .filter((group) => hasAmount(group.total) || group.ledgers.some((ledger) => hasAmount(ledger.amount)))
+    .flatMap((group) => {
+      const groupName = group.groupName || "Uncategorized";
+      const ledgers = group.ledgers
+        .filter((ledger) => hasAmount(ledger.amount))
+        .map((ledger) => ({
+          label: ledger.ledgerName || "Unknown Ledger",
+          code: ledger.code,
+          ledgerId: ledger.ledgerId,
+          amount: Math.abs(Number(ledger.amount || 0)),
+          kind: "ledger" as const,
+        }));
+
+      return [
+        { label: groupName, amount: group.total, kind: "group" as const },
+        ...ledgers,
+        { label: `Total ${groupName}`, amount: group.total, kind: "subtotal" as const },
+      ];
+    });
+}
+
+function balanceSheetExportRows(report: BalanceSheetReport): ExportRow[] {
+  const liabilities = balanceSheetSideLines(report.liabilities);
+  const assets = balanceSheetSideLines(report.assets);
+  const difference = Math.abs(Number(report.totals.difference || 0));
+  const left = liabilities;
+  const right = assets;
+  const rows = Array.from({ length: Math.max(left.length, right.length) }, (_, index) => ({
+    liabilitiesParticulars: left[index]?.label || "",
+    liabilitiesAmount: left[index] ? money(left[index].amount) : "",
+    assetsParticulars: right[index]?.label || "",
+    assetsAmount: right[index] ? money(right[index].amount) : "",
+  }));
+
+  if (!report.isBalanced) {
+    rows.push({
+      liabilitiesParticulars: "Difference",
+      liabilitiesAmount: money(difference),
+      assetsParticulars: "Difference",
+      assetsAmount: money(difference),
+    });
+  }
+
+  rows.push({
+    liabilitiesParticulars: "Total",
+    liabilitiesAmount: money(report.totals.totalLiabilities),
+    assetsParticulars: "Total",
+    assetsAmount: money(report.totals.totalAssets),
+  });
+
+  return rows;
 }
 
 function prepareAccountingReport(
@@ -294,21 +358,23 @@ function prepareAccountingReport(
 
   if (kind === "balance-sheet") {
     const report = data as BalanceSheetReport;
-    const reportColumns = columns([["section", "Section"], ["group", "Group"], ["ledger", "Ledger"], ["amount", "Amount"]]);
+    const reportColumns = columns([
+      ["liabilitiesParticulars", "Liabilities"],
+      ["liabilitiesAmount", "Amount"],
+      ["assetsParticulars", "Assets"],
+      ["assetsAmount", "Amount"],
+    ]);
     return {
       title: meta.title,
       subtitle,
       filename,
       columns: reportColumns,
-      rows: [
-        ...flattenGroupRows("Assets", report.assets),
-        ...flattenGroupRows("Liabilities", report.liabilities),
-      ],
+      rows: balanceSheetExportRows(report),
       totals: {
-        section: "TOTAL",
-        group: `Assets ${money(report.totals.totalAssets)}`,
-        ledger: `Liabilities ${money(report.totals.totalLiabilities)}`,
-        amount: report.isBalanced ? "Balanced" : `Difference ${money(Math.abs(report.totals.difference))}`,
+        liabilitiesParticulars: "Status",
+        liabilitiesAmount: report.isBalanced ? "Balanced" : `Difference ${money(Math.abs(report.totals.difference))}`,
+        assetsParticulars: "Total Assets vs Liabilities",
+        assetsAmount: `${money(report.totals.totalAssets)} / ${money(report.totals.totalLiabilities)}`,
       },
     };
   }
@@ -391,6 +457,44 @@ function prepareAccountingReport(
 
   if (kind === "ledger-summary") {
     const report = data as LedgerSummaryReport;
+    const groups = groupLedgerSummaryRows(report.rows);
+    const reportRows = groups.flatMap((group) => [
+      {
+        ledger: group.groupName,
+        code: "",
+        group: "Group Total",
+        opening: `Dr ${money(group.totals.openingDebit)} / Cr ${money(group.totals.openingCredit)}`,
+        debit: money(group.totals.periodDebit),
+        credit: money(group.totals.periodCredit),
+        closing: `Dr ${money(group.totals.closingDebit)} / Cr ${money(group.totals.closingCredit)}`,
+      },
+      ...group.ledgers.map((row) => ({
+        ledger: row.ledgerName,
+        code: row.code,
+        group: row.groupName || "-",
+        opening: balanceText(row.openingBalance, row.openingBalanceType),
+        debit: moneyOrDash(row.periodDebit),
+        credit: moneyOrDash(row.periodCredit),
+        closing: balanceText(row.closingBalance, row.closingBalanceType),
+      })),
+      {
+        ledger: `Subtotal ${group.groupName}`,
+        code: "",
+        group: "",
+        opening: `Dr ${money(group.totals.openingDebit)} / Cr ${money(group.totals.openingCredit)}`,
+        debit: money(group.totals.periodDebit),
+        credit: money(group.totals.periodCredit),
+        closing: `Dr ${money(group.totals.closingDebit)} / Cr ${money(group.totals.closingCredit)}`,
+      },
+    ]);
+    const totals = groups.reduce((acc, group) => ({
+      openingDebit: acc.openingDebit + group.totals.openingDebit,
+      openingCredit: acc.openingCredit + group.totals.openingCredit,
+      periodDebit: acc.periodDebit + group.totals.periodDebit,
+      periodCredit: acc.periodCredit + group.totals.periodCredit,
+      closingDebit: acc.closingDebit + group.totals.closingDebit,
+      closingCredit: acc.closingCredit + group.totals.closingCredit,
+    }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 });
     const reportColumns = columns([
       ["ledger", "Ledger"],
       ["code", "Code"],
@@ -405,19 +509,29 @@ function prepareAccountingReport(
       subtitle,
       filename,
       columns: reportColumns,
-      rows: report.rows.map((row) => ({
-        ledger: row.ledgerName,
-        code: row.code,
-        group: row.groupName || "-",
-        opening: balanceText(row.openingBalance, row.openingBalanceType),
-        debit: moneyOrDash(row.periodDebit),
-        credit: moneyOrDash(row.periodCredit),
-        closing: balanceText(row.closingBalance, row.closingBalanceType),
-      })),
+      rows: reportRows,
+      totals: {
+        ledger: "Grand Total",
+        code: "",
+        group: "",
+        opening: `Dr ${money(totals.openingDebit)} / Cr ${money(totals.openingCredit)}`,
+        debit: money(totals.periodDebit),
+        credit: money(totals.periodCredit),
+        closing: `Dr ${money(totals.closingDebit)} / Cr ${money(totals.closingCredit)}`,
+      },
     };
   }
 
   const report = data as GroupSummaryReport;
+  const totals = report.rows.reduce((acc, row) => ({
+    openingDebit: acc.openingDebit + Number(row.openingDebit || 0),
+    openingCredit: acc.openingCredit + Number(row.openingCredit || 0),
+    periodDebit: acc.periodDebit + Number(row.periodDebit || 0),
+    periodCredit: acc.periodCredit + Number(row.periodCredit || 0),
+    closingDebit: acc.closingDebit + Number(row.closingDebit || 0),
+    closingCredit: acc.closingCredit + Number(row.closingCredit || 0),
+  }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 });
+
   return {
     title: meta.title,
     subtitle,
@@ -444,6 +558,17 @@ function prepareAccountingReport(
       closingDebit: moneyOrDash(row.closingDebit),
       closingCredit: moneyOrDash(row.closingCredit),
     })),
+    totals: {
+      group: "Grand Total",
+      code: "",
+      nature: "",
+      openingDebit: money(totals.openingDebit),
+      openingCredit: money(totals.openingCredit),
+      periodDebit: money(totals.periodDebit),
+      periodCredit: money(totals.periodCredit),
+      closingDebit: money(totals.closingDebit),
+      closingCredit: money(totals.closingCredit),
+    },
   };
 }
 
@@ -481,10 +606,10 @@ function ReportTableCard({ children }: { children: ReactNode }) {
   );
 }
 
-function EmptyReportCard({ title }: { title: string }) {
+function EmptyReportCard({ title, description = "No accounting rows found for the selected period." }: { title: string; description?: string }) {
   return (
     <Card className="rounded-lg">
-      <EmptyState icon={FileText} title={title} description="No accounting rows found for the selected period." />
+      <EmptyState icon={FileText} title={title} description={description} />
     </Card>
   );
 }
@@ -600,6 +725,183 @@ function TwoColumnStatement({
   );
 }
 
+const balanceSheetLineTone = {
+  group: "bg-muted/40 font-semibold",
+  ledger: "",
+  subtotal: "border-t border-border bg-muted/20 font-semibold",
+  difference: "bg-primary/5 font-semibold",
+};
+
+function BalanceSheetParticular({ line }: { line?: BalanceSheetSideLine }) {
+  if (!line) return null;
+
+  const content = (
+    <>
+      <p className={line.kind === "ledger" ? "font-medium" : ""}>{line.label}</p>
+      {line.code && <p className="text-xs text-muted-foreground">{line.code}</p>}
+    </>
+  );
+
+  if (line.kind === "ledger" && line.ledgerId) {
+    return (
+      <Link
+        href={`/accounting/ledgers/${line.ledgerId}`}
+        className="block pl-6 transition-colors hover:text-primary"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={line.kind === "ledger" ? "pl-6" : ""}>{content}</div>;
+}
+
+function BalanceSheetAmount({ line }: { line?: BalanceSheetSideLine }) {
+  if (!line) return null;
+  return <Amount value={line.amount} strong={line.kind !== "ledger"} />;
+}
+
+function BalanceSheetMobileSection({
+  title,
+  lines,
+  total,
+}: {
+  title: string;
+  lines: BalanceSheetSideLine[];
+  total: number;
+}) {
+  return (
+    <div className="border-t border-border">
+      <div className="flex items-center justify-between bg-muted/40 px-4 py-3 font-semibold">
+        <span>{title}</span>
+        <span className="tabular-nums">{money(total)}</span>
+      </div>
+      {lines.length ? lines.map((line, index) => (
+        <div
+          key={`${title}-${line.kind}-${line.label}-${index}`}
+          className={[
+            "grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-border/70 px-4 py-2.5 text-sm",
+            balanceSheetLineTone[line.kind],
+          ].filter(Boolean).join(" ")}
+        >
+          <BalanceSheetParticular line={line} />
+          <span className="text-right tabular-nums"><BalanceSheetAmount line={line} /></span>
+        </div>
+      )) : (
+        <div className="border-t border-border/70 px-4 py-6 text-center text-sm text-muted-foreground">
+          No rows found.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BalanceSheetStatement({ report }: { report: BalanceSheetReport }) {
+  const liabilities = balanceSheetSideLines(report.liabilities);
+  const assets = balanceSheetSideLines(report.assets);
+  const difference = Math.abs(Number(report.totals.difference || 0));
+  const differenceLine: BalanceSheetSideLine | undefined = report.isBalanced
+    ? undefined
+    : { label: "Difference", amount: difference, kind: "difference" };
+  const left = differenceLine ? [...liabilities, differenceLine] : liabilities;
+  const right = differenceLine ? [...assets, differenceLine] : assets;
+  const maxRows = Math.max(left.length, right.length);
+  const rows = Array.from({ length: maxRows }, (_, index) => ({ left: left[index], right: right[index] }));
+
+  if (!liabilities.length && !assets.length) {
+    return (
+      <EmptyReportCard
+        title="No Balance Sheet data found"
+        description="No Balance Sheet data found for selected date."
+      />
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden rounded-lg">
+      <CardHeader className="border-b border-border p-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-lg font-semibold">Balance Sheet</p>
+            <p className="text-sm text-muted-foreground">As on {formatAccountingDate(report.asOnDate)}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="text-muted-foreground">
+              Liabilities <span className="font-semibold text-foreground tabular-nums">{money(report.totals.totalLiabilities)}</span>
+            </div>
+            <div className="text-muted-foreground">
+              Assets <span className="font-semibold text-foreground tabular-nums">{money(report.totals.totalAssets)}</span>
+            </div>
+            <Badge variant={report.isBalanced ? "success" : "warning"}>
+              {report.isBalanced ? "Balanced" : `Difference ${money(difference)}`}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="hidden overflow-x-auto md:block">
+          <Table className="min-w-[920px] table-fixed">
+            <TableHeader className="bg-card">
+              <TableRow>
+                <TableHead className="w-[35%] px-4 py-3">Liabilities</TableHead>
+                <TableHead className="w-[15%] px-4 py-3 text-right">Amount</TableHead>
+                <TableHead className="w-[35%] border-l border-border px-4 py-3">Assets</TableHead>
+                <TableHead className="w-[15%] px-4 py-3 text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell className={[
+                    "h-10 px-4 py-2 align-top",
+                    row.left ? balanceSheetLineTone[row.left.kind] : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <BalanceSheetParticular line={row.left} />
+                  </TableCell>
+                  <TableCell className={[
+                    "h-10 px-4 py-2 text-right align-top tabular-nums",
+                    row.left ? balanceSheetLineTone[row.left.kind] : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <BalanceSheetAmount line={row.left} />
+                  </TableCell>
+                  <TableCell className={[
+                    "h-10 border-l border-border px-4 py-2 align-top",
+                    row.right ? balanceSheetLineTone[row.right.kind] : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <BalanceSheetParticular line={row.right} />
+                  </TableCell>
+                  <TableCell className={[
+                    "h-10 px-4 py-2 text-right align-top tabular-nums",
+                    row.right ? balanceSheetLineTone[row.right.kind] : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <BalanceSheetAmount line={row.right} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter className="border-t-2 border-border bg-muted/60 font-bold">
+              <TableRow>
+                <TableCell className="px-4 py-3">Total</TableCell>
+                <TableCell className="px-4 py-3 text-right tabular-nums">{money(report.totals.totalLiabilities)}</TableCell>
+                <TableCell className="border-l border-border px-4 py-3">Total</TableCell>
+                <TableCell className="px-4 py-3 text-right tabular-nums">{money(report.totals.totalAssets)}</TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
+        <div className="md:hidden">
+          <BalanceSheetMobileSection title="Liabilities" lines={left} total={report.totals.totalLiabilities} />
+          <BalanceSheetMobileSection title="Assets" lines={right} total={report.totals.totalAssets} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function groupTrialRows(rows: TrialBalanceReport["rows"]) {
   const groups = new Map<string, TrialBalanceReport["rows"]>();
   rows.forEach((row) => {
@@ -616,6 +918,27 @@ function groupTrialRows(rows: TrialBalanceReport["rows"]) {
       periodCredit: acc.periodCredit + Number(row.periodCredit || 0),
       closingDebit: acc.closingDebit + Number(row.closingDebit || 0),
       closingCredit: acc.closingCredit + Number(row.closingCredit || 0),
+    }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 }),
+  }));
+}
+
+function groupLedgerSummaryRows(rows: LedgerSummaryReport["rows"]) {
+  const groups = new Map<string, LedgerSummaryReport["rows"]>();
+  rows.forEach((row) => {
+    const key = row.groupName || "Unmapped Group";
+    groups.set(key, [...(groups.get(key) || []), row]);
+  });
+
+  return Array.from(groups.entries()).map(([groupName, ledgers]) => ({
+    groupName,
+    ledgers,
+    totals: ledgers.reduce((acc, row) => ({
+      openingDebit: acc.openingDebit + (row.openingBalanceType === "DEBIT" ? Number(row.openingBalance || 0) : 0),
+      openingCredit: acc.openingCredit + (row.openingBalanceType === "CREDIT" ? Number(row.openingBalance || 0) : 0),
+      periodDebit: acc.periodDebit + Number(row.periodDebit || 0),
+      periodCredit: acc.periodCredit + Number(row.periodCredit || 0),
+      closingDebit: acc.closingDebit + (row.closingBalanceType === "DEBIT" ? Number(row.closingBalance || 0) : 0),
+      closingCredit: acc.closingCredit + (row.closingBalanceType === "CREDIT" ? Number(row.closingBalance || 0) : 0),
     }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 }),
   }));
 }
@@ -739,32 +1062,7 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
 
   if (kind === "balance-sheet") {
     const report = data as BalanceSheetReport;
-    const liabilities = statementLines(report.liabilities);
-    const assets = statementLines(report.assets);
-    return (
-      <>
-        <div className="grid gap-4 md:grid-cols-3">
-          <SummaryCard label="Total Assets" value={report.totals.totalAssets} />
-          <SummaryCard label="Total Liabilities" value={report.totals.totalLiabilities} />
-          <Card className="rounded-lg">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Status</p>
-              <Badge className="mt-3" variant={report.isBalanced ? "success" : "warning"}>
-                {report.isBalanced ? "Balanced" : `Difference ${formatAccountingMoney(Math.abs(report.totals.difference))}`}
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
-        <TwoColumnStatement
-          leftTitle="Liabilities"
-          rightTitle="Assets"
-          left={liabilities}
-          right={assets}
-          leftTotal={report.totals.totalLiabilities}
-          rightTotal={report.totals.totalAssets}
-        />
-      </>
-    );
+    return <BalanceSheetStatement report={report} />;
   }
 
   if (kind === "cash-book" || kind === "bank-book") {
@@ -893,14 +1191,23 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
 
   if (kind === "ledger-summary") {
     const report = data as LedgerSummaryReport;
+    const groups = groupLedgerSummaryRows(report.rows);
+    const totals = groups.reduce((acc, group) => ({
+      openingDebit: acc.openingDebit + group.totals.openingDebit,
+      openingCredit: acc.openingCredit + group.totals.openingCredit,
+      periodDebit: acc.periodDebit + group.totals.periodDebit,
+      periodCredit: acc.periodCredit + group.totals.periodCredit,
+      closingDebit: acc.closingDebit + group.totals.closingDebit,
+      closingCredit: acc.closingCredit + group.totals.closingCredit,
+    }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 });
+
     return (
       <Card className="rounded-lg">
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card">
               <TableRow>
-                <TableHead>Ledger</TableHead>
-                <TableHead>Group</TableHead>
+                <TableHead>Particulars</TableHead>
                 <TableHead className="text-right">Opening</TableHead>
                 <TableHead className="text-right">Debit</TableHead>
                 <TableHead className="text-right">Credit</TableHead>
@@ -908,20 +1215,67 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {report.rows.map((row) => (
-                <TableRow key={row.ledgerId}>
-                  <TableCell>
-                    <p className="font-medium">{row.ledgerName}</p>
-                    <p className="text-xs text-muted-foreground">{row.code}</p>
-                  </TableCell>
-                  <TableCell>{row.groupName}</TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(row.openingBalance)} {row.openingBalanceType === "CREDIT" ? "Cr" : "Dr"}</TableCell>
-                  <TableCell className="text-right"><Amount value={row.periodDebit} /></TableCell>
-                  <TableCell className="text-right"><Amount value={row.periodCredit} /></TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(row.closingBalance)} {row.closingBalanceType === "CREDIT" ? "Cr" : "Dr"}</TableCell>
-                </TableRow>
+              {groups.map((group) => (
+                <Fragment key={group.groupName}>
+                  <TableRow className={rowTone.group}>
+                    <TableCell>{group.groupName}</TableCell>
+                    <TableCell className="text-right">
+                      {money(group.totals.openingDebit || group.totals.openingCredit)} {group.totals.openingCredit > group.totals.openingDebit ? "Cr" : "Dr"}
+                    </TableCell>
+                    {rightCell(group.totals.periodDebit, true)}
+                    {rightCell(group.totals.periodCredit, true)}
+                    <TableCell className="text-right">
+                      {money(group.totals.closingDebit || group.totals.closingCredit)} {group.totals.closingCredit > group.totals.closingDebit ? "Cr" : "Dr"}
+                    </TableCell>
+                  </TableRow>
+                  {group.ledgers.map((row) => (
+                    <TableRow key={row.ledgerId}>
+                      <TableCell className="pl-8">
+                        <Link href={`/accounting/ledgers/${row.ledgerId}`} className="font-medium hover:text-primary">
+                          {row.ledgerName || "Unmapped Ledger"}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">{row.code || "-"} · {row.ledgerType || "-"}</p>
+                      </TableCell>
+                      <TableCell className="text-right">{formatAccountingMoney(row.openingBalance)} {row.openingBalanceType === "CREDIT" ? "Cr" : "Dr"}</TableCell>
+                      <TableCell className="text-right"><Amount value={row.periodDebit} /></TableCell>
+                      <TableCell className="text-right"><Amount value={row.periodCredit} /></TableCell>
+                      <TableCell className="text-right">{formatAccountingMoney(row.closingBalance)} {row.closingBalanceType === "CREDIT" ? "Cr" : "Dr"}</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className={rowTone.subtotal}>
+                    <TableCell>Subtotal {group.groupName}</TableCell>
+                    <TableCell className="text-right">
+                      {money(group.totals.openingDebit || group.totals.openingCredit)} {group.totals.openingCredit > group.totals.openingDebit ? "Cr" : "Dr"}
+                    </TableCell>
+                    {rightCell(group.totals.periodDebit, true)}
+                    {rightCell(group.totals.periodCredit, true)}
+                    <TableCell className="text-right">
+                      {money(group.totals.closingDebit || group.totals.closingCredit)} {group.totals.closingCredit > group.totals.closingDebit ? "Cr" : "Dr"}
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
               ))}
+              {!report.rows.length && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-28 text-center text-muted-foreground">
+                    No ledger summary rows found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell>Grand Total</TableCell>
+                <TableCell className="text-right">
+                  Dr {money(totals.openingDebit)} / Cr {money(totals.openingCredit)}
+                </TableCell>
+                <TableCell className="text-right">{money(totals.periodDebit)}</TableCell>
+                <TableCell className="text-right">{money(totals.periodCredit)}</TableCell>
+                <TableCell className="text-right">
+                  Dr {money(totals.closingDebit)} / Cr {money(totals.closingCredit)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>
@@ -929,11 +1283,20 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
   }
 
   const report = data as GroupSummaryReport;
+  const groupTotals = report.rows.reduce((acc, row) => ({
+    openingDebit: acc.openingDebit + Number(row.openingDebit || 0),
+    openingCredit: acc.openingCredit + Number(row.openingCredit || 0),
+    periodDebit: acc.periodDebit + Number(row.periodDebit || 0),
+    periodCredit: acc.periodCredit + Number(row.periodCredit || 0),
+    closingDebit: acc.closingDebit + Number(row.closingDebit || 0),
+    closingCredit: acc.closingCredit + Number(row.closingCredit || 0),
+  }), { openingDebit: 0, openingCredit: 0, periodDebit: 0, periodCredit: 0, closingDebit: 0, closingCredit: 0 });
+
   return (
     <Card className="rounded-lg">
-      <CardContent className="p-0">
+      <CardContent className="overflow-x-auto p-0">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-card">
             <TableRow>
               <TableHead>Group</TableHead>
               <TableHead>Nature</TableHead>
@@ -947,9 +1310,9 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
           </TableHeader>
           <TableBody>
             {report.rows.map((row) => (
-              <TableRow key={row.groupId || row.groupName}>
+              <TableRow key={row.groupId || row.groupName} className="font-medium">
                 <TableCell>
-                  <p className="font-medium">{row.groupName}</p>
+                  <p>{row.groupName || "Unmapped Group"}</p>
                   <p className="text-xs text-muted-foreground">{row.groupCode}</p>
                 </TableCell>
                 <TableCell>{row.nature || "-"}</TableCell>
@@ -961,7 +1324,26 @@ function renderReport(kind: AccountingReportKind, data: ReportData) {
                 <TableCell className="text-right"><Amount value={row.closingCredit} /></TableCell>
               </TableRow>
             ))}
+            {!report.rows.length && (
+              <TableRow>
+                <TableCell colSpan={8} className="h-28 text-center text-muted-foreground">
+                  No group summary rows found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell>Grand Total</TableCell>
+              <TableCell></TableCell>
+              {rightCell(groupTotals.openingDebit, true)}
+              {rightCell(groupTotals.openingCredit, true)}
+              {rightCell(groupTotals.periodDebit, true)}
+              {rightCell(groupTotals.periodCredit, true)}
+              {rightCell(groupTotals.closingDebit, true)}
+              {rightCell(groupTotals.closingCredit, true)}
+            </TableRow>
+          </TableFooter>
         </Table>
       </CardContent>
     </Card>
@@ -978,6 +1360,7 @@ export function AccountingReportPage({ kind }: { kind: AccountingReportKind }) {
   const [startDate, setStartDate] = useState(monthStart());
   const [endDate, setEndDate] = useState(today());
   const [asOnDate, setAsOnDate] = useState(today());
+  const headerDescription = kind === "balance-sheet" ? `As on ${formatAccountingDate(asOnDate)}` : meta.description;
 
   const load = useCallback(async () => {
     try {
@@ -1040,7 +1423,7 @@ export function AccountingReportPage({ kind }: { kind: AccountingReportKind }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={meta.title} description={meta.description} icon={meta.icon}>
+      <PageHeader title={meta.title} description={headerDescription} icon={meta.icon}>
         <Button variant="outline" asChild>
           <Link href="/accounting/reports"><ArrowLeft className="h-4 w-4" /> Reports</Link>
         </Button>

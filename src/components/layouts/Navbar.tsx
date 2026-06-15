@@ -53,7 +53,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     <motion.header
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border/50 bg-card/80 backdrop-blur-xl px-4 lg:px-6"
+      className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-card/90 px-4 backdrop-blur-xl lg:px-6"
     >
       {/* Mobile menu */}
       <Button
@@ -78,7 +78,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products, customers, invoices..."
-                className="pl-10 bg-background/80"
+                className="bg-background/70 pl-10"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 autoFocus
@@ -122,7 +122,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="gap-2 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white text-sm font-semibold shrink-0 aspect-square">
+            <div className="flex h-8 w-8 shrink-0 aspect-square items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary ring-1 ring-primary/20">
               {user?.name?.charAt(0).toUpperCase() || "U"}
             </div>
             <div className="hidden sm:block text-left">

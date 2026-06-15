@@ -169,7 +169,7 @@ export function SalesAnalyticsDashboard({
                 <Line
                   type="monotone"
                   dataKey="totalSales"
-                  stroke="#f97316"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   dot={false}
                   name="Sales Amount"
@@ -190,8 +190,8 @@ export function SalesAnalyticsDashboard({
               <AreaChart data={data?.charts?.revenueTrend || []}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -215,7 +215,7 @@ export function SalesAnalyticsDashboard({
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#f97316"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   fill="url(#colorRevenue)"
                   name="Revenue"
@@ -261,7 +261,7 @@ export function SalesAnalyticsDashboard({
                 />
                 <Bar
                   dataKey="totalSales"
-                  fill="#f97316"
+                  fill="var(--primary)"
                   radius={[6, 6, 0, 0]}
                   name="Sales Amount"
                 />
@@ -304,7 +304,7 @@ export function SalesAnalyticsDashboard({
                 />
                 <Bar
                   dataKey="quantitySold"
-                  fill="#10b981"
+                  fill="var(--success)"
                   radius={[0, 6, 6, 0]}
                   name="Qty Sold"
                 />
@@ -323,7 +323,7 @@ export function SalesAnalyticsDashboard({
       >
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Profit Margin</p>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-success">
             {(data?.summary?.totalSales || 0) > 0
               ? (
                   ((data?.summary?.netProfit || 0) /
@@ -336,13 +336,13 @@ export function SalesAnalyticsDashboard({
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Total Expenses</p>
-          <p className="text-2xl font-bold text-rose-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-destructive">
             {formatCurrency(data?.summary?.expenses || 0)}
           </p>
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Gross Profit %</p>
-          <p className="text-2xl font-bold text-blue-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-info">
             {(data?.summary?.totalSales || 0) > 0
               ? (
                   ((data?.summary?.grossProfit || 0) /
@@ -355,7 +355,7 @@ export function SalesAnalyticsDashboard({
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Orders</p>
-          <p className="text-2xl font-bold text-orange-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-primary">
             {data?.summary?.orderCount || 0}
           </p>
         </div>

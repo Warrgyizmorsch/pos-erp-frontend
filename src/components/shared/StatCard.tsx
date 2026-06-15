@@ -16,27 +16,27 @@ interface StatCardProps {
 
 const colorMap = {
   orange:
-    "from-orange-500/10 to-orange-500/5 text-orange-600 dark:text-orange-400 border-orange-500/20",
+    "from-accent/10 to-accent/5 text-accent border-accent/20",
   indigo:
-    "from-orange-500/10 to-orange-500/5 text-orange-600 dark:text-orange-400 border-orange-500/20",
+    "from-primary/10 to-primary/5 text-primary border-primary/20",
   emerald:
-    "from-emerald-500/10 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    "from-success/10 to-success/5 text-success border-success/20",
   slate:
-    "from-slate-500/10 to-slate-500/5 text-slate-600 dark:text-slate-400 border-slate-500/20",
+    "from-secondary to-secondary/40 text-muted-foreground border-border",
   amber:
-    "from-amber-500/10 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  rose: "from-rose-500/10 to-rose-500/5 text-rose-600 dark:text-rose-400 border-rose-500/20",
-  blue: "from-blue-500/10 to-blue-500/5 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    "from-warning/10 to-warning/5 text-warning border-warning/20",
+  rose: "from-destructive/10 to-destructive/5 text-destructive border-destructive/20",
+  blue: "from-info/10 to-info/5 text-info border-info/20",
 };
 
 const iconBgMap = {
-  orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  indigo: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  slate: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  orange: "bg-accent/10 text-accent",
+  indigo: "bg-primary-soft text-primary",
+  emerald: "bg-success/10 text-success",
+  slate: "bg-secondary text-muted-foreground",
+  amber: "bg-warning/10 text-warning",
+  rose: "bg-destructive/10 text-destructive",
+  blue: "bg-info/10 text-info",
 };
 
 export function StatCard({
@@ -55,7 +55,7 @@ export function StatCard({
       transition={{ duration: 0.4 }}
       whileHover={{ y: -2, transition: { duration: 0.2 } }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border bg-gradient-to-br p-5 transition-shadow duration-300 hover:shadow-lg",
+        "relative overflow-hidden rounded-lg border bg-gradient-to-br p-5 transition-shadow duration-300 hover:shadow-md",
         colorMap[color],
         className,
       )}
@@ -75,8 +75,8 @@ export function StatCard({
                 className={cn(
                   "text-xs font-medium",
                   trend.value >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-rose-600 dark:text-rose-400",
+                    ? "text-success"
+                    : "text-destructive",
                 )}
               >
                 {trend.value >= 0 ? "+" : ""}
@@ -90,7 +90,7 @@ export function StatCard({
         </div>
         <div
           className={cn(
-            "rounded-xl p-3 absolute top-2 right-2",
+            "absolute right-2 top-2 rounded-lg p-3",
             iconBgMap[color],
           )}
         >

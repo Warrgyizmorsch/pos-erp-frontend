@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, FileText, ListCollapse, Loader2, RefreshCw, Search } from "lucide-react";
+import { ArrowLeft, ListCollapse, Loader2, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   formatAccountingMoney,
@@ -11,7 +11,6 @@ import {
   LoadingPanel,
 } from "@/components/accounting/accounting-ui";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,86 @@ import { accountingService, type LedgerStatement } from "@/services/accountingSe
 
 const formatBalance = (amount: number, type: string) =>
   `${formatAccountingMoney(amount)} ${type === "CREDIT" ? "Cr" : "Dr"}`;
+
+type LedgerSideLine = {
+  date: string;
+  particulars: string;
+  amount: number;
+  meta?: string;
+  kind?: "opening" | "entry" | "closing";
+};
+
+const hasAmount = (amount: number | null | undefined) => Math.abs(Number(amount || 0)) > 0.009;
+
+const entryParticulars = (entry: LedgerStatement["entries"][number]) =>
+  entry.referenceNo || entry.voucherTypeName || entry.narration || entry.voucherNo || "-";
+
+function buildLedgerSides(statement: LedgerStatement, startDate: string) {
+  const debit: LedgerSideLine[] = [];
+  const credit: LedgerSideLine[] = [];
+  const openingDate = startDate || statement.entries[0]?.date || "";
+
+  if (hasAmount(statement.ledger.openingBalance)) {
+    const openingLine = {
+      date: openingDate,
+      particulars: "Opening Balance",
+      amount: statement.ledger.openingBalance,
+      kind: "opening" as const,
+    };
+
+    if (statement.ledger.openingBalanceType === "CREDIT") credit.push(openingLine);
+    else debit.push(openingLine);
+  }
+
+  statement.entries.forEach((entry) => {
+    const base = {
+      date: entry.date,
+      particulars: entryParticulars(entry),
+      meta: `${entry.voucherNo} · ${entry.voucherTypeCode}`,
+      kind: "entry" as const,
+    };
+
+    if (hasAmount(entry.debit)) debit.push({ ...base, amount: entry.debit });
+    if (hasAmount(entry.credit)) credit.push({ ...base, amount: entry.credit });
+  });
+
+  if (hasAmount(statement.totals.closingBalance)) {
+    const closingLine = {
+      date: endOfStatementDate(statement),
+      particulars: "Closing Balance",
+      amount: statement.totals.closingBalance,
+      kind: "closing" as const,
+    };
+
+    if (statement.totals.closingBalanceType === "DEBIT") credit.push(closingLine);
+    else debit.push(closingLine);
+  }
+
+  const debitTotal = debit.reduce((total, line) => total + Number(line.amount || 0), 0);
+  const creditTotal = credit.reduce((total, line) => total + Number(line.amount || 0), 0);
+
+  return {
+    debit,
+    credit,
+    debitTotal,
+    creditTotal,
+  };
+}
+
+function endOfStatementDate(statement: LedgerStatement) {
+  return statement.entries.at(-1)?.date || "";
+}
+
+function LedgerSideCell({ line }: { line?: LedgerSideLine }) {
+  if (!line) return null;
+
+  return (
+    <div className={line.kind === "entry" ? "" : "font-semibold"}>
+      <p>{line.particulars}</p>
+      {line.meta && <p className="text-xs text-muted-foreground">{line.meta}</p>}
+    </div>
+  );
+}
 
 export default function LedgerStatementPage() {
   const router = useRouter();
@@ -69,6 +148,13 @@ export default function LedgerStatementPage() {
   }
 
   const ledger = statement?.ledger;
+  const ledgerSides = statement ? buildLedgerSides(statement, startDate) : null;
+  const ledgerRows = ledgerSides
+    ? Array.from(
+      { length: Math.max(ledgerSides.debit.length, ledgerSides.credit.length) },
+      (_, index) => ({ debit: ledgerSides.debit[index], credit: ledgerSides.credit[index] }),
+    )
+    : [];
 
   return (
     <div className="space-y-6">
@@ -144,70 +230,106 @@ export default function LedgerStatementPage() {
 
       <Card className="rounded-lg">
         <CardContent className="overflow-x-auto p-0">
-          <Table>
+          <Table className="min-w-[920px] table-fixed">
             <TableHeader className="sticky top-0 bg-card">
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Voucher No</TableHead>
-                <TableHead>Voucher Type</TableHead>
-                <TableHead>Particulars</TableHead>
-                <TableHead>Narration</TableHead>
-                <TableHead className="text-right">Debit</TableHead>
-                <TableHead className="text-right">Credit</TableHead>
-                <TableHead className="text-right">Running Balance</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead colSpan={3} className="border-r border-border text-center font-semibold text-foreground">
+                  Debit
+                </TableHead>
+                <TableHead colSpan={3} className="text-center font-semibold text-foreground">
+                  Credit
+                </TableHead>
+              </TableRow>
+              <TableRow>
+                <TableHead className="w-[12%]">Date</TableHead>
+                <TableHead className="w-[28%]">Particulars</TableHead>
+                <TableHead className="w-[10%] border-r border-border text-right">Amount</TableHead>
+                <TableHead className="w-[12%]">Date</TableHead>
+                <TableHead className="w-[28%]">Particulars</TableHead>
+                <TableHead className="w-[10%] text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {statement && (
-                <TableRow className="bg-muted/40 font-semibold">
-                  <TableCell>{startDate ? formatAccountingDate(startDate) : "-"}</TableCell>
-                  <TableCell>Opening</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>Opening Balance</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell className="text-right">₹0.00</TableCell>
-                  <TableCell className="text-right">₹0.00</TableCell>
-                  <TableCell className="text-right">{formatBalance(statement.ledger.openingBalance, statement.ledger.openingBalanceType)}</TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              )}
-              {(statement?.entries || []).map((entry, index) => (
-                <TableRow key={entry.entryId || `${entry.voucherId}-${index}`}>
-                  <TableCell>{formatAccountingDate(entry.date)}</TableCell>
-                  <TableCell className="font-medium">{entry.voucherNo}</TableCell>
-                  <TableCell><Badge variant="outline">{entry.voucherTypeCode}</Badge></TableCell>
-                  <TableCell>{entry.referenceNo || entry.voucherTypeName || "-"}</TableCell>
-                  <TableCell className="max-w-[300px] truncate">{entry.narration || "-"}</TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(entry.debit || 0)}</TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(entry.credit || 0)}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatBalance(entry.runningBalance, entry.runningBalanceType)}
+              {ledgerRows.map((row, index) => (
+                <TableRow key={`${row.debit?.date || "debit"}-${row.credit?.date || "credit"}-${index}`}>
+                  <TableCell className={[
+                    "px-4 py-2 align-top",
+                    row.debit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.debit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    {row.debit ? formatAccountingDate(row.debit.date) : null}
                   </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="icon-sm" title="View voucher">
-                      <FileText className="h-4 w-4" />
-                    </Button>
+                  <TableCell className={[
+                    "px-4 py-2 align-top",
+                    row.debit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.debit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <LedgerSideCell line={row.debit} />
+                  </TableCell>
+                  <TableCell className={[
+                    "border-r border-border px-4 py-2 text-right align-top tabular-nums",
+                    row.debit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.debit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    {row.debit ? formatAccountingMoney(row.debit.amount) : null}
+                  </TableCell>
+                  <TableCell className={[
+                    "px-4 py-2 align-top",
+                    row.credit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.credit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    {row.credit ? formatAccountingDate(row.credit.date) : null}
+                  </TableCell>
+                  <TableCell className={[
+                    "px-4 py-2 align-top",
+                    row.credit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.credit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    <LedgerSideCell line={row.credit} />
+                  </TableCell>
+                  <TableCell className={[
+                    "px-4 py-2 text-right align-top tabular-nums",
+                    row.credit?.kind === "opening" ? "bg-muted/40 font-semibold" : "",
+                    row.credit?.kind === "closing" ? "border-t border-border bg-muted/20 font-semibold" : "",
+                  ].filter(Boolean).join(" ")}
+                  >
+                    {row.credit ? formatAccountingMoney(row.credit.amount) : null}
                   </TableCell>
                 </TableRow>
               ))}
-              {statement?.entries.length === 0 && (
+              {statement && ledgerRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-28 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-28 text-center text-muted-foreground">
                     No posted voucher entries found for this ledger.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-            {statement && (
+            {statement && ledgerSides && (
               <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={5}>Closing Balance</TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(statement.totals.totalDebit || 0)}</TableCell>
-                  <TableCell className="text-right">{formatAccountingMoney(statement.totals.totalCredit || 0)}</TableCell>
-                  <TableCell className="text-right">{formatBalance(statement.totals.closingBalance, statement.totals.closingBalanceType)}</TableCell>
-                  <TableCell></TableCell>
+                <TableRow className="border-t-2 border-border font-bold">
+                  <TableCell colSpan={2}>Total Debit</TableCell>
+                  <TableCell className="border-r border-border text-right tabular-nums">
+                    {formatAccountingMoney(ledgerSides.debitTotal)}
+                  </TableCell>
+                  <TableCell colSpan={2}>Total Credit</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatAccountingMoney(ledgerSides.creditTotal)}
+                  </TableCell>
                 </TableRow>
+                {hasAmount(Math.abs(ledgerSides.debitTotal - ledgerSides.creditTotal)) && (
+                  <TableRow>
+                    <TableCell colSpan={5}>Difference</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatAccountingMoney(Math.abs(ledgerSides.debitTotal - ledgerSides.creditTotal))}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableFooter>
             )}
           </Table>

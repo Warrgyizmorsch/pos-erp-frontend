@@ -4,22 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/95 hover:shadow-lg",
+          "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary-hover hover:shadow-md",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-md shadow-destructive/20 hover:bg-destructive/95 hover:shadow-lg",
+          "bg-destructive text-destructive-foreground shadow-sm shadow-destructive/20 hover:bg-destructive/90 hover:shadow-md",
         outline:
-          "border border-border bg-card text-foreground shadow-sm hover:bg-muted hover:text-foreground",
+          "border border-border bg-card text-foreground shadow-sm hover:border-primary/35 hover:bg-primary-soft hover:text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-muted",
-        ghost: "text-foreground hover:bg-muted hover:text-foreground",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-primary-soft hover:text-primary",
+        ghost: "text-foreground hover:bg-primary-soft hover:text-primary",
         link: "text-primary underline-offset-4 hover:underline",
         success:
-          "bg-success text-white shadow-md shadow-success/20 hover:shadow-lg hover:brightness-105",
+          "bg-success text-white shadow-sm shadow-success/20 hover:shadow-md hover:brightness-105",
+        accent:
+          "bg-accent text-accent-foreground shadow-sm shadow-accent/20 hover:brightness-95 hover:shadow-md",
       },
       size: {
         default: "h-10 px-5 py-2",

@@ -142,7 +142,7 @@ function POSBillTopBar({ onAddCustomItem }: { onAddCustomItem: () => void }) {
 
         <div className="flex-1" />
 
-        <div className="relative shrink-0 hidden md:block" ref={wrapperRef}>
+        <div className="relative hidden md:block min-w-[150px] max-w-[220px]" ref={wrapperRef}>
           <div className="relative flex items-center">
             <User className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
             <input
@@ -151,7 +151,7 @@ function POSBillTopBar({ onAddCustomItem }: { onAddCustomItem: () => void }) {
               onChange={(e) => { setCustSearch(e.target.value); setShowDD(true); if (!isWalkIn) setCustomer(WALK_IN_CUSTOMER); }}
               onFocus={() => setShowDD(true)}
               placeholder="Walk-in Customer"
-            className="h-8 w-[190px] rounded-md border border-border/60 bg-muted/25 pl-8 pr-7 text-xs font-semibold transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 xl:w-[210px]"
+              className="h-8 w-full rounded-md border border-border/60 bg-muted/25 pl-8 pr-7 text-xs font-semibold transition-all placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             {!isWalkIn ? (
               <button

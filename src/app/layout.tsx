@@ -16,6 +16,15 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "POS ERP - Modern Point of Sale System",
   description: "A premium POS and Accounting ERP system for modern businesses",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      // { url: "/favicon.svg", type: "image/svg+xml" },
+      // { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

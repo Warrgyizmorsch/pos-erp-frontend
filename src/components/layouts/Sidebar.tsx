@@ -234,19 +234,34 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     [accountingEnabled, user?.role],
   );
 
+  const flatNavLinks = useMemo(
+    () => visibleNavEntries.flatMap((entry) => (isGroup(entry) ? entry.children : [entry])),
+    [visibleNavEntries],
+  );
+
+  const activeLinkHref = useMemo(() => {
+    const matches = flatNavLinks.filter((item) =>
+      pathname === item.href || pathname.startsWith(`${item.href}/`),
+    );
+
+    if (matches.length === 0) return null;
+    return matches.reduce((best, next) =>
+      best.href.length >= next.href.length ? best : next,
+    ).href;
+  }, [flatNavLinks, pathname]);
+
   const openGroups = useMemo(() => {
     const state: Record<string, boolean> = {};
     visibleNavEntries.forEach((entry) => {
       if (isGroup(entry)) {
-        const isPathActive = entry.children.some((child) => pathname === child.href || pathname.startsWith(`${child.href}/`));
+        const isPathActive = entry.children.some((child) => child.href === activeLinkHref);
         state[entry.label] = Boolean(manualOpenGroups[entry.label] || isPathActive);
       }
     });
     return state;
-  }, [manualOpenGroups, pathname, visibleNavEntries]);
+  }, [manualOpenGroups, activeLinkHref, visibleNavEntries]);
 
-  const isLinkActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+  const isLinkActive = (href: string) => href === activeLinkHref;
 
   const toggleGroup = (label: string) => {
     if (sidebarCollapsed) return;
@@ -269,10 +284,11 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         href={item.href}
         onClick={onMobileClose}
         className={cn(
-          "group relative flex h-12 items-center gap-3.5 rounded-full px-4 text-[15px] font-medium text-foreground/78 transition-colors duration-150 hover:bg-primary/[0.10] hover:text-primary focus-visible:outline-none focus-visible:bg-primary/[0.10] focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/20",
+          "group relative flex h-11 items-center gap-3 rounded-lg text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:bg-primary-soft focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/25",
+          sidebarCollapsed ? "justify-center px-0" : "px-3.5",
           nested && !sidebarCollapsed && "ml-8 mr-1 h-11 px-4",
           isActive
-            ? "bg-primary/[0.10] text-primary"
+            ? "bg-primary-soft text-primary dark:bg-primary dark:text-primary-foreground"
             : "",
         )}
       >
@@ -288,7 +304,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           className={cn(
             "h-[18px] w-[18px] shrink-0 transition-colors",
             isActive
-              ? "text-primary"
+              ? "text-primary dark:text-primary-foreground group-hover:text-primary dark:group-hover:text-primary-foreground"
               : "text-muted-foreground group-hover:text-primary",
           )}
         />
@@ -319,20 +335,19 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           type="button"
           onClick={() => toggleGroup(group.label)}
           className={cn(
-            "group relative flex h-12 w-full items-center gap-3.5 rounded-full px-4 text-[15px] font-medium text-foreground/78 transition-colors duration-150 hover:bg-primary/[0.10] hover:text-primary focus-visible:outline-none focus-visible:bg-primary/[0.10] focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/20",
-            isOpen
-              ? "bg-primary/[0.10] text-primary"
+            "group relative flex h-11 w-full items-center gap-3 rounded-lg text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:bg-primary-soft focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/25",
+            sidebarCollapsed ? "justify-center px-0" : "px-3.5",
+            isOpen && !isAnyChildActive
+              ? "bg-primary-soft text-primary dark:bg-primary dark:text-primary-foreground"
               : "",
           )}
         >
           <group.icon
             className={cn(
               "h-[18px] w-[18px] shrink-0 transition-colors",
-              isOpen
-                ? "text-primary"
-                : isAnyChildActive
-                  ? "text-primary"
-                  : "text-muted-foreground group-hover:text-primary",
+              isOpen && !isAnyChildActive
+                ? "text-primary dark:text-primary-foreground"
+                : "text-muted-foreground group-hover:text-primary",
             )}
           />
 
@@ -353,7 +368,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             <ChevronDown
               className={cn(
                 "h-4 w-4 shrink-0 transition-transform duration-200",
-                isOpen ? "text-primary" : "text-muted-foreground",
+                isOpen ? "text-primary dark:text-primary-foreground" : "text-muted-foreground",
                 isOpen && "rotate-180",
               )}
             />
@@ -361,7 +376,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         </button>
 
         <AnimatePresence initial={false}>
-          {isOpen && (
+          {isOpen && !sidebarCollapsed && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -370,10 +385,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               className="overflow-hidden"
             >
               <div
-                className={cn(
-                  "space-y-1",
-                  !sidebarCollapsed && "relative my-2 ml-6 border-l border-primary/20 py-1 pl-0.5",
-                )}
+                className="space-y-1 relative my-2 ml-6 border-l border-primary/20 py-1 pl-0.5"
               >
                 {group.children.map((child) => renderLink(child, true))}
               </div>
@@ -385,10 +397,10 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   };
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-[#f6f7fb] dark:bg-card">
+    <div className="flex h-full flex-col bg-card">
       <div className="flex h-[88px] items-center justify-between px-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/[0.08]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft ring-1 ring-primary/15">
             <Zap className="h-5 w-5 text-primary" />
           </div>
 
@@ -417,7 +429,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               size="icon"
               onClick={() => setManualOpenGroups({})}
               title="Collapse all submenus"
-              className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-primary/[0.10] hover:text-primary focus-visible:ring-primary/20"
+              className="h-9 w-9 shrink-0 rounded-lg text-muted-foreground hover:bg-primary-soft hover:text-primary focus-visible:ring-primary/25"
             >
             <ListCollapse className="h-4 w-4" />
           </Button>
@@ -429,15 +441,22 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         {visibleNavEntries.map((entry) => (isGroup(entry) ? renderGroup(entry) : renderLink(entry)))}
       </nav>
 
-      <div className="border-t border-border/55 bg-[#f6f7fb] px-4 pb-4 pt-4 dark:bg-card">
+      <div className="border-t border-border/70 bg-card px-4 pb-4 pt-4">
         <Link
           href="/settings/profile"
-          className="block rounded-[22px] bg-background p-3 transition-colors hover:bg-primary/[0.10] focus-visible:outline-none focus-visible:bg-primary/[0.10] focus-visible:ring-2 focus-visible:ring-primary/20"
+          className={cn(
+            "block w-full rounded-lg border border-border bg-secondary/55 transition-colors hover:bg-primary-soft focus-visible:outline-none focus-visible:bg-primary-soft focus-visible:ring-2 focus-visible:ring-primary/25",
+            sidebarCollapsed ? "px-2 py-3" : "p-3",
+          )}
         >
-          <div className={cn("flex items-center gap-3", sidebarCollapsed && "justify-center")}>
-            <Avatar className="h-11 w-11 shrink-0 rounded-xl">
+          <div className={cn(
+            "flex w-full items-center",
+            sidebarCollapsed ? "justify-center gap-0" : "gap-3",
+          )}
+          >
+            <Avatar className={cn("h-11 w-11 shrink-0 rounded-full", sidebarCollapsed && "mx-auto")}>
               {profile?.logo ? <AvatarImage src={profile.logo} /> : null}
-              <AvatarFallback className="rounded-xl bg-primary/10 text-sm font-semibold text-primary">
+              <AvatarFallback className="rounded-full bg-primary/10 text-sm font-semibold text-primary">
                 {businessName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -471,13 +490,13 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         initial={false}
         animate={{ width: sidebarCollapsed ? 72 : 272 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="group/sidebar fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-border/55 bg-[#f6f7fb] lg:flex dark:bg-card"
+        className="group/sidebar fixed left-0 top-0 z-30 hidden h-screen flex-col border-r border-border bg-card lg:flex"
       >
         {sidebarContent}
 
         <button
           onClick={toggleSidebar}
-          className="absolute -right-4 bottom-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background shadow-sm opacity-0 transition-all duration-200 hover:border-primary/20 hover:bg-primary/[0.10] hover:text-primary group-hover/sidebar:opacity-100"
+          className="absolute -right-4 bottom-3 z-50 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card shadow-sm opacity-0 transition-all duration-200 hover:border-primary/30 hover:bg-primary-soft hover:text-primary group-hover/sidebar:opacity-100"
         >
           <ChevronLeft
             className={cn(
@@ -504,7 +523,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="fixed left-0 top-0 z-50 h-screen w-[288px] border-r border-border/55 bg-[#f6f7fb] lg:hidden dark:bg-card"
+              className="fixed left-0 top-0 z-50 h-screen w-[288px] border-r border-border bg-card lg:hidden"
             >
               <Button
                 variant="ghost"

@@ -19,13 +19,13 @@ interface AnalyticsCardProps {
 }
 
 const colorClasses = {
-  orange: "text-orange-500 bg-orange-500/10",
-  emerald: "text-emerald-500 bg-emerald-500/10",
-  slate: "text-slate-500 bg-slate-500/10",
-  amber: "text-amber-500 bg-amber-500/10",
-  rose: "text-rose-500 bg-rose-500/10",
-  violet: "text-orange-500 bg-orange-500/10",
-  cyan: "text-cyan-500 bg-cyan-500/10",
+  orange: "text-accent bg-accent/10",
+  emerald: "text-success bg-success/10",
+  slate: "text-muted-foreground bg-secondary",
+  amber: "text-warning bg-warning/10",
+  rose: "text-destructive bg-destructive/10",
+  violet: "text-primary bg-primary-soft",
+  cyan: "text-primary bg-primary-soft",
 };
 
 /**
@@ -48,7 +48,7 @@ export function AnalyticsCard({
   title,
   value,
   icon: Icon,
-  color = "orange",
+  color = "cyan",
   trend,
   format = "number",
   loading = false,
@@ -71,7 +71,7 @@ export function AnalyticsCard({
       transition={{ duration: 0.4 }}
       className="min-w-0"
     >
-      <Card className="relative overflow-hidden border border-border/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:border-border/60 transition-colors h-full">
+      <Card className="relative h-full overflow-hidden border border-border bg-card transition-colors hover:border-primary/30">
         <CardHeader className="pb-1 pt-3 px-3 flex flex-row items-start justify-between space-y-0 gap-1">
           <CardTitle className="text-xs font-medium text-muted-foreground leading-tight">
             {title}
@@ -93,13 +93,13 @@ export function AnalyticsCard({
           {trend && (
             <div className="flex items-center gap-1 text-[10px] mt-1">
               {trend.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-emerald-500 shrink-0" />
+                <TrendingUp className="h-3 w-3 shrink-0 text-success" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-rose-500 shrink-0" />
+                <TrendingDown className="h-3 w-3 shrink-0 text-destructive" />
               )}
               <span
                 className={
-                  trend.isPositive ? "text-emerald-600" : "text-rose-600"
+                  trend.isPositive ? "text-success" : "text-destructive"
                 }
               >
                 {trend.isPositive ? "+" : "-"}

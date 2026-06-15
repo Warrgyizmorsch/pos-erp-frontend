@@ -60,7 +60,7 @@ export function InventoryAnalyticsDashboard({
     loadData();
   }, [loadData]);
 
-  const COLORS = ["#f97316", "#10b981", "#f59e0b", "#ef4444", "#fb923c"];
+  const COLORS = ["var(--primary)", "var(--info)", "var(--accent)", "var(--success)", "var(--warning)"];
   const stockOverview = data?.charts?.stockOverview
     ? [
         { name: "In Stock", value: data.charts.stockOverview.inStock },
@@ -164,9 +164,9 @@ export function InventoryAnalyticsDashboard({
                   }}
                 />
                 <Legend />
-                <Bar dataKey="Value" fill="#10b981" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="Cost" fill="#f97316" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="Profit" fill="#fb923c" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Value" fill="var(--primary)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Cost" fill="var(--info)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Profit" fill="var(--success)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -236,9 +236,9 @@ export function InventoryAnalyticsDashboard({
                   label={({ name, value }) => `${name}: ${value}`}
                   labelLine={{ strokeWidth: 1 }}
                 >
-                  <Cell fill="#10b981" />
-                  <Cell fill="#f59e0b" />
-                  <Cell fill="#ef4444" />
+                  <Cell fill="var(--success)" />
+                  <Cell fill="var(--warning)" />
+                  <Cell fill="var(--destructive)" />
                 </Pie>
                 <Tooltip
                   contentStyle={{
@@ -274,13 +274,13 @@ export function InventoryAnalyticsDashboard({
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Potential Profit</p>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-success">
             {formatCurrency(data?.summary?.potentialProfit || 0)}
           </p>
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Profit Margin</p>
-          <p className="text-2xl font-bold text-blue-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-info">
             {(data?.summary?.currentInventoryValue || 0) > 0
               ? (
                   ((data?.summary?.potentialProfit || 0) /

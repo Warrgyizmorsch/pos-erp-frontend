@@ -12,18 +12,21 @@ function Badge({
     | "destructive"
     | "outline"
     | "success"
-    | "warning";
+    | "warning"
+    | "info";
 }) {
   const variants: Record<string, string> = {
-    default: "border-transparent bg-primary text-primary-foreground",
+    default: "border-transparent bg-primary-soft text-primary",
     secondary: "border-transparent bg-secondary text-secondary-foreground",
     destructive:
-      "border-transparent bg-destructive text-destructive-foreground",
-    outline: "text-foreground border",
+      "border-transparent bg-destructive/15 text-destructive",
+    outline: "border-border text-foreground",
     success:
-      "border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+      "border-transparent bg-success/15 text-success",
     warning:
-      "border-transparent bg-amber-500/15 text-amber-600 dark:text-amber-400",
+      "border-transparent bg-warning/15 text-warning",
+    info:
+      "border-transparent bg-info/15 text-info",
   };
 
   return (

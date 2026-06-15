@@ -65,7 +65,7 @@ export function PurchaseAnalyticsDashboard({
     loadData();
   }, [loadData]);
 
-  const COLORS = ["#f97316", "#10b981", "#f59e0b", "#ef4444", "#fb923c", "#06b6d4"];
+  const COLORS = ["var(--primary)", "var(--info)", "var(--accent)", "var(--success)", "var(--warning)", "var(--destructive)"];
 
   return (
     <div className="space-y-5">
@@ -134,8 +134,8 @@ export function PurchaseAnalyticsDashboard({
               <AreaChart data={data?.charts?.purchaseTrend || []}>
                 <defs>
                   <linearGradient id="colorPurchase" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -157,7 +157,7 @@ export function PurchaseAnalyticsDashboard({
                 <Area
                   type="monotone"
                   dataKey="totalPurchases"
-                  stroke="#f97316"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   fill="url(#colorPurchase)"
                   name="Purchase Count"
@@ -198,7 +198,7 @@ export function PurchaseAnalyticsDashboard({
                 <Line
                   type="monotone"
                   dataKey="totalPurchaseAmount"
-                  stroke="#10b981"
+                  stroke="var(--success)"
                   strokeWidth={2}
                   dot={false}
                   name="Purchase Amount"
@@ -247,7 +247,7 @@ export function PurchaseAnalyticsDashboard({
                 />
                 <Bar
                   dataKey="totalPurchaseAmount"
-                  fill="#f97316"
+                  fill="var(--primary)"
                   radius={[0, 6, 6, 0]}
                   name="Purchase Amount"
                 />
@@ -314,13 +314,13 @@ export function PurchaseAnalyticsDashboard({
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Supplier Count</p>
-          <p className="text-2xl font-bold text-orange-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-primary">
             {data?.summary?.supplierCount || 0}
           </p>
         </div>
         <div className="bg-card border border-border/40 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Category Count</p>
-          <p className="text-2xl font-bold text-emerald-500 mt-1">
+          <p className="mt-1 text-2xl font-bold text-success">
             {data?.charts?.purchaseCategoryChart?.length || 0}
           </p>
         </div>
