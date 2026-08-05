@@ -1,0 +1,32 @@
+import 'package:get/get.dart';
+import '../../modules/authentication/bindings/auth_binding.dart';
+import '../../modules/authentication/views/forgot_password_view.dart';
+import '../../modules/authentication/views/login_view.dart';
+import '../../modules/authentication/views/register_view.dart';
+import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
+import 'app_routes.dart';
+
+class AppPages {
+  static final pages = [
+    GetPage(
+      name: Routes.login,
+      page: () => LoginView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.register,
+      page: () => RegisterView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.forgotPassword,
+      page: () => ForgotPasswordView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.dashboard,
+      page: () => const DashboardPlaceholderView(),
+      binding: AuthBinding(),
+    ),
+  ];
+}
