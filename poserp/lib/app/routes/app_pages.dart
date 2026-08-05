@@ -4,6 +4,8 @@ import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
 import '../../modules/authentication/views/register_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
+import '../../modules/products/categories/bindings/category_binding.dart';
+import '../../modules/products/categories/views/category_list_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -27,6 +29,11 @@ class AppPages {
       name: Routes.dashboard,
       page: () => const DashboardPlaceholderView(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: Routes.categories,
+      page: () => const CategoryListView(),
+      binding: CategoryBinding(),
     ),
   ];
 }

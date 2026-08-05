@@ -47,7 +47,9 @@ class AppTextField extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: isDark ? AppColors.foregroundDark : AppColors.foregroundLight,
+                color: isDark
+                    ? AppColors.foregroundDark
+                    : AppColors.foregroundLight,
               ),
               children: [
                 if (isRequired)
@@ -73,7 +75,9 @@ class AppTextField extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: isDark ? AppColors.foregroundDark : AppColors.foregroundLight,
+            color: isDark
+                ? AppColors.foregroundDark
+                : AppColors.foregroundLight,
           ),
           decoration: InputDecoration(
             hintText: hintText,
@@ -82,7 +86,10 @@ class AppTextField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: AppRadius.lg,
               borderSide: BorderSide(
@@ -104,16 +111,11 @@ class AppTextField extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: AppRadius.lg,
-              borderSide: const BorderSide(
-                color: AppColors.danger,
-              ),
+              borderSide: const BorderSide(color: AppColors.danger),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: AppRadius.lg,
-              borderSide: const BorderSide(
-                color: AppColors.danger,
-                width: 1.5,
-              ),
+              borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
             ),
           ),
         ),

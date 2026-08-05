@@ -44,11 +44,7 @@ class AppInitializerScreen extends GetView<AuthController> {
                     color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.bolt,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  child: const Icon(Icons.bolt, color: Colors.white, size: 32),
                 ),
                 const SizedBox(height: 24),
                 const SizedBox(
@@ -72,11 +68,7 @@ class AppInitializerScreen extends GetView<AuthController> {
         });
       }
 
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     });
   }
 }

@@ -19,10 +19,7 @@ class LoginView extends GetView<AuthController> {
 
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
-      controller.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      controller.login(_emailController.text.trim(), _passwordController.text);
     }
   }
 
@@ -68,9 +65,13 @@ class LoginView extends GetView<AuthController> {
                 isRequired: true,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword.value ? Icons.visibility_off : Icons.visibility,
+                    _obscurePassword.value
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                     size: 20,
-                    color: isDark ? AppColors.mutedForegroundDark : AppColors.mutedForegroundLight,
+                    color: isDark
+                        ? AppColors.mutedForegroundDark
+                        : AppColors.mutedForegroundLight,
                   ),
                   onPressed: () => _obscurePassword.toggle(),
                 ),
@@ -145,7 +146,9 @@ class LoginView extends GetView<AuthController> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.mutedForegroundDark : AppColors.mutedForegroundLight,
+                      color: isDark
+                          ? AppColors.mutedForegroundDark
+                          : AppColors.mutedForegroundLight,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -153,7 +156,9 @@ class LoginView extends GetView<AuthController> {
                     'Admin: admin@poserp.com / admin123',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.foregroundDark : AppColors.foregroundLight,
+                      color: isDark
+                          ? AppColors.foregroundDark
+                          : AppColors.foregroundLight,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -161,7 +166,9 @@ class LoginView extends GetView<AuthController> {
                     'Cashier: cashier@poserp.com / cashier123',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.foregroundDark : AppColors.foregroundLight,
+                      color: isDark
+                          ? AppColors.foregroundDark
+                          : AppColors.foregroundLight,
                     ),
                   ),
                 ],

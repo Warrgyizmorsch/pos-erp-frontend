@@ -43,18 +43,12 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                   const SizedBox(height: 16),
                   const Text(
                     'Authentication Successful!',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Phase 1 Shared Foundation & Auth Module active.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
                   const Divider(height: 32),
@@ -62,10 +56,18 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ListTile(
                       leading: const Icon(Icons.person),
                       title: Text(user.name),
-                      subtitle: Text('${user.email} (${user.role.toUpperCase()})'),
+                      subtitle: Text(
+                        '${user.email} (${user.role.toUpperCase()})',
+                      ),
                     ),
                   ],
-                  const SizedBox(height: 16),
+                  AppButton(
+                    text: 'Open Categories Module',
+                    variant: AppButtonVariant.primary,
+                    width: double.infinity,
+                    onPressed: () => Get.toNamed('/categories'),
+                  ),
+                  const SizedBox(height: 12),
                   AppButton(
                     text: 'Sign Out',
                     variant: AppButtonVariant.destructive,

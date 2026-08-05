@@ -71,7 +71,9 @@ class ForgotPasswordView extends StatelessWidget {
                   Icon(
                     Icons.arrow_back,
                     size: 16,
-                    color: isDark ? AppColors.mutedForegroundDark : AppColors.mutedForegroundLight,
+                    color: isDark
+                        ? AppColors.mutedForegroundDark
+                        : AppColors.mutedForegroundLight,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -79,7 +81,9 @@ class ForgotPasswordView extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? AppColors.mutedForegroundDark : AppColors.mutedForegroundLight,
+                      color: isDark
+                          ? AppColors.mutedForegroundDark
+                          : AppColors.mutedForegroundLight,
                     ),
                   ),
                 ],

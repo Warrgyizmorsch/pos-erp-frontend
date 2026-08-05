@@ -20,7 +20,9 @@ class AuthLayoutWrapper extends StatelessWidget {
 
     if (!isDesktop) {
       return Scaffold(
-        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        backgroundColor: isDark
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -78,7 +80,9 @@ class AuthLayoutWrapper extends StatelessWidget {
 
     // Desktop/Tablet Split View
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Sliding Branding Panel (Left for login, Right for register)
@@ -144,9 +148,7 @@ class AuthLayoutWrapper extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: 'for your business',
-                          style: TextStyle(
-                            color: AppColors.primarySoftLight,
-                          ),
+                          style: TextStyle(color: AppColors.primarySoftLight),
                         ),
                       ],
                     ),

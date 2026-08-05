@@ -89,9 +89,13 @@ class RegisterView extends GetView<AuthController> {
                 isRequired: true,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword.value ? Icons.visibility_off : Icons.visibility,
+                    _obscurePassword.value
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                     size: 20,
-                    color: isDark ? AppColors.mutedForegroundDark : AppColors.mutedForegroundLight,
+                    color: isDark
+                        ? AppColors.mutedForegroundDark
+                        : AppColors.mutedForegroundLight,
                   ),
                   onPressed: () => _obscurePassword.toggle(),
                 ),
@@ -104,7 +108,8 @@ class RegisterView extends GetView<AuthController> {
               hintText: '••••••••',
               controller: _confirmPasswordController,
               obscureText: true,
-              validator: (val) => Validators.confirmPassword(val, _passwordController.text),
+              validator: (val) =>
+                  Validators.confirmPassword(val, _passwordController.text),
               isRequired: true,
             ),
             const SizedBox(height: 24),

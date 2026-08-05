@@ -51,10 +51,14 @@ class AuthController extends GetxController {
         );
         Get.offAllNamed('/dashboard');
       } else {
-        showErrorSnackbar(response.message ?? 'Login failed. Invalid credentials.');
+        showErrorSnackbar(
+          response.message ?? 'Login failed. Invalid credentials.',
+        );
       }
     } catch (e) {
-      final msg = e is AppException ? e.message : 'An error occurred during sign in.';
+      final msg = e is AppException
+          ? e.message
+          : 'An error occurred during sign in.';
       showErrorSnackbar(msg);
     } finally {
       isLoading.value = false;
@@ -91,7 +95,9 @@ class AuthController extends GetxController {
         showErrorSnackbar(response.message ?? 'Registration failed.');
       }
     } catch (e) {
-      final msg = e is AppException ? e.message : 'An error occurred during account creation.';
+      final msg = e is AppException
+          ? e.message
+          : 'An error occurred during account creation.';
       showErrorSnackbar(msg);
     } finally {
       isLoading.value = false;

@@ -3,7 +3,7 @@ class AppSizes {
   static const double buttonHeightMd = 44.0;
   static const double buttonHeightLg = 52.0;
   static const double inputHeight = 44.0;
-  
+
   static const double iconSm = 16.0;
   static const double iconMd = 20.0;
   static const double iconLg = 24.0;

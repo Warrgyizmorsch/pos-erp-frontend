@@ -16,7 +16,8 @@ class AuthBinding extends Bindings {
     }
     if (!Get.isRegistered<AuthRepository>()) {
       Get.lazyPut<AuthRepository>(
-        () => AuthRepository(Get.find<AuthService>(), Get.find<StorageService>()),
+        () =>
+            AuthRepository(Get.find<AuthService>(), Get.find<StorageService>()),
       );
     }
     Get.lazyPut<AuthController>(

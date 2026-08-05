@@ -21,10 +21,14 @@ class ApiResponse<T> {
   ) {
     return ApiResponse<T>(
       success: json['success'] ?? false,
-      data: json['data'] != null && fromJsonT != null ? fromJsonT(json['data']) : null,
+      data: json['data'] != null && fromJsonT != null
+          ? fromJsonT(json['data'])
+          : null,
       message: json['message'],
       token: json['token'],
-      pagination: json['pagination'] != null ? Pagination.fromJson(json['pagination']) : null,
+      pagination: json['pagination'] != null
+          ? Pagination.fromJson(json['pagination'])
+          : null,
     );
   }
 }

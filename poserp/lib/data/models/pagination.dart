@@ -21,11 +21,6 @@ class Pagination {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'page': page,
-      'limit': limit,
-      'total': total,
-      'pages': pages,
-    };
+    return {'page': page, 'limit': limit, 'total': total, 'pages': pages};
   }
 }

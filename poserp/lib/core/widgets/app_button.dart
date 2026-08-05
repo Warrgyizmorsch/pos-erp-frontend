@@ -41,19 +41,27 @@ class AppButton extends StatelessWidget {
         foregroundColor = Colors.white;
         break;
       case AppButtonVariant.secondary:
-        backgroundColor = isDark ? AppColors.secondaryDark : AppColors.secondaryLight;
-        foregroundColor = isDark ? AppColors.foregroundDark : AppColors.foregroundLight;
+        backgroundColor = isDark
+            ? AppColors.secondaryDark
+            : AppColors.secondaryLight;
+        foregroundColor = isDark
+            ? AppColors.foregroundDark
+            : AppColors.foregroundLight;
         break;
       case AppButtonVariant.outline:
         backgroundColor = Colors.transparent;
-        foregroundColor = isDark ? AppColors.foregroundDark : AppColors.foregroundLight;
+        foregroundColor = isDark
+            ? AppColors.foregroundDark
+            : AppColors.foregroundLight;
         borderSide = BorderSide(
           color: isDark ? AppColors.borderDark : AppColors.borderLight,
         );
         break;
       case AppButtonVariant.ghost:
         backgroundColor = Colors.transparent;
-        foregroundColor = isDark ? AppColors.foregroundDark : AppColors.foregroundLight;
+        foregroundColor = isDark
+            ? AppColors.foregroundDark
+            : AppColors.foregroundLight;
         break;
       case AppButtonVariant.destructive:
         backgroundColor = AppColors.danger;
@@ -93,10 +101,7 @@ class AppButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
                     text,
                     style: TextStyle(
