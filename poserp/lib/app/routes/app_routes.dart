@@ -13,4 +13,5 @@ abstract class Routes {
   static const transporters = '/transporters';
   static const pos = '/pos';
   static const sales = '/sales';
+  static const paymentIn = '/sales/payment-in';
 }

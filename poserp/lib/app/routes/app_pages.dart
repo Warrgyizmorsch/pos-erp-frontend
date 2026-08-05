@@ -21,6 +21,8 @@ import '../../modules/products/subcategories/bindings/subcategory_binding.dart';
 import '../../modules/products/subcategories/views/subcategory_list_view.dart';
 import '../../modules/products/views/product_list_view.dart';
 import '../../modules/sales/bindings/sale_binding.dart';
+import '../../modules/sales/payment_in/bindings/payment_in_binding.dart';
+import '../../modules/sales/payment_in/views/payment_in_list_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
 import 'app_routes.dart';
 
@@ -90,6 +92,11 @@ class AppPages {
       name: Routes.sales,
       page: () => const SaleListView(),
       binding: SaleBinding(),
+    ),
+    GetPage(
+      name: Routes.paymentIn,
+      page: () => const PaymentInListView(),
+      binding: PaymentInBinding(),
     ),
   ];
 }

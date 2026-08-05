@@ -19,5 +19,6 @@ class ApiEndpoints {
 
   // Sales & POS
   static const String sales = '/sales';
+  static const String paymentIn = '/payment-in';
   static const String cashBankAccounts = '/cash-bank/accounts';
 }
