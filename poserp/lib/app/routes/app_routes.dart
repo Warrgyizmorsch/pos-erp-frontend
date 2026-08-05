@@ -7,4 +7,5 @@ abstract class Routes {
   static const categories = '/categories';
   static const subcategories = '/subcategories';
   static const products = '/products';
+  static const openingStock = '/opening-stock';
 }

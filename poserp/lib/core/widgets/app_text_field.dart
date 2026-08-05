@@ -6,6 +6,7 @@ class AppTextField extends StatelessWidget {
   final String? label;
   final String? hintText;
   final String? errorText;
+  final String? initialValue;
   final TextEditingController? controller;
   final TextInputType keyboardType;
   final bool obscureText;
@@ -21,6 +22,7 @@ class AppTextField extends StatelessWidget {
     this.label,
     this.hintText,
     this.errorText,
+    this.initialValue,
     this.controller,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
@@ -66,6 +68,7 @@ class AppTextField extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         TextFormField(
+          initialValue: initialValue,
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
