@@ -23,6 +23,9 @@ import '../../modules/products/views/product_list_view.dart';
 import '../../modules/sales/bindings/sale_binding.dart';
 import '../../modules/sales/payment_in/bindings/payment_in_binding.dart';
 import '../../modules/sales/payment_in/views/payment_in_list_view.dart';
+import '../../modules/sales/return/bindings/sale_return_binding.dart';
+import '../../modules/sales/return/views/sale_return_form_view.dart';
+import '../../modules/sales/return/views/sale_return_list_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
 import 'app_routes.dart';
 
@@ -97,6 +100,16 @@ class AppPages {
       name: Routes.paymentIn,
       page: () => const PaymentInListView(),
       binding: PaymentInBinding(),
+    ),
+    GetPage(
+      name: Routes.saleReturn,
+      page: () => const SaleReturnListView(),
+      binding: SaleReturnBinding(),
+    ),
+    GetPage(
+      name: Routes.saleReturnCreate,
+      page: () => const SaleReturnFormView(),
+      binding: SaleReturnBinding(),
     ),
   ];
 }
