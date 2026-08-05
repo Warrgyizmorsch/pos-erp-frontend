@@ -122,6 +122,13 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Sales Invoices Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/sales'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Sign Out',
                       variant: AppButtonVariant.destructive,
                       width: double.infinity,

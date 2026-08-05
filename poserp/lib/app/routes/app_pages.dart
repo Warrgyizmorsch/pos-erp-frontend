@@ -20,6 +20,8 @@ import '../../modules/products/opening_stock/views/opening_stock_view.dart';
 import '../../modules/products/subcategories/bindings/subcategory_binding.dart';
 import '../../modules/products/subcategories/views/subcategory_list_view.dart';
 import '../../modules/products/views/product_list_view.dart';
+import '../../modules/sales/bindings/sale_binding.dart';
+import '../../modules/sales/views/sale_list_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -83,6 +85,11 @@ class AppPages {
       name: Routes.pos,
       page: () => const POSView(),
       binding: POSBinding(),
+    ),
+    GetPage(
+      name: Routes.sales,
+      page: () => const SaleListView(),
+      binding: SaleBinding(),
     ),
   ];
 }
