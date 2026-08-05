@@ -10,4 +10,5 @@ abstract class Routes {
   static const openingStock = '/opening-stock';
   static const customers = '/customers';
   static const suppliers = '/suppliers';
+  static const transporters = '/transporters';
 }

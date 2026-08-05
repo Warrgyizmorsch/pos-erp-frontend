@@ -32,84 +32,96 @@ class DashboardPlaceholderView extends GetView<AuthController> {
             constraints: const BoxConstraints(maxWidth: 500),
             child: AppCard(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline,
-                    size: 64,
-                    color: AppColors.success,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Authentication Successful!',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Phase 1 Shared Foundation & Auth Module active.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const Divider(height: 32),
-                  if (user != null) ...[
-                    ListTile(
-                      leading: const Icon(Icons.person),
-                      title: Text(user.name),
-                      subtitle: Text(
-                        '${user.email} (${user.role.toUpperCase()})',
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 64,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Authentication Successful!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Phase 1 Shared Foundation & Auth Module active.',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Divider(height: 32),
+                    if (user != null) ...[
+                      ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text(user.name),
+                        subtitle: Text(
+                          '${user.email} (${user.role.toUpperCase()})',
+                        ),
+                      ),
+                    ],
+                    AppButton(
+                      text: 'Open Categories Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/categories'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Subcategories Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/subcategories'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Products Catalog Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/products'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Opening Stock Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/opening-stock'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Customers Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/customers'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Suppliers Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/suppliers'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Transporters Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/transporters'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Sign Out',
+                      variant: AppButtonVariant.destructive,
+                      width: double.infinity,
+                      onPressed: () => controller.logout(),
+                    ),
                   ],
-                  AppButton(
-                    text: 'Open Categories Module',
-                    variant: AppButtonVariant.primary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/categories'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Open Subcategories Module',
-                    variant: AppButtonVariant.secondary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/subcategories'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Open Products Catalog Module',
-                    variant: AppButtonVariant.primary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/products'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Open Opening Stock Module',
-                    variant: AppButtonVariant.secondary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/opening-stock'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Open Customers Module',
-                    variant: AppButtonVariant.primary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/customers'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Open Suppliers Module',
-                    variant: AppButtonVariant.secondary,
-                    width: double.infinity,
-                    onPressed: () => Get.toNamed('/suppliers'),
-                  ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    text: 'Sign Out',
-                    variant: AppButtonVariant.destructive,
-                    width: double.infinity,
-                    onPressed: () => controller.logout(),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
