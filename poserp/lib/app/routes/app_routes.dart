@@ -5,4 +5,5 @@ abstract class Routes {
   static const forgotPassword = '/forgot-password';
   static const dashboard = '/dashboard';
   static const categories = '/categories';
+  static const subcategories = '/subcategories';
 }

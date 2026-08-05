@@ -6,6 +6,8 @@ import '../../modules/authentication/views/register_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
+import '../../modules/products/subcategories/bindings/subcategory_binding.dart';
+import '../../modules/products/subcategories/views/subcategory_list_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -34,6 +36,11 @@ class AppPages {
       name: Routes.categories,
       page: () => const CategoryListView(),
       binding: CategoryBinding(),
+    ),
+    GetPage(
+      name: Routes.subcategories,
+      page: () => const SubcategoryListView(),
+      binding: SubcategoryBinding(),
     ),
   ];
 }
