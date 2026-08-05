@@ -4,6 +4,8 @@ import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
 import '../../modules/authentication/views/register_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
+import '../../modules/parties/customers/bindings/customer_binding.dart';
+import '../../modules/parties/customers/views/customer_list_view.dart';
 import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
@@ -55,6 +57,11 @@ class AppPages {
       name: Routes.openingStock,
       page: () => const OpeningStockView(),
       binding: OpeningStockBinding(),
+    ),
+    GetPage(
+      name: Routes.customers,
+      page: () => const CustomerListView(),
+      binding: CustomerBinding(),
     ),
   ];
 }
