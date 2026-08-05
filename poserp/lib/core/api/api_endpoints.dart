@@ -16,4 +16,8 @@ class ApiEndpoints {
   // Inventory & Stock
   static const String inventory = '/inventory';
   static const String stock = '/stock';
+
+  // Sales & POS
+  static const String sales = '/sales';
+  static const String cashBankAccounts = '/cash-bank/accounts';
 }

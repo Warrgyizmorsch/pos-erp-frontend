@@ -10,6 +10,8 @@ import '../../modules/parties/suppliers/bindings/supplier_binding.dart';
 import '../../modules/parties/suppliers/views/supplier_list_view.dart';
 import '../../modules/parties/transporters/bindings/transporter_binding.dart';
 import '../../modules/parties/transporters/views/transporter_list_view.dart';
+import '../../modules/pos/bindings/pos_binding.dart';
+import '../../modules/pos/views/pos_view.dart';
 import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
@@ -76,6 +78,11 @@ class AppPages {
       name: Routes.transporters,
       page: () => const TransporterListView(),
       binding: TransporterBinding(),
+    ),
+    GetPage(
+      name: Routes.pos,
+      page: () => const POSView(),
+      binding: POSBinding(),
     ),
   ];
 }
