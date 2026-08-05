@@ -20,12 +20,12 @@ class ApiResponse<T> {
     T Function(dynamic json)? fromJsonT,
   ) {
     return ApiResponse<T>(
-      success: json['success'] ?? false,
+      success: json['success'] as bool? ?? (json['data'] != null),
       data: json['data'] != null && fromJsonT != null
           ? fromJsonT(json['data'])
           : null,
-      message: json['message'],
-      token: json['token'],
+      message: json['message']?.toString(),
+      token: json['token']?.toString(),
       pagination: json['pagination'] != null
           ? Pagination.fromJson(json['pagination'])
           : null,
