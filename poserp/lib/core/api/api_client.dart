@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../constants/app_config.dart';
 import 'api_exceptions.dart';
 import 'api_interceptors.dart';
+import 'api_logger_interceptor.dart';
 
 class ApiClient {
   late final Dio _dio;
@@ -17,6 +18,7 @@ class ApiClient {
     );
 
     _dio.interceptors.add(ApiInterceptors());
+    _dio.interceptors.add(ApiLoggerInterceptor());
   }
 
   Future<Response> get(

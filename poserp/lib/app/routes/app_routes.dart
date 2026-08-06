@@ -19,4 +19,5 @@ abstract class Routes {
   static const purchases = '/purchases';
   static const purchaseCreate = '/purchases/create';
   static const purchaseDetail = '/purchases/:id';
+  static const paymentOut = '/purchases/payment-out';
 }

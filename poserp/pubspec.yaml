@@ -37,6 +37,7 @@ dependencies:
 
   get: ^4.6.6
   dio: ^5.7.0
+  logger: ^2.7.0
   get_storage: ^2.1.1
   google_fonts: ^6.2.1
 
