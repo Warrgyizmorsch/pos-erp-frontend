@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Product, ApiResponse, Pagination } from "@/types";
+import type { Product, ApiResponse, Pagination, ProductPriceOptionsResponse } from "@/types";
 
 export const productService = {
   getAll: async (params?: {
@@ -23,6 +23,16 @@ export const productService = {
   getByBarcode: async (barcode: string): Promise<Product> => {
     const { data } = await api.get<ApiResponse<Product>>(`/products/barcode/${barcode}`);
     return data.data;
+  },
+
+  getPriceOptions: async (id: string): Promise<ProductPriceOptionsResponse> => {
+    const { data } = await api.get<ApiResponse<ProductPriceOptionsResponse> & ProductPriceOptionsResponse>(`/products/${id}/price-options`);
+    return data.data || {
+      product: data.product,
+      priceOptions: data.priceOptions,
+      defaultPrice: data.defaultPrice,
+      priceSelectionRequired: data.priceSelectionRequired,
+    };
   },
 
   create: async (payload: Partial<Product>): Promise<Product> => {

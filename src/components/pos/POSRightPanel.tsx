@@ -118,6 +118,36 @@ function POSRightPanelContent() {
     if (currentItems.length === 0) { toast.error("Add items first"); return; }
     setSaving(true);
     try {
+      for (const item of currentItems) {
+        if (item.itemType === "inventory") {
+          if (!item.productId) {
+            toast.error(`Inventory item ${item.itemName || "selected row"} is missing product.`);
+            setSaving(false);
+            return;
+          }
+          if (item.priceSelectionRequired && !item.batchId) {
+            toast.error(`Please select selling price for ${item.itemName}.`);
+            setSaving(false);
+            return;
+          }
+          if (Number(item.availableQty || 0) > 0 && item.quantity > Number(item.availableQty || 0)) {
+            toast.error(`Selected price batch for ${item.itemName} has only ${item.availableQty} qty available.`);
+            setSaving(false);
+            return;
+          }
+        }
+        if (item.quantity <= 0) {
+          toast.error(`Quantity must be greater than 0 for ${item.itemName}.`);
+          setSaving(false);
+          return;
+        }
+        if (item.pricePerUnit <= 0) {
+          toast.error(`Please select selling price for ${item.itemName}.`);
+          setSaving(false);
+          return;
+        }
+      }
+
       // Use the customer from the bill; if walk-in, pass walk-in name but no DB id
       const isWalkIn = !activeBill.customer || activeBill.customer._id === "walk-in";
       const cId = isWalkIn ? undefined : activeBill.customer?._id;
@@ -166,6 +196,7 @@ function POSRightPanelContent() {
           return {
             product: productId,
             productId,
+            batchId: isInventory ? i.batchId || undefined : undefined,
             itemType: i.itemType || "inventory",
             affectsInventory: isInventory,
             itemName: i.itemName,
@@ -175,6 +206,10 @@ function POSRightPanelContent() {
             quantity: i.quantity,
             rate: i.pricePerUnit,
             unitPrice: i.pricePerUnit,
+            salePrice: i.pricePerUnit,
+            mrp: i.mrp || i.pricePerUnit,
+            selectedPriceType: i.selectedPriceType || i.priceLabel || undefined,
+            availableQty: i.availableQty,
             purchasePrice: i.purchasePrice,
             discount: i.discount,
             taxRate: i.taxPercent,

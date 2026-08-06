@@ -358,21 +358,33 @@ export default function IncomeExpensePage({ entryType }: IncomeExpensePageProps)
           <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add {isIncome ? "Income" : "Expense"}</Button>
         </EmptyState>
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-lg">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-[1180px] w-full table-fixed">
+              <colgroup>
+                <col className="w-[120px]" />
+                <col className="w-[160px]" />
+                <col className="w-[220px]" />
+                <col className="w-[180px]" />
+                <col className="w-[150px]" />
+                <col className="w-[140px]" />
+                <col className="w-[120px]" />
+                <col className="w-[140px]" />
+                <col className="w-[140px]" />
+                <col className="w-[100px]" />
+              </colgroup>
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Nature</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Title / Particular</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Ledger</th>
-                  <th className="text-center p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Payment Mode</th>
-                  <th className="text-right p-4 text-sm font-medium text-muted-foreground">Taxable</th>
-                  <th className="text-right p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">GST</th>
-                  <th className="text-right p-4 text-sm font-medium text-muted-foreground">Total</th>
-                  <th className="text-center p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Accounting</th>
-                  <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Nature</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Title / Particular</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Ledger</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Payment Mode</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Taxable</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">GST</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Total</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Accounting</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -390,44 +402,48 @@ export default function IncomeExpensePage({ entryType }: IncomeExpensePageProps)
                       transition={{ delay: i * 0.03 }}
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                     >
-                      <td className="p-4 text-sm text-muted-foreground whitespace-nowrap">
+                      <td className="px-4 py-4 text-sm text-muted-foreground whitespace-nowrap">
                         {new Date(e.date).toLocaleDateString("en-IN")}
                       </td>
-                      <td className="p-4">
-                        <Badge variant="outline" className={NATURE_BADGE_CLASSES[badgeKey] || ""}>
+                      <td className="px-4 py-4">
+                        <Badge variant="outline" className={`max-w-full whitespace-nowrap px-2.5 py-1 font-semibold ${NATURE_BADGE_CLASSES[badgeKey] || ""}`}>
                           {NATURE_BADGE_LABELS[badgeKey] || badgeKey}
                         </Badge>
                       </td>
-                      <td className="p-4">
-                        <p className="font-medium text-sm">{e.title}</p>
+                      <td className="px-4 py-4">
+                        <p className="truncate text-sm font-semibold text-foreground" title={e.title}>{e.title}</p>
                         {e.description && <p className="text-xs text-muted-foreground line-clamp-1">{e.description}</p>}
                       </td>
-                      <td className="p-4 text-sm hidden md:table-cell">
-                        <Badge variant="secondary" className="font-normal">
+                      <td className="px-4 py-4 text-sm">
+                        <Badge
+                          variant="secondary"
+                          title={e.ledgerName || e.categoryName || (typeof e.category === "string" ? e.category : e.category?.name) || "—"}
+                          className="max-w-full truncate rounded-md px-2.5 py-1 text-xs font-medium"
+                        >
                           {e.ledgerName || e.categoryName || (typeof e.category === "string" ? e.category : e.category?.name) || "—"}
                         </Badge>
                       </td>
-                      <td className="p-4 text-center hidden md:table-cell text-sm capitalize">
+                      <td className="px-4 py-4 text-center text-sm capitalize text-muted-foreground">
                         {(e.paymentMethod || "cash").replace("_", " ")}
                       </td>
-                      <td className={`p-4 text-right font-medium ${amountColorClass}`}>
+                      <td className={`px-4 py-4 text-right font-semibold tabular-nums ${amountColorClass}`}>
                         {formatCurrency(e.taxableAmount || e.amount)}
                       </td>
-                      <td className={`p-4 text-right hidden lg:table-cell text-sm ${amountColorClass}`}>
+                      <td className={`px-4 py-4 text-right text-sm font-semibold tabular-nums ${amountColorClass}`}>
                         {e.gstApplicable && e.gstAmount ? formatCurrency(e.gstAmount) : "—"}
                       </td>
-                      <td className={`p-4 text-right font-semibold ${amountColorClass}`}>
+                      <td className={`px-4 py-4 text-right font-bold tabular-nums ${amountColorClass}`}>
                         {formatCurrency(e.totalAmount || e.amount)}
                       </td>
-                      <td className="p-4 text-center hidden lg:table-cell">
+                      <td className="px-4 py-4 text-center">
                         <Badge
                           variant="outline"
-                          className={accountingStatusClasses[e.accountingStatus || "not_posted"]}
+                          className={`whitespace-nowrap px-2.5 py-1 font-semibold ${accountingStatusClasses[e.accountingStatus || "not_posted"]}`}
                         >
                           {(e.accountingStatus || "not_posted").replace("_", " ")}
                         </Badge>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {isAdmin && (e.accountingStatus || "not_posted") !== "posted" && (
                             <Button variant="ghost" size="icon-sm" onClick={() => handleRepostAccounting(e._id)} title="Repost accounting">

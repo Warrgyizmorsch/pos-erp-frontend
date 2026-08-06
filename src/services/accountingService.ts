@@ -144,6 +144,16 @@ export const accountingService = {
     return response.data.data;
   },
 
+  async createLedger(payload: any): Promise<Ledger> {
+    const response = await api.post<ApiResponse<Ledger>>("/accounting/ledgers", payload);
+    return response.data.data;
+  },
+
+  async getAccountGroups(): Promise<any[]> {
+    const response = await api.get<ApiResponse<any[]>>("/accounting/groups");
+    return response.data.data;
+  },
+
   async getLedgerStatement(id: string, filters?: Filters): Promise<LedgerStatement> {
     const response = await api.get<ApiResponse<LedgerStatement>>(
       withFilters(`/accounting/ledgers/${id}/statement`, filters),
@@ -460,5 +470,67 @@ export const accountingService = {
   }> {
     const response = await api.get<ApiResponse<AccountingAuditLog[]>>(withFilters("/accounting/audit-logs", filters));
     return { logs: response.data.data, pagination: response.data.pagination };
+  },
+
+  async uploadBankStatement(file: File, bankLedgerId: string): Promise<any> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bankLedgerId", bankLedgerId);
+    const response = await api.post<ApiResponse<any>>("/accounting/bank-statement/import", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data.data;
+  },
+
+  async saveBankStatement(payload: any): Promise<any> {
+    const response = await api.post<ApiResponse<any>>("/accounting/bank-statement/save", payload);
+    return response.data.data;
+  },
+
+  async postMappedStatementEntries(id: string, mappings: Record<string, string>): Promise<any> {
+    const response = await api.post<ApiResponse<any>>(`/accounting/bank-statement/${id}/post-entries`, { mappings });
+    return response.data.data;
+  },
+
+  async getBankStatementHistory(): Promise<any[]> {
+    const response = await api.get<ApiResponse<any[]>>("/accounting/bank-statement/history");
+    return response.data.data;
+  },
+
+  async getBankStatementDetails(id: string): Promise<any> {
+    const response = await api.get<ApiResponse<any>>(`/accounting/bank-statement/${id}`);
+    return response.data.data;
+  },
+
+  async getMappingRules(): Promise<any[]> {
+    const response = await api.get<ApiResponse<any[]>>("/accounting/bank-statement/mappings");
+    return response.data.data;
+  },
+
+  async createMappingRule(payload: any): Promise<any> {
+    const response = await api.post<ApiResponse<any>>("/accounting/bank-statement/mappings", payload);
+    return response.data.data;
+  },
+
+  async updateMappingRule(id: string, payload: any): Promise<any> {
+    const response = await api.put<ApiResponse<any>>(`/accounting/bank-statement/mappings/${id}`, payload);
+    return response.data.data;
+  },
+
+  async deleteMappingRule(id: string): Promise<any> {
+    const response = await api.delete<ApiResponse<any>>(`/accounting/bank-statement/mappings/${id}`);
+    return response.data;
+  },
+
+  async getBankImportSettings(): Promise<any> {
+    const response = await api.get<ApiResponse<any>>("/accounting/bank-statement/settings");
+    return response.data.data;
+  },
+
+  async updateBankImportSettings(payload: any): Promise<any> {
+    const response = await api.put<ApiResponse<any>>("/accounting/bank-statement/settings", payload);
+    return response.data.data;
   },
 };

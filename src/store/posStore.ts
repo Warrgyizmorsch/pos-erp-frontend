@@ -21,6 +21,12 @@ export interface POSItem {
   productId?: string | null;
   product?: Product;
   productRef?: string | null;
+  batchId?: string | null;
+  selectedPriceType?: string | null;
+  priceLabel?: string;
+  mrp?: number;
+  availableQty?: number;
+  priceSelectionRequired?: boolean;
   itemType: "inventory" | "non_stock_product" | "service";
   affectsInventory: boolean;
   itemCode: string;
@@ -92,6 +98,12 @@ export const createPlaceholderItem = (): POSItem => ({
   id: crypto.randomUUID(),
   productId: null,
   productRef: null,
+  batchId: null,
+  selectedPriceType: null,
+  priceLabel: '',
+  mrp: 0,
+  availableQty: 0,
+  priceSelectionRequired: false,
   itemType: 'inventory',
   affectsInventory: true,
   itemCode: '',
@@ -220,6 +232,12 @@ export const usePOSStore = create<POSStore>((set, get) => ({
             id: crypto.randomUUID(),
             productId,
             productRef: productId,
+            batchId: item.batchId || null,
+            selectedPriceType: item.selectedPriceType || null,
+            priceLabel: item.selectedPriceType || '',
+            mrp: item.mrp || rate,
+            availableQty: item.availableQtyAtSale || 0,
+            priceSelectionRequired: false,
             product,
             itemType,
             affectsInventory: item.affectsInventory ?? itemType === 'inventory',
@@ -279,6 +297,12 @@ export const usePOSStore = create<POSStore>((set, get) => ({
         id: crypto.randomUUID(),
         productId: null,
         productRef: null,
+        batchId: null,
+        selectedPriceType: null,
+        priceLabel: '',
+        mrp: 0,
+        availableQty: 0,
+        priceSelectionRequired: false,
         itemType: 'inventory',
         affectsInventory: true,
         itemCode: '',
@@ -311,7 +335,11 @@ export const usePOSStore = create<POSStore>((set, get) => ({
           
           // Check if item already exists (if it's a product)
           if (calculatedItem.itemType === 'inventory' && calculatedItem.productId) {
-            const existingIndex = b.items.findIndex(i => i.itemType === 'inventory' && i.productId === calculatedItem.productId);
+            const existingIndex = b.items.findIndex(
+              i => i.itemType === 'inventory'
+                && i.productId === calculatedItem.productId
+                && (i.batchId || null) === (calculatedItem.batchId || null)
+            );
             if (existingIndex >= 0) {
               const items = [...b.items];
               const existing = items[existingIndex];
@@ -371,7 +399,10 @@ export const usePOSStore = create<POSStore>((set, get) => ({
       let selectedIndex = itemIndex;
       if (calculatedItem.itemType === 'inventory' && calculatedItem.productId) {
         const duplicateIndex = updatedItems.findIndex(
-          (i, idx) => idx !== itemIndex && i.itemType === 'inventory' && i.productId === calculatedItem.productId
+          (i, idx) => idx !== itemIndex
+            && i.itemType === 'inventory'
+            && i.productId === calculatedItem.productId
+            && (i.batchId || null) === (calculatedItem.batchId || null)
         );
 
         if (duplicateIndex >= 0) {
