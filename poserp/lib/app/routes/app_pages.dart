@@ -15,6 +15,8 @@ import '../../modules/pos/views/pos_view.dart';
 import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
+import '../../modules/products/inventory/bindings/stock_binding.dart';
+import '../../modules/products/inventory/views/inventory_view.dart';
 import '../../modules/products/opening_stock/bindings/opening_stock_binding.dart';
 import '../../modules/products/opening_stock/views/opening_stock_view.dart';
 import '../../modules/products/subcategories/bindings/subcategory_binding.dart';
@@ -76,6 +78,11 @@ class AppPages {
       name: Routes.openingStock,
       page: () => const OpeningStockView(),
       binding: OpeningStockBinding(),
+    ),
+    GetPage(
+      name: Routes.inventory,
+      page: () => const InventoryView(),
+      binding: StockBinding(),
     ),
     GetPage(
       name: Routes.customers,

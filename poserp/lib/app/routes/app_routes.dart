@@ -8,6 +8,7 @@ abstract class Routes {
   static const subcategories = '/subcategories';
   static const products = '/products';
   static const openingStock = '/opening-stock';
+  static const inventory = '/inventory';
   static const customers = '/customers';
   static const suppliers = '/suppliers';
   static const transporters = '/transporters';

@@ -15,7 +15,12 @@ class ApiEndpoints {
 
   // Inventory & Stock
   static const String inventory = '/inventory';
+  static const String inventoryHistory = '/inventory/history';
+  static const String inventoryOpeningStock = '/inventory/opening-stock';
   static const String stock = '/stock';
+  static const String stockAdjustments = '/stock/adjustments';
+  static const String stockAlerts = '/stock/alerts';
+  static const String stockStats = '/stock/stats';
 
   // Sales & POS
   static const String sales = '/sales';

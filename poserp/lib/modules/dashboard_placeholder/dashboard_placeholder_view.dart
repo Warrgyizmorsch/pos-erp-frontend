@@ -94,6 +94,13 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Inventory Manager Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/inventory'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Open Customers Module',
                       variant: AppButtonVariant.primary,
                       width: double.infinity,
