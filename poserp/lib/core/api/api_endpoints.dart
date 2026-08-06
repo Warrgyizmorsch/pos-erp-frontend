@@ -31,6 +31,7 @@ class ApiEndpoints {
 
   // Purchases
   static const String purchases = '/purchases';
+  static const String purchaseReturns = '/purchase-returns';
   static const String paymentOut = '/payment-out';
   static const String unpaidPurchases = '/purchases/unpaid';
 }

@@ -157,10 +157,17 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
-                      text: 'Open Payment-Out Module',
+                      text: 'Open Purchase Return / Debit Note Module',
                       variant: AppButtonVariant.primary,
                       width: double.infinity,
-                      onPressed: () => Get.toNamed('/purchases/payment-out'),
+                      onPressed: () => Get.toNamed('/purchase-return'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Payment-Out Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/payment-out'),
                     ),
                     const SizedBox(height: 12),
                     AppButton(

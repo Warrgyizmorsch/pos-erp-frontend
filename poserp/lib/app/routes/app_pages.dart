@@ -25,6 +25,8 @@ import '../../modules/products/views/product_list_view.dart';
 import '../../modules/purchases/bindings/purchase_binding.dart';
 import '../../modules/purchases/payment_out/bindings/payment_out_binding.dart';
 import '../../modules/purchases/payment_out/views/payment_out_list_view.dart';
+import '../../modules/purchases/return/bindings/purchase_return_binding.dart';
+import '../../modules/purchases/return/views/purchase_return_list_view.dart';
 import '../../modules/purchases/views/purchase_detail_view.dart';
 import '../../modules/purchases/views/purchase_form_view.dart';
 import '../../modules/purchases/views/purchase_list_view.dart';
@@ -138,6 +140,11 @@ class AppPages {
       name: Routes.purchaseDetail,
       page: () => const PurchaseDetailView(),
       binding: PurchaseBinding(),
+    ),
+    GetPage(
+      name: Routes.purchaseReturn,
+      page: () => const PurchaseReturnListView(),
+      binding: PurchaseReturnBinding(),
     ),
     GetPage(
       name: Routes.paymentOut,
