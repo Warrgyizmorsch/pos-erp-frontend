@@ -79,7 +79,7 @@ const emptyForm = {
 
 export default function IncomeExpensePage({ entryType }: IncomeExpensePageProps) {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "accountant";
   const isIncome = entryType === "income";
   const pageTitle = isIncome ? "Income" : "Expenses";
   const pageDesc = isIncome ? "Track and manage business income" : "Track and manage business expenses";

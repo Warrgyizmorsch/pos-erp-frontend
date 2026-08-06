@@ -59,7 +59,7 @@ interface FormItem {
 export default function PurchaseReturnPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "manager";
 
   // Page mode state: "list" | "create"
   const [mode, setMode] = useState<"list" | "create">("list");

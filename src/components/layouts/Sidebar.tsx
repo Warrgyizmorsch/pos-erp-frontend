@@ -230,8 +230,26 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
   const visibleNavEntries = useMemo(
     () => navEntries.filter((entry) => {
+      const role = user?.role;
+      if (!role) return false;
+
       if (entry.label === "Accounting" && accountingEnabled === false) return false;
-      if (entry.label === "Activity Logs" && user?.role !== "admin") return false;
+
+      // Role filter constraints
+      if (entry.label === "Parties" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Inventory Master" && !["admin", "manager", "stock_manager"].includes(role)) return false;
+      if (entry.label === "Sale" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Purchase" && !["admin", "manager", "stock_manager"].includes(role)) return false;
+      if (entry.label === "Cash & Bank" && !["admin", "accountant"].includes(role)) return false;
+      if (entry.label === "Expenses / Income" && !["admin", "manager", "accountant"].includes(role)) return false;
+      if (entry.label === "Accounting" && !["admin", "accountant"].includes(role)) return false;
+      if (entry.label === "Reports" && !["admin", "manager", "accountant"].includes(role)) return false;
+      if (entry.label === "Shifts" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Activity Logs" && role !== "admin") return false;
+      if (entry.label === "Sync & Backup" && role !== "admin") return false;
+      if (entry.label === "Settings" && role !== "admin") return false;
+      if (entry.label === "Utilities" && !["admin", "manager"].includes(role)) return false;
+
       return true;
     }),
     [accountingEnabled, user?.role],

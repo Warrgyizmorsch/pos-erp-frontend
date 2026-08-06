@@ -60,7 +60,7 @@ export default function SaleDetailsPage() {
   const [printOpen, setPrintOpen] = useState(false);
   const [reposting, setReposting] = useState(false);
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "accountant";
 
   useEffect(() => {
     let active = true;
