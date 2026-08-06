@@ -20,6 +20,10 @@ import '../../modules/products/opening_stock/views/opening_stock_view.dart';
 import '../../modules/products/subcategories/bindings/subcategory_binding.dart';
 import '../../modules/products/subcategories/views/subcategory_list_view.dart';
 import '../../modules/products/views/product_list_view.dart';
+import '../../modules/purchases/bindings/purchase_binding.dart';
+import '../../modules/purchases/views/purchase_detail_view.dart';
+import '../../modules/purchases/views/purchase_form_view.dart';
+import '../../modules/purchases/views/purchase_list_view.dart';
 import '../../modules/sales/bindings/sale_binding.dart';
 import '../../modules/sales/payment_in/bindings/payment_in_binding.dart';
 import '../../modules/sales/payment_in/views/payment_in_list_view.dart';
@@ -110,6 +114,21 @@ class AppPages {
       name: Routes.saleReturnCreate,
       page: () => const SaleReturnFormView(),
       binding: SaleReturnBinding(),
+    ),
+    GetPage(
+      name: Routes.purchases,
+      page: () => const PurchaseListView(),
+      binding: PurchaseBinding(),
+    ),
+    GetPage(
+      name: Routes.purchaseCreate,
+      page: () => const PurchaseFormView(),
+      binding: PurchaseBinding(),
+    ),
+    GetPage(
+      name: Routes.purchaseDetail,
+      page: () => const PurchaseDetailView(),
+      binding: PurchaseBinding(),
     ),
   ];
 }

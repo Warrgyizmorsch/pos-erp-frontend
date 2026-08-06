@@ -16,4 +16,7 @@ abstract class Routes {
   static const paymentIn = '/sales/payment-in';
   static const saleReturn = '/sales/return';
   static const saleReturnCreate = '/sales/return/create';
+  static const purchases = '/purchases';
+  static const purchaseCreate = '/purchases/create';
+  static const purchaseDetail = '/purchases/:id';
 }

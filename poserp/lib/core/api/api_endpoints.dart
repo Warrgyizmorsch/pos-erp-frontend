@@ -22,4 +22,7 @@ class ApiEndpoints {
   static const String salesReturns = '/sales-returns';
   static const String paymentIn = '/payment-in';
   static const String cashBankAccounts = '/cash-bank/accounts';
+
+  // Purchases
+  static const String purchases = '/purchases';
 }
