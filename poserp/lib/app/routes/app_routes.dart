@@ -30,4 +30,7 @@ abstract class Routes {
   static const ledgerStatement = '/accounting/ledgers/:id';
   static const vouchers = '/accounting/vouchers';
   static const journalCreate = '/accounting/journal/create';
+  static const dayBook = '/accounting/day-book';
+  static const financialReports = '/accounting/reports';
+  static const gstReports = '/accounting/gst';
 }

@@ -4,6 +4,9 @@ import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
 import '../../modules/accounting/ledgers/bindings/ledger_binding.dart';
 import '../../modules/accounting/ledgers/views/ledger_list_view.dart';
 import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
+import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
+import '../../modules/accounting/reports/views/day_book_view.dart';
+import '../../modules/accounting/reports/views/financial_reports_view.dart';
 import '../../modules/accounting/vouchers/bindings/voucher_binding.dart';
 import '../../modules/accounting/vouchers/views/journal_form_view.dart';
 import '../../modules/accounting/vouchers/views/voucher_list_view.dart';
@@ -204,6 +207,21 @@ class AppPages {
       name: Routes.journalCreate,
       page: () => const JournalFormView(),
       binding: VoucherBinding(),
+    ),
+    GetPage(
+      name: Routes.dayBook,
+      page: () => const DayBookView(),
+      binding: AccountingReportBinding(),
+    ),
+    GetPage(
+      name: Routes.financialReports,
+      page: () => const FinancialReportsView(),
+      binding: AccountingReportBinding(),
+    ),
+    GetPage(
+      name: Routes.gstReports,
+      page: () => const FinancialReportsView(),
+      binding: AccountingReportBinding(),
     ),
   ];
 }

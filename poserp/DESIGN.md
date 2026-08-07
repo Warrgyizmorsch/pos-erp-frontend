@@ -670,9 +670,9 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/accounting/ledgers` | `/accounting/ledgers` | `accounting/ledgers` | `LedgerListController` | `LedgerRepository` | Searchable Ledger Table | **Completed (Phase 6)** |
 | `/accounting/vouchers` | `/accounting/vouchers` | `accounting/vouchers` | `VoucherListController` | `VoucherRepository` | Voucher History Table | **Completed (Phase 6)** |
 | `/accounting/journal/create` | `/accounting/journal/create` | `accounting/vouchers` | `JournalFormController` | `VoucherRepository` | Double-Entry Grid Form | **Completed (Phase 6)** |
-| `/accounting/day-book` | `/accounting/day-book` | `accounting/day_book` | `DayBookController` | `AccountingRepository` | Chronological Journal Table | Pending |
-| `/accounting/trial-balance` | `/accounting/trial-balance` | `accounting/trial_balance` | `TrialBalanceController` | `AccountingRepository` | Debit/Credit Summary Table | Pending |
-| `/accounting/gst` | `/accounting/gst` | `accounting/gst` | `GstReportController` | `AccountingRepository` | Tax Summary Dashboard | Pending |
+| `/accounting/day-book` | `/accounting/day-book` | `accounting/reports` | `DayBookController` | `AccountingReportRepository` | Chronological Journal Table | **Completed (Phase 6)** |
+| `/accounting/trial-balance` | `/accounting/trial-balance` | `accounting/reports` | `FinancialReportsController` | `AccountingReportRepository` | Debit/Credit Summary Table | **Completed (Phase 6)** |
+| `/accounting/gst` | `/accounting/gst` | `accounting/reports` | `FinancialReportsController` | `AccountingReportRepository` | Tax Summary Dashboard | **Completed (Phase 6)** |
 | `/reports` | `/reports` | `reports` | `ReportsController` | `ReportsRepository` | Report Selection & Charts | Pending |
 | `/shifts` | `/shifts` | `shifts` | `ShiftController` | `ShiftRepository` | Shift Status + Register | **Completed (Phase 5)** |
 | `/activity` | `/activity` | `activity` | `ActivityController` | `ActivityRepository` | System Audit Table | Pending |

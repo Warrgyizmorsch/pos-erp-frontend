@@ -64,4 +64,12 @@ class ApiEndpoints {
   static const String accountingVoucherTypes = '/accounting/voucher-types';
   static const String accountingJournalDraft = '/accounting/journal/draft';
   static const String accountingJournalPost = '/accounting/journal/post';
+  static const String accountingDayBook = '/accounting/day-book';
+  static const String accountingReportTrialBalance =
+      '/accounting/reports/trial-balance';
+  static const String accountingReportProfitLoss =
+      '/accounting/reports/profit-loss';
+  static const String accountingReportBalanceSheet =
+      '/accounting/reports/balance-sheet';
+  static const String accountingGstSummary = '/accounting/gst/summary';
 }
