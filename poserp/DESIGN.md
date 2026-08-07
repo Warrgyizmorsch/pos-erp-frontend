@@ -666,8 +666,8 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/expenses` | `/expenses` | `expenses` | `ExpenseController` | `ExpenseRepository` | Category Filtered Table | **Completed (Phase 5)** |
 | `/expenses/income` | `/expenses/income` | `expenses` | `ExpenseController` | `ExpenseRepository` | Income Entry Table | **Completed (Phase 5)** |
 | `/accounting` | `/accounting` | `accounting` | `AccountingDashboardController` | `AccountingRepository` | Financial Overview Grid | Pending |
-| `/accounting/chart-of-accounts` | `/accounting/coa` | `accounting/coa` | `ChartOfAccountsController` | `AccountingRepository` | Tree View / Accordion | Pending |
-| `/accounting/ledgers` | `/accounting/ledgers` | `accounting/ledgers` | `LedgerController` | `AccountingRepository` | Searchable Ledger Table | Pending |
+| `/accounting/chart-of-accounts` | `/accounting/coa` | `accounting/coa` | `COAController` | `COARepository` | Tree View / Accordion | **Completed (Phase 6)** |
+| `/accounting/ledgers` | `/accounting/ledgers` | `accounting/ledgers` | `LedgerListController` | `LedgerRepository` | Searchable Ledger Table | **Completed (Phase 6)** |
 | `/accounting/vouchers` | `/accounting/vouchers` | `accounting/vouchers` | `VoucherController` | `AccountingRepository` | Voucher History Table | Pending |
 | `/accounting/journal/create` | `/accounting/journal/create` | `accounting/journal` | `JournalController` | `AccountingRepository` | Double-Entry Grid Form | Pending |
 | `/accounting/day-book` | `/accounting/day-book` | `accounting/day_book` | `DayBookController` | `AccountingRepository` | Chronological Journal Table | Pending |

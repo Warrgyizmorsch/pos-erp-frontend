@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
 import '../../modules/accounting/coa/bindings/coa_binding.dart';
 import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
+import '../../modules/accounting/ledgers/bindings/ledger_binding.dart';
+import '../../modules/accounting/ledgers/views/ledger_list_view.dart';
+import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
 import '../../modules/authentication/bindings/auth_binding.dart';
 import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
@@ -178,6 +181,16 @@ class AppPages {
       name: Routes.chartOfAccounts,
       page: () => const ChartOfAccountsView(),
       binding: COABinding(),
+    ),
+    GetPage(
+      name: Routes.ledgers,
+      page: () => const LedgerListView(),
+      binding: LedgerBinding(),
+    ),
+    GetPage(
+      name: Routes.ledgerStatement,
+      page: () => const LedgerStatementView(),
+      binding: LedgerBinding(),
     ),
   ];
 }

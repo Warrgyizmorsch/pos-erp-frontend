@@ -26,4 +26,6 @@ abstract class Routes {
   static const cashBank = '/cash-bank';
   static const shifts = '/shifts';
   static const chartOfAccounts = '/accounting/chart-of-accounts';
+  static const ledgers = '/accounting/ledgers';
+  static const ledgerStatement = '/accounting/ledgers/:id';
 }
