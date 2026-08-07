@@ -26,12 +26,25 @@ class ApiEndpoints {
   static const String sales = '/sales';
   static const String salesReturns = '/sales-returns';
   static const String paymentIn = '/payment-in';
-  static const String cashBankAccounts = '/cash-bank/accounts';
+
+  // Cash & Bank
   static const String bank = '/bank';
+  static const String bankTransactions = '/bank/transaction';
+  static const String cashBankAccounts = '/cash-bank/accounts';
+  static const String cashBankSummary = '/cash-bank/summary';
+  static const String cashBankTransactions = '/cash-bank/transactions';
+  static const String cashBankCashEntry = '/cash-bank/cash-entry';
+  static const String cashBankBankTransfer = '/cash-bank/bank-transfer';
 
   // Purchases
   static const String purchases = '/purchases';
   static const String purchaseReturns = '/purchase-returns';
   static const String paymentOut = '/payment-out';
   static const String unpaidPurchases = '/purchases/unpaid';
+
+  // Expenses & Income
+  static const String expenses = '/expenses';
+  static const String expenseCategories = '/expense-categories';
+  static const String expenseReportsSummary = '/expenses/reports/summary';
+  static const String expenseLedgers = '/expenses/ledgers';
 }

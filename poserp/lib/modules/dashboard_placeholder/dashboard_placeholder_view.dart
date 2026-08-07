@@ -171,6 +171,20 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Expenses & Income Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/expenses'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Cash & Bank Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/cash-bank'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Sign Out',
                       variant: AppButtonVariant.destructive,
                       width: double.infinity,

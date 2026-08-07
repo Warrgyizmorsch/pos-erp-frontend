@@ -3,7 +3,11 @@ import '../../modules/authentication/bindings/auth_binding.dart';
 import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
 import '../../modules/authentication/views/register_view.dart';
+import '../../modules/cash_bank/bindings/cash_bank_binding.dart';
+import '../../modules/cash_bank/views/cash_bank_list_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
+import '../../modules/expenses/bindings/expense_binding.dart';
+import '../../modules/expenses/views/expense_list_view.dart';
 import '../../modules/parties/customers/bindings/customer_binding.dart';
 import '../../modules/parties/customers/views/customer_list_view.dart';
 import '../../modules/parties/suppliers/bindings/supplier_binding.dart';
@@ -150,6 +154,16 @@ class AppPages {
       name: Routes.paymentOut,
       page: () => const PaymentOutListView(),
       binding: PaymentOutBinding(),
+    ),
+    GetPage(
+      name: Routes.expenses,
+      page: () => const ExpenseListView(),
+      binding: ExpenseBinding(),
+    ),
+    GetPage(
+      name: Routes.cashBank,
+      page: () => const CashBankListView(),
+      binding: CashBankBinding(),
     ),
   ];
 }

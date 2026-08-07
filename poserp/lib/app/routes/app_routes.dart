@@ -22,4 +22,6 @@ abstract class Routes {
   static const purchaseDetail = '/purchases/:id';
   static const purchaseReturn = '/purchase-return';
   static const paymentOut = '/payment-out';
+  static const expenses = '/expenses';
+  static const cashBank = '/cash-bank';
 }
