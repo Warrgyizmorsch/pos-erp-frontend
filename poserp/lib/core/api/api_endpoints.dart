@@ -52,4 +52,13 @@ class ApiEndpoints {
   static const String shiftsCurrent = '/shifts/current';
   static const String shiftsOpen = '/shifts/open';
   static const String shiftsClose = '/shifts/close';
+
+  // Accounting Engine
+  static const String accountingStatus = '/accounting/status';
+  static const String accountingInitialize = '/accounting/initialize';
+  static const String accountingChartOfAccounts =
+      '/accounting/chart-of-accounts';
+  static const String accountingDashboard = '/accounting/dashboard';
+  static const String accountingLedgers = '/accounting/ledgers';
+  static const String accountingVouchers = '/accounting/vouchers';
 }

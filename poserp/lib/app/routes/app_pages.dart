@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import '../../modules/accounting/coa/bindings/coa_binding.dart';
+import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
 import '../../modules/authentication/bindings/auth_binding.dart';
 import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
@@ -171,6 +173,11 @@ class AppPages {
       name: Routes.shifts,
       page: () => const ShiftManagementView(),
       binding: ShiftBinding(),
+    ),
+    GetPage(
+      name: Routes.chartOfAccounts,
+      page: () => const ChartOfAccountsView(),
+      binding: COABinding(),
     ),
   ];
 }
