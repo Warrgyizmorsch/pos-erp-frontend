@@ -24,4 +24,5 @@ abstract class Routes {
   static const paymentOut = '/payment-out';
   static const expenses = '/expenses';
   static const cashBank = '/cash-bank';
+  static const shifts = '/shifts';
 }

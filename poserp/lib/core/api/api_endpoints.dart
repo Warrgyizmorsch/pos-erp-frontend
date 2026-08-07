@@ -47,4 +47,9 @@ class ApiEndpoints {
   static const String expenseCategories = '/expense-categories';
   static const String expenseReportsSummary = '/expenses/reports/summary';
   static const String expenseLedgers = '/expenses/ledgers';
+
+  // Shifts
+  static const String shiftsCurrent = '/shifts/current';
+  static const String shiftsOpen = '/shifts/open';
+  static const String shiftsClose = '/shifts/close';
 }

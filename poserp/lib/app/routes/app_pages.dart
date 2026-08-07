@@ -41,6 +41,8 @@ import '../../modules/sales/return/bindings/sale_return_binding.dart';
 import '../../modules/sales/return/views/sale_return_form_view.dart';
 import '../../modules/sales/return/views/sale_return_list_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
+import '../../modules/shifts/bindings/shift_binding.dart';
+import '../../modules/shifts/views/shift_management_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -164,6 +166,11 @@ class AppPages {
       name: Routes.cashBank,
       page: () => const CashBankListView(),
       binding: CashBankBinding(),
+    ),
+    GetPage(
+      name: Routes.shifts,
+      page: () => const ShiftManagementView(),
+      binding: ShiftBinding(),
     ),
   ];
 }
