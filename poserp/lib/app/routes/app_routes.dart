@@ -28,4 +28,6 @@ abstract class Routes {
   static const chartOfAccounts = '/accounting/chart-of-accounts';
   static const ledgers = '/accounting/ledgers';
   static const ledgerStatement = '/accounting/ledgers/:id';
+  static const vouchers = '/accounting/vouchers';
+  static const journalCreate = '/accounting/journal/create';
 }

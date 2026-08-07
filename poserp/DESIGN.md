@@ -668,8 +668,8 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/accounting` | `/accounting` | `accounting` | `AccountingDashboardController` | `AccountingRepository` | Financial Overview Grid | Pending |
 | `/accounting/chart-of-accounts` | `/accounting/coa` | `accounting/coa` | `COAController` | `COARepository` | Tree View / Accordion | **Completed (Phase 6)** |
 | `/accounting/ledgers` | `/accounting/ledgers` | `accounting/ledgers` | `LedgerListController` | `LedgerRepository` | Searchable Ledger Table | **Completed (Phase 6)** |
-| `/accounting/vouchers` | `/accounting/vouchers` | `accounting/vouchers` | `VoucherController` | `AccountingRepository` | Voucher History Table | Pending |
-| `/accounting/journal/create` | `/accounting/journal/create` | `accounting/journal` | `JournalController` | `AccountingRepository` | Double-Entry Grid Form | Pending |
+| `/accounting/vouchers` | `/accounting/vouchers` | `accounting/vouchers` | `VoucherListController` | `VoucherRepository` | Voucher History Table | **Completed (Phase 6)** |
+| `/accounting/journal/create` | `/accounting/journal/create` | `accounting/vouchers` | `JournalFormController` | `VoucherRepository` | Double-Entry Grid Form | **Completed (Phase 6)** |
 | `/accounting/day-book` | `/accounting/day-book` | `accounting/day_book` | `DayBookController` | `AccountingRepository` | Chronological Journal Table | Pending |
 | `/accounting/trial-balance` | `/accounting/trial-balance` | `accounting/trial_balance` | `TrialBalanceController` | `AccountingRepository` | Debit/Credit Summary Table | Pending |
 | `/accounting/gst` | `/accounting/gst` | `accounting/gst` | `GstReportController` | `AccountingRepository` | Tax Summary Dashboard | Pending |
