@@ -16,6 +16,8 @@ import '../../modules/authentication/bindings/auth_binding.dart';
 import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
 import '../../modules/authentication/views/register_view.dart';
+import '../../modules/backup/bindings/backup_binding.dart';
+import '../../modules/backup/views/backup_view.dart';
 import '../../modules/cash_bank/bindings/cash_bank_binding.dart';
 import '../../modules/cash_bank/views/cash_bank_list_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
@@ -56,6 +58,8 @@ import '../../modules/sales/return/views/sale_return_list_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
 import '../../modules/shifts/bindings/shift_binding.dart';
 import '../../modules/shifts/views/shift_management_view.dart';
+import '../../modules/utilities/barcode/bindings/barcode_binding.dart';
+import '../../modules/utilities/barcode/views/barcode_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -229,6 +233,16 @@ class AppPages {
       name: Routes.activity,
       page: () => const ActivityLogView(),
       binding: ActivityLogBinding(),
+    ),
+    GetPage(
+      name: Routes.backup,
+      page: () => const BackupView(),
+      binding: BackupBinding(),
+    ),
+    GetPage(
+      name: Routes.barcode,
+      page: () => const BarcodeView(),
+      binding: BarcodeBinding(),
     ),
   ];
 }

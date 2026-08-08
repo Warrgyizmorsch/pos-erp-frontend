@@ -73,6 +73,8 @@ class ApiEndpoints {
       '/accounting/reports/balance-sheet';
   static const String accountingGstSummary = '/accounting/gst/summary';
 
-  // Activity Logs
+  // Activity Logs, Backup & Utilities
   static const String activityLogs = '/activity-logs';
+  static const String backup = '/backup';
+  static const String barcode = '/utilities/barcode';
 }

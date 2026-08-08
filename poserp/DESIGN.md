@@ -676,8 +676,8 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/reports` | `/reports` | `reports` | `ReportsController` | `ReportsRepository` | Report Selection & Charts | Pending |
 | `/shifts` | `/shifts` | `shifts` | `ShiftController` | `ShiftRepository` | Shift Status + Register | **Completed (Phase 5)** |
 | `/activity` | `/activity` | `activity` | `ActivityLogController` | `ActivityLogRepository` | System Audit Table | **Completed (Phase 7)** |
-| `/backup` | `/backup` | `backup` | `BackupController` | `BackupRepository` | Backup Action Cards | Pending |
-| `/utilities/barcode` | `/utilities/barcode` | `utilities/barcode` | `BarcodeController` | `ProductRepository` | Label Print Preview Grid | Pending |
+| `/backup` | `/backup` | `backup` | `BackupController` | `BackupRepository` | Backup Action Cards | **Completed (Phase 7)** |
+| `/utilities/barcode` | `/utilities/barcode` | `utilities/barcode` | `BarcodeController` | `ProductRepository` | Label Print Preview Grid | **Completed (Phase 7)** |
 | `/utilities/import-export` | `/utilities/import-export` | `utilities/import_export` | `ImportExportController` | `UtilityRepository` | File Upload / Export View | Pending |
 | `/settings` | `/settings` | `settings` | `SettingsController` | `SettingsRepository` | Form Sections / Tabs | Pending |
 
