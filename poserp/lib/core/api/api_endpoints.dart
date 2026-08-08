@@ -38,6 +38,7 @@ class ApiEndpoints {
   static const String cashBankCashEntry = '/cash-bank/cash-entry';
   static const String cashBankBankTransfer = '/cash-bank/bank-transfer';
   static const String cheques = '/cheques';
+  static const String loans = '/loans';
 
   // Purchases
   static const String purchases = '/purchases';

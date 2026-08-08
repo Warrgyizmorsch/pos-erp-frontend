@@ -25,6 +25,7 @@ abstract class Routes {
   static const expenses = '/expenses';
   static const cashBank = '/cash-bank';
   static const cheques = '/cheques';
+  static const loans = '/loans';
   static const shifts = '/shifts';
   static const chartOfAccounts = '/accounting/chart-of-accounts';
   static const ledgers = '/accounting/ledgers';

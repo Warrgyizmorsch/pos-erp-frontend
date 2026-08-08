@@ -25,6 +25,8 @@ import '../../modules/cheques/views/cheque_list_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
 import '../../modules/expenses/bindings/expense_binding.dart';
 import '../../modules/expenses/views/expense_list_view.dart';
+import '../../modules/loans/bindings/loan_binding.dart';
+import '../../modules/loans/views/loan_list_view.dart';
 import '../../modules/parties/customers/bindings/customer_binding.dart';
 import '../../modules/parties/customers/views/customer_list_view.dart';
 import '../../modules/parties/suppliers/bindings/supplier_binding.dart';
@@ -194,6 +196,11 @@ class AppPages {
       name: Routes.cheques,
       page: () => const ChequeListView(),
       binding: ChequeBinding(),
+    ),
+    GetPage(
+      name: Routes.loans,
+      page: () => const LoanListView(),
+      binding: LoanBinding(),
     ),
     GetPage(
       name: Routes.shifts,
