@@ -25,7 +25,7 @@ class ApiEndpoints {
   // Sales & POS
   static const String sales = '/sales';
   static const String salesReturns = '/sales-returns';
-  static const String paymentIn = '/payment-in';
+  static const String paymentIn = '/sales/payment-in';
 
   // Cash & Bank
   static const String bank = '/bank';
@@ -72,4 +72,7 @@ class ApiEndpoints {
   static const String accountingReportBalanceSheet =
       '/accounting/reports/balance-sheet';
   static const String accountingGstSummary = '/accounting/gst/summary';
+
+  // Activity Logs
+  static const String activityLogs = '/activity-logs';
 }

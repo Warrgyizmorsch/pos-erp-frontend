@@ -10,6 +10,8 @@ import '../../modules/accounting/reports/views/financial_reports_view.dart';
 import '../../modules/accounting/vouchers/bindings/voucher_binding.dart';
 import '../../modules/accounting/vouchers/views/journal_form_view.dart';
 import '../../modules/accounting/vouchers/views/voucher_list_view.dart';
+import '../../modules/activity/bindings/activity_log_binding.dart';
+import '../../modules/activity/views/activity_log_view.dart';
 import '../../modules/authentication/bindings/auth_binding.dart';
 import '../../modules/authentication/views/forgot_password_view.dart';
 import '../../modules/authentication/views/login_view.dart';
@@ -222,6 +224,11 @@ class AppPages {
       name: Routes.gstReports,
       page: () => const FinancialReportsView(),
       binding: AccountingReportBinding(),
+    ),
+    GetPage(
+      name: Routes.activity,
+      page: () => const ActivityLogView(),
+      binding: ActivityLogBinding(),
     ),
   ];
 }
