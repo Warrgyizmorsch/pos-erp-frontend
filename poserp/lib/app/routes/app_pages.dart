@@ -3,6 +3,8 @@ import '../../modules/accounting/coa/bindings/coa_binding.dart';
 import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
 import '../../modules/accounting/dashboard/bindings/accounting_dashboard_binding.dart';
 import '../../modules/accounting/dashboard/views/accounting_dashboard_view.dart';
+import '../../modules/accounting/health/bindings/accounting_health_binding.dart';
+import '../../modules/accounting/health/views/accounting_health_view.dart';
 import '../../modules/accounting/ledgers/bindings/ledger_binding.dart';
 import '../../modules/accounting/ledgers/views/ledger_list_view.dart';
 import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
@@ -262,6 +264,11 @@ class AppPages {
       name: Routes.accountingSettings,
       page: () => const AccountingSettingsView(),
       binding: AccountingSettingsBinding(),
+    ),
+    GetPage(
+      name: Routes.accountingHealth,
+      page: () => const AccountingHealthView(),
+      binding: AccountingHealthBinding(),
     ),
     GetPage(
       name: Routes.reports,
