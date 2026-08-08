@@ -8,6 +8,8 @@ import '../../modules/accounting/health/views/accounting_health_view.dart';
 import '../../modules/accounting/ledgers/bindings/ledger_binding.dart';
 import '../../modules/accounting/ledgers/views/ledger_list_view.dart';
 import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
+import '../../modules/accounting/reconciliation/bindings/accounting_reconciliation_binding.dart';
+import '../../modules/accounting/reconciliation/views/accounting_reconciliation_view.dart';
 import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
@@ -269,6 +271,11 @@ class AppPages {
       name: Routes.accountingHealth,
       page: () => const AccountingHealthView(),
       binding: AccountingHealthBinding(),
+    ),
+    GetPage(
+      name: Routes.accountingReconciliation,
+      page: () => const AccountingReconciliationView(),
+      binding: AccountingReconciliationBinding(),
     ),
     GetPage(
       name: Routes.reports,

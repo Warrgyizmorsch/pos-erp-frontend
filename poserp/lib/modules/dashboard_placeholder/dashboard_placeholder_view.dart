@@ -263,6 +263,14 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Accounting Reconciliation Hub Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () =>
+                          Get.toNamed('/accounting/reconciliation'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Open Business Intelligence & Reports Module',
                       variant: AppButtonVariant.primary,
                       width: double.infinity,
