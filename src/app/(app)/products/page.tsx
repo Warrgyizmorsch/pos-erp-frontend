@@ -532,23 +532,23 @@ export default function ProductsPage() {
           </DialogHeader>
 
           <Tabs defaultValue="details" className="w-full">
-            <div className="px-6 pt-2 bg-muted/20 border-b">
-              <TabsList className="bg-transparent border-b-0 h-10 p-0 gap-6">
+            <div className="px-6 pt-4 bg-muted/20 border-b">
+              <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-auto p-0 gap-4 sm:gap-8">
                 <TabsTrigger
                   value="details"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-0 font-bold text-xs uppercase tracking-wider"
+                  className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground shadow-none transition-all data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   Details
                 </TabsTrigger>
                 <TabsTrigger
                   value="pricing"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-0 font-bold text-xs uppercase tracking-wider"
+                  className="rounded-none border-b-2 border-transparent px-0 pb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground shadow-none transition-all data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   Pricing
                 </TabsTrigger>
                 <TabsTrigger
                   value="stock"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-0 font-bold text-xs uppercase tracking-wider"
+                  className="cursor-pointer rounded-none border-b-2 border-transparent px-0 pb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground shadow-none transition-all data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   Stock
                 </TabsTrigger>

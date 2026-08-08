@@ -2,7 +2,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: "admin" | "cashier";
+  role: "admin" | "manager" | "accountant" | "stock_manager" | "cashier";
   phone?: string;
   avatar?: string;
   isActive: boolean;
@@ -82,6 +82,30 @@ export interface SalesPrice {
   updatedAt: string;
 }
 
+export interface ProductPriceOption {
+  batchId: string | null;
+  batchNo?: string;
+  label: string;
+  isCurrent?: boolean;
+  salePrice: number;
+  salesPrice?: number;
+  mrp?: number;
+  availableQty: number;
+  purchasePrice: number;
+  taxPercent?: number;
+  taxRate?: number;
+  barcode?: string;
+  sourceType?: string;
+  createdAt?: string;
+}
+
+export interface ProductPriceOptionsResponse {
+  product: Product;
+  priceOptions: ProductPriceOption[];
+  defaultPrice: ProductPriceOption;
+  priceSelectionRequired: boolean;
+}
+
 export interface Customer {
   _id: string;
   name: string;
@@ -107,6 +131,11 @@ export interface Customer {
 export interface SaleItem {
   product?: string | Product | null;
   productId?: string | null;
+  batchId?: string | null;
+  selectedPriceType?: string | null;
+  salePrice?: number;
+  mrp?: number;
+  availableQtyAtSale?: number;
   itemType?: "inventory" | "non_stock_product" | "service";
   affectsInventory?: boolean;
   itemName?: string;

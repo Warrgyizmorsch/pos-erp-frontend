@@ -165,6 +165,9 @@ const navEntries: NavEntry[] = [
       { label: "GST Exceptions", href: "/accounting/gst/exceptions", icon: AlertTriangle },
       { label: "Health Check", href: "/accounting/health", icon: HeartPulse },
       { label: "Reconciliation", href: "/accounting/reconciliation", icon: ShieldCheck },
+      { label: "Bank Statement Import", href: "/accounting/bank-statement-import", icon: ArrowDownUp },
+      { label: "Mapping Rules", href: "/accounting/mapping-rules", icon: Settings },
+      { label: "Bank Import Settings", href: "/accounting/bank-import-settings", icon: Settings },
       { label: "Audit Logs", href: "/accounting/audit-logs", icon: History },
       { label: "Settings", href: "/accounting/settings", icon: Settings },
     ],
@@ -227,8 +230,26 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
   const visibleNavEntries = useMemo(
     () => navEntries.filter((entry) => {
+      const role = user?.role;
+      if (!role) return false;
+
       if (entry.label === "Accounting" && accountingEnabled === false) return false;
-      if (entry.label === "Activity Logs" && user?.role !== "admin") return false;
+
+      // Role filter constraints
+      if (entry.label === "Parties" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Inventory Master" && !["admin", "manager", "stock_manager"].includes(role)) return false;
+      if (entry.label === "Sale" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Purchase" && !["admin", "manager", "stock_manager"].includes(role)) return false;
+      if (entry.label === "Cash & Bank" && !["admin", "accountant"].includes(role)) return false;
+      if (entry.label === "Expenses / Income" && !["admin", "manager", "accountant"].includes(role)) return false;
+      if (entry.label === "Accounting" && !["admin", "accountant"].includes(role)) return false;
+      if (entry.label === "Reports" && !["admin", "manager", "accountant"].includes(role)) return false;
+      if (entry.label === "Shifts" && !["admin", "manager", "cashier"].includes(role)) return false;
+      if (entry.label === "Activity Logs" && role !== "admin") return false;
+      if (entry.label === "Sync & Backup" && role !== "admin") return false;
+      if (entry.label === "Settings" && role !== "admin") return false;
+      if (entry.label === "Utilities" && !["admin", "manager"].includes(role)) return false;
+
       return true;
     }),
     [accountingEnabled, user?.role],

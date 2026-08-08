@@ -6,7 +6,7 @@ import { productService } from "@/services/productService";
 import { customerService } from "@/services/customerService";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
-import type { Customer, Product } from "@/types";
+import type { Customer, Product, ProductPriceOption } from "@/types";
 import { toast } from "sonner";
 import { SimpleProductModal } from "@/components/shared/SimpleProductModal";
 import { CustomerModal } from "@/components/shared/CustomerModal";
@@ -39,6 +39,18 @@ const TableCellInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
   );
 });
 TableCellInput.displayName = "TableCellInput";
+
+const parseQuantityInput = (value: string) => {
+  if (value === "") return 0;
+  const quantity = Number(value);
+  return Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+};
+
+type PendingPriceSelection = {
+  product: Product;
+  targetItemId: string;
+  options: ProductPriceOption[];
+};
 
 function POSBillTopBar({ onAddCustomItem }: { onAddCustomItem: () => void }) {
   const { bills, activeBillId, setActiveBill, createNewBill, closeBill, getActiveBill, setCustomer } = usePOSStore();
@@ -269,6 +281,7 @@ export function POSItemTable() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
+  const [pendingPriceSelection, setPendingPriceSelection] = useState<PendingPriceSelection | null>(null);
 
   const debouncedBarcodeQuery = useDebounce(barcodeQuery, 250);
 
@@ -319,56 +332,37 @@ export function POSItemTable() {
     }
   };
 
-  const handleAddProduct = useCallback(async (product: Product, targetItemId: string) => {
-    let price = product.salesPrice || 0;
+  const applyProductPrice = useCallback((product: Product, targetItemId: string, priceOption?: ProductPriceOption | null, requiresSelection = false) => {
+    const price = Number(priceOption?.salePrice ?? priceOption?.salesPrice ?? product.salesPrice ?? 0);
     const tax = product.taxRate || 0;
     const incl = (product as any).salesTaxType === "with";
-    try {
-      const p = await productService.getPricing(product._id);
-      updateItemProduct(targetItemId, {
-        productId: product._id,
-        productRef: product._id,
-        product,
-        itemType: "inventory",
-        affectsInventory: true,
-        itemCode: product.sku,
-        itemName: product.name,
-        name: product.name,
-        description: product.description || "",
-        barcode: product.barcode,
-        pricePerUnit: p.salesPrice ?? price,
-        rate: p.salesPrice ?? price,
-        purchasePrice: p.purchasePrice ?? 0,
-        taxPercent: p.taxPercent ?? tax,
-        taxRate: p.taxPercent ?? tax,
-        unit: product.unit || "Pcs",
-        isInclusive: p.salesTaxType === "with",
-        customItem: false,
-      });
-      focusCell(targetItemId, "quantity");
-    } catch {
-      updateItemProduct(targetItemId, {
-        productId: product._id,
-        productRef: product._id,
-        product,
-        itemType: "inventory",
-        affectsInventory: true,
-        itemCode: product.sku,
-        itemName: product.name,
-        name: product.name,
-        description: product.description || "",
-        barcode: product.barcode,
-        pricePerUnit: price,
-        rate: price,
-        purchasePrice: 0,
-        taxPercent: tax,
-        taxRate: tax,
-        unit: product.unit || "Pcs",
-        isInclusive: incl,
-        customItem: false,
-      });
-      focusCell(targetItemId, "quantity");
-    }
+    updateItemProduct(targetItemId, {
+      productId: product._id,
+      productRef: product._id,
+      batchId: priceOption?.batchId || null,
+      selectedPriceType: priceOption?.label || null,
+      priceLabel: priceOption?.label || "",
+      mrp: Number(priceOption?.mrp ?? price),
+      availableQty: Number(priceOption?.availableQty || 0),
+      priceSelectionRequired: requiresSelection,
+      product,
+      itemType: "inventory",
+      affectsInventory: true,
+      itemCode: product.sku,
+      itemName: product.name,
+      name: product.name,
+      description: product.description || "",
+      barcode: priceOption?.barcode || product.barcode,
+      pricePerUnit: price,
+      rate: price,
+      purchasePrice: Number(priceOption?.purchasePrice || product.purchasePrice || 0),
+      taxPercent: Number(priceOption?.taxPercent ?? priceOption?.taxRate ?? tax),
+      taxRate: Number(priceOption?.taxPercent ?? priceOption?.taxRate ?? tax),
+      unit: product.unit || "Pcs",
+      isInclusive: incl,
+      customItem: false,
+    });
+    focusCell(targetItemId, "quantity");
     setEditingBarcodeId(null);
     setBarcodeQuery("");
     setBarcodeResults([]);
@@ -376,6 +370,27 @@ export function POSItemTable() {
     setBarcodeDropdownOpen(false);
     resetBarcodeScannerRef.current?.();
   }, [updateItemProduct]);
+
+  const handleAddProduct = useCallback(async (product: Product, targetItemId: string) => {
+    try {
+      const pricing = await productService.getPriceOptions(product._id);
+      const options = pricing.priceOptions || [];
+      if (options.length > 1) {
+        setPendingPriceSelection({ product: pricing.product || product, targetItemId, options });
+        setBarcodeDropdownOpen(false);
+        return;
+      }
+      applyProductPrice(pricing.product || product, targetItemId, options[0] || pricing.defaultPrice || null, false);
+    } catch {
+      applyProductPrice(product, targetItemId, null, false);
+    }
+  }, [applyProductPrice, setPendingPriceSelection]);
+
+  const handleSelectPrice = (option: ProductPriceOption) => {
+    if (!pendingPriceSelection) return;
+    applyProductPrice(pendingPriceSelection.product, pendingPriceSelection.targetItemId, option, true);
+    setPendingPriceSelection(null);
+  };
 
   // Barcode scanner hook — scans fill the active placeholder row
   const { reset: resetBarcodeScanner } = useBarcodeScanner({
@@ -563,6 +578,16 @@ export function POSItemTable() {
                     <span className={cn("rounded-full border px-2 py-0.5 text-[9px] font-black uppercase", getItemTypeClass(item))}>
                       {getItemTypeLabel(item)}
                     </span>
+                    {item.priceLabel && (
+                      <span className={cn(
+                        "rounded-full border px-2 py-0.5 text-[9px] font-black uppercase",
+                        item.priceLabel.toLowerCase().includes("old")
+                          ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                          : "border-primary/25 bg-primary/10 text-primary"
+                      )}>
+                        {item.priceLabel}
+                      </span>
+                    )}
                   </div>
                   {item.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>}
                 </div>
@@ -778,6 +803,16 @@ export function POSItemTable() {
                         <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase leading-none", getItemTypeClass(item))}>
                           {getItemTypeLabel(item)}
                         </span>
+                        {item.priceLabel && (
+                          <span className={cn(
+                            "rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase leading-none",
+                            item.priceLabel.toLowerCase().includes("old")
+                              ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                              : "border-primary/25 bg-primary/10 text-primary"
+                          )}>
+                            {item.priceLabel}
+                          </span>
+                        )}
                         {item.description && <span className="truncate text-[9px] text-muted-foreground">{item.description}</span>}
                       </div>
                     )}
@@ -794,7 +829,10 @@ export function POSItemTable() {
                         min="0.01"
                         step="any"
                         value={item.quantity || ""}
-                        onChange={(e) => updateItem(item.id, { quantity: Math.max(0.01, Number(e.target.value)) })}
+                        onChange={(e) => updateItem(item.id, { quantity: parseQuantityInput(e.target.value) })}
+                        onBlur={(e) => {
+                          if (parseQuantityInput(e.currentTarget.value) <= 0) updateItem(item.id, { quantity: 1 });
+                        }}
                         className="h-6 rounded bg-muted/20 text-[12px]"
                       />
                     ) : null}
@@ -954,6 +992,83 @@ export function POSItemTable() {
         onOpenChange={setShowCustomItemModal}
         onAdd={(item) => addItem(item)}
       />
+
+      {pendingPriceSelection && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            onClick={() => setPendingPriceSelection(null)}
+          />
+          <div className="relative mx-4 w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card shadow-2xl shadow-black/30">
+            <div className="flex items-start justify-between gap-4 border-b border-border/60 px-5 py-4">
+              <div>
+                <h2 className="text-lg font-black tracking-tight text-foreground">Select Selling Price</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This product has multiple stock prices. Select the price for billing.
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {pendingPriceSelection.product.name}
+                  <span className="ml-2 font-mono text-xs text-muted-foreground">
+                    {pendingPriceSelection.product.barcode || pendingPriceSelection.product.sku}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingPriceSelection(null)}
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[420px] overflow-y-auto p-4">
+              <div className="grid gap-3">
+                {pendingPriceSelection.options.map((option) => {
+                  const disabled = Number(option.availableQty || 0) <= 0;
+                  return (
+                    <button
+                      key={option.batchId || `${option.salePrice}-${option.createdAt}`}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleSelectPrice(option)}
+                      className={cn(
+                        "grid grid-cols-[1fr_auto] items-center gap-4 rounded-lg border p-4 text-left transition-all",
+                        option.isCurrent ? "border-primary/50 bg-primary/5" : "border-border bg-muted/10 hover:bg-muted/25",
+                        disabled && "cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-black text-foreground">{option.label}</span>
+                          {option.isCurrent && (
+                            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+                              Current
+                            </span>
+                          )}
+                          {!option.isCurrent && (
+                            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-600">
+                              Old Price
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                          <span>Available: <strong className="text-foreground">{option.availableQty}</strong></span>
+                          <span>Purchase: <strong className="text-foreground">{formatCurrency(option.purchasePrice || 0)}</strong></span>
+                          <span>Batch: <strong className="text-foreground">{option.batchNo || "-"}</strong></span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-black text-foreground">{formatCurrency(option.salePrice || 0)}</div>
+                        <div className="text-[10px] font-bold uppercase text-muted-foreground">Select price</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Action Modals for keyboard shortcuts */}
       <ActionModals

@@ -60,7 +60,7 @@ export default function TransactionHistoryPage() {
 
 function TransactionHistoryContent() {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "accountant";
   const {
     summary,
     transactions,

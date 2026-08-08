@@ -44,7 +44,7 @@ export default function PurchaseDetailsPage() {
   const [printOpen, setPrintOpen] = useState(false);
   const [reposting, setReposting] = useState(false);
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "accountant";
 
   const load = useCallback(async () => {
     try {
