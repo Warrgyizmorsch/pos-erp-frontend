@@ -77,6 +77,12 @@ class ApiEndpoints {
       '/accounting/reports/balance-sheet';
   static const String accountingGstSummary = '/accounting/gst/summary';
 
+  // BI Analytics & Reports
+  static const String analyticsSales = '/analytics/sales';
+  static const String analyticsInventory = '/analytics/inventory';
+  static const String analyticsPurchases = '/analytics/purchases';
+  static const String analyticsCashflow = '/analytics/cashflow';
+
   // Activity Logs, Backup & Utilities
   static const String activityLogs = '/activity-logs';
   static const String backup = '/backup';

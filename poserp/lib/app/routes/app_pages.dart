@@ -55,6 +55,8 @@ import '../../modules/purchases/return/views/purchase_return_list_view.dart';
 import '../../modules/purchases/views/purchase_detail_view.dart';
 import '../../modules/purchases/views/purchase_form_view.dart';
 import '../../modules/purchases/views/purchase_list_view.dart';
+import '../../modules/reports/bindings/reports_binding.dart';
+import '../../modules/reports/views/reports_view.dart';
 import '../../modules/sales/bindings/sale_binding.dart';
 import '../../modules/sales/payment_in/bindings/payment_in_binding.dart';
 import '../../modules/sales/payment_in/views/payment_in_list_view.dart';
@@ -253,6 +255,11 @@ class AppPages {
       name: Routes.gstReports,
       page: () => const FinancialReportsView(),
       binding: AccountingReportBinding(),
+    ),
+    GetPage(
+      name: Routes.reports,
+      page: () => const ReportsView(),
+      binding: ReportsBinding(),
     ),
     GetPage(
       name: Routes.activity,

@@ -673,7 +673,7 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/accounting/day-book` | `/accounting/day-book` | `accounting/reports` | `DayBookController` | `AccountingReportRepository` | Chronological Journal Table | **Completed (Phase 6)** |
 | `/accounting/trial-balance` | `/accounting/trial-balance` | `accounting/reports` | `FinancialReportsController` | `AccountingReportRepository` | Debit/Credit Summary Table | **Completed (Phase 6)** |
 | `/accounting/gst` | `/accounting/gst` | `accounting/reports` | `FinancialReportsController` | `AccountingReportRepository` | Tax Summary Dashboard | **Completed (Phase 6)** |
-| `/reports` | `/reports` | `reports` | `ReportsController` | `ReportsRepository` | Report Selection & Charts | Pending |
+| `/reports` | `/reports` | `reports` | `ReportsController` | `ReportsRepository` | Report Selection & Charts | **Completed (Phase 8)** |
 | `/shifts` | `/shifts` | `shifts` | `ShiftController` | `ShiftRepository` | Shift Status + Register | **Completed (Phase 5)** |
 | `/activity` | `/activity` | `activity` | `ActivityLogController` | `ActivityLogRepository` | System Audit Table | **Completed (Phase 7)** |
 | `/backup` | `/backup` | `backup` | `BackupController` | `BackupRepository` | Backup Action Cards | **Completed (Phase 7)** |
