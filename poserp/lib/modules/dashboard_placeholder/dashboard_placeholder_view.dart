@@ -185,8 +185,15 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
-                      text: 'Open Cashier Shifts Module',
+                      text: 'Open Cheques Register Module',
                       variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/cheques'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open Cashier Shifts Module',
+                      variant: AppButtonVariant.secondary,
                       width: double.infinity,
                       onPressed: () => Get.toNamed('/shifts'),
                     ),

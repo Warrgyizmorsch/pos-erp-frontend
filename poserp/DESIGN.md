@@ -661,7 +661,7 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/cash-bank/transaction-history` | `/cash-bank/history` | `cash_bank` | `CashBankController` | `CashBankRepository` | Transaction Table | **Completed (Phase 5)** |
 | `/bank` | `/bank` | `cash_bank` | `CashBankController` | `CashBankRepository` | Account Cards + List | **Completed (Phase 5)** |
 | `/cash` | `/cash` | `cash_bank` | `CashBankController` | `CashBankRepository` | Cash Ledger Table | **Completed (Phase 5)** |
-| `/cheques` | `/cheques` | `cash_bank` | `CashBankController` | `CashBankRepository` | Status Filtered Table | Pending |
+| `/cheques` | `/cheques` | `cheques` | `ChequeListController` | `ChequeRepository` | Status Filtered Table | **Completed (Phase 8)** |
 | `/loans` | `/loans` | `cash_bank` | `CashBankController` | `CashBankRepository` | Loan Account Cards | Pending |
 | `/expenses` | `/expenses` | `expenses` | `ExpenseController` | `ExpenseRepository` | Category Filtered Table | **Completed (Phase 5)** |
 | `/expenses/income` | `/expenses/income` | `expenses` | `ExpenseController` | `ExpenseRepository` | Income Entry Table | **Completed (Phase 5)** |

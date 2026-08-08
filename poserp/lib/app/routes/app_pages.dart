@@ -20,6 +20,8 @@ import '../../modules/backup/bindings/backup_binding.dart';
 import '../../modules/backup/views/backup_view.dart';
 import '../../modules/cash_bank/bindings/cash_bank_binding.dart';
 import '../../modules/cash_bank/views/cash_bank_list_view.dart';
+import '../../modules/cheques/bindings/cheque_binding.dart';
+import '../../modules/cheques/views/cheque_list_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
 import '../../modules/expenses/bindings/expense_binding.dart';
 import '../../modules/expenses/views/expense_list_view.dart';
@@ -187,6 +189,11 @@ class AppPages {
       name: Routes.cashBank,
       page: () => const CashBankListView(),
       binding: CashBankBinding(),
+    ),
+    GetPage(
+      name: Routes.cheques,
+      page: () => const ChequeListView(),
+      binding: ChequeBinding(),
     ),
     GetPage(
       name: Routes.shifts,
