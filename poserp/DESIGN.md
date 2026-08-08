@@ -638,26 +638,26 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 
 | Next.js Route / Page | Flutter Route | Proposed Flutter Module | Main Controller | Required Repository / Service | Responsive Layout | Status |
 |---|---|---|---|---|---|---|
-| `/login` | `/login` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Planned (Phase 1)** |
-| `/register` | `/register` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Planned (Phase 1)** |
-| `/forgot-password` | `/forgot-password` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Planned (Phase 1)** |
-| `/dashboard` | `/dashboard` | `dashboard` | `DashboardController` | `DashboardRepository` | Grid Stats + Table View | Pending |
-| `/customers` | `/customers` | `parties/customers` | `CustomerController` | `CustomerRepository` | Table + Detail Drawer | Pending |
-| `/customers/[id]` | `/customers/:id` | `parties/customers` | `CustomerDetailController` | `CustomerRepository` | Tabbed Profile View | Pending |
-| `/suppliers` | `/suppliers` | `parties/suppliers` | `SupplierController` | `SupplierRepository` | Table + Form Modal | Pending |
-| `/transporters` | `/transporters` | `parties/transporters` | `TransporterController` | `TransporterRepository` | Compact Table View | Pending |
-| `/products` | `/products` | `products` | `ProductController` | `ProductRepository` | Grid / Table + Filter Bar | Pending |
-| `/categories` | `/categories` | `products/categories` | `CategoryController` | `CategoryRepository` | List + Create Dialog | Pending |
-| `/subcategories` | `/subcategories` | `products/subcategories` | `SubcategoryController` | `SubcategoryRepository` | List + Parent Dropdown | Pending |
-| `/inventory/opening-stock` | `/inventory/opening-stock` | `products/opening_stock` | `OpeningStockController` | `StockRepository` | Data Entry Table | Pending |
-| `/inventory` | `/inventory` | `products/inventory` | `InventoryController` | `StockRepository` | Stock Adjustment Table | Pending |
-| `/pos` | `/pos` | `pos` | `PosController` | `PosRepository`, `CartService` | 60/40 Split Grid / Cart | Pending |
-| `/sales` | `/sales` | `sales` | `SalesController` | `SalesRepository` | Filtered Invoice Table | Pending |
-| `/sales/payment-in` | `/sales/payment-in` | `sales/payment_in` | `PaymentInController` | `PaymentInRepository` | Voucher Form + History | Pending |
-| `/sales/return` | `/sales/return` | `sales/return` | `SaleReturnController` | `SaleReturnRepository` | Credit Note Table / Form | Pending |
-| `/purchases` | `/purchases` | `purchases` | `PurchaseController` | `PurchaseRepository` | Purchase Bill Table | Pending |
-| `/purchases/payment-out` | `/purchases/payment-out` | `purchases/payment_out` | `PaymentOutController` | `PaymentOutRepository` | Voucher Form + History | Pending |
-| `/purchases/return` | `/purchases/return` | `purchases/return` | `PurchaseReturnController` | `PurchaseReturnRepository` | Debit Note Table / Form | Pending |
+| `/login` | `/login` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Completed (Phase 1)** |
+| `/register` | `/register` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Completed (Phase 1)** |
+| `/forgot-password` | `/forgot-password` | `authentication` | `AuthController` | `AuthRepository`, `AuthService` | Single Card Center Layout | **Completed (Phase 1)** |
+| `/dashboard` | `/dashboard` | `dashboard` | `DashboardController` | `DashboardRepository` | Grid Stats + Table View | **Completed (Phase 1)** |
+| `/customers` | `/customers` | `parties/customers` | `CustomerController` | `CustomerRepository` | Table + Detail Drawer | **Completed (Phase 3)** |
+| `/customers/[id]` | `/customers/:id` | `parties/customers` | `CustomerDetailController` | `CustomerRepository` | Tabbed Profile View | **Completed (Phase 3)** |
+| `/suppliers` | `/suppliers` | `parties/suppliers` | `SupplierController` | `SupplierRepository` | Table + Form Modal | **Completed (Phase 3)** |
+| `/transporters` | `/transporters` | `parties/transporters` | `TransporterController` | `TransporterRepository` | Compact Table View | **Completed (Phase 3)** |
+| `/products` | `/products` | `products` | `ProductController` | `ProductRepository` | Grid / Table + Filter Bar | **Completed (Phase 2)** |
+| `/categories` | `/categories` | `products/categories` | `CategoryController` | `CategoryRepository` | List + Create Dialog | **Completed (Phase 2)** |
+| `/subcategories` | `/subcategories` | `products/subcategories` | `SubcategoryController` | `SubcategoryRepository` | List + Parent Dropdown | **Completed (Phase 2)** |
+| `/inventory/opening-stock` | `/inventory/opening-stock` | `products/opening_stock` | `OpeningStockController` | `StockRepository` | Data Entry Table | **Completed (Phase 2)** |
+| `/inventory` | `/inventory` | `products/inventory` | `InventoryController` | `StockRepository` | Stock Adjustment Table | **Completed (Phase 2)** |
+| `/pos` | `/pos` | `pos` | `PosController` | `PosRepository`, `CartService` | 60/40 Split Grid / Cart | **Completed (Phase 4)** |
+| `/sales` | `/sales` | `sales` | `SalesController` | `SalesRepository` | Filtered Invoice Table | **Completed (Phase 4)** |
+| `/sales/payment-in` | `/sales/payment-in` | `sales/payment_in` | `PaymentInController` | `PaymentInRepository` | Voucher Form + History | **Completed (Phase 4)** |
+| `/sales/return` | `/sales/return` | `sales/return` | `SaleReturnController` | `SaleReturnRepository` | Credit Note Table / Form | **Completed (Phase 4)** |
+| `/purchases` | `/purchases` | `purchases` | `PurchaseController` | `PurchaseRepository` | Purchase Bill Table | **Completed (Phase 4)** |
+| `/purchases/payment-out` | `/purchases/payment-out` | `purchases/payment_out` | `PaymentOutController` | `PaymentOutRepository` | Voucher Form + History | **Completed (Phase 4)** |
+| `/purchases/return` | `/purchases/return` | `purchases/return` | `PurchaseReturnController` | `PurchaseReturnRepository` | Debit Note Table / Form | **Completed (Phase 4)** |
 | `/cash-bank/transaction-history` | `/cash-bank/history` | `cash_bank` | `CashBankController` | `CashBankRepository` | Transaction Table | **Completed (Phase 5)** |
 | `/bank` | `/bank` | `cash_bank` | `CashBankController` | `CashBankRepository` | Account Cards + List | **Completed (Phase 5)** |
 | `/cash` | `/cash` | `cash_bank` | `CashBankController` | `CashBankRepository` | Cash Ledger Table | **Completed (Phase 5)** |
