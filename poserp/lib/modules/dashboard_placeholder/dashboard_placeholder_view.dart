@@ -271,6 +271,13 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Accounting Audit Logs Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/accounting/audit-logs'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Open Business Intelligence & Reports Module',
                       variant: AppButtonVariant.primary,
                       width: double.infinity,
