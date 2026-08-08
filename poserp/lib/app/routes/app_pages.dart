@@ -9,6 +9,8 @@ import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
 import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
+import '../../modules/accounting/settings/bindings/accounting_settings_binding.dart';
+import '../../modules/accounting/settings/views/accounting_settings_view.dart';
 import '../../modules/accounting/vouchers/bindings/voucher_binding.dart';
 import '../../modules/accounting/vouchers/views/journal_form_view.dart';
 import '../../modules/accounting/vouchers/views/voucher_list_view.dart';
@@ -255,6 +257,11 @@ class AppPages {
       name: Routes.gstReports,
       page: () => const FinancialReportsView(),
       binding: AccountingReportBinding(),
+    ),
+    GetPage(
+      name: Routes.accountingSettings,
+      page: () => const AccountingSettingsView(),
+      binding: AccountingSettingsBinding(),
     ),
     GetPage(
       name: Routes.reports,

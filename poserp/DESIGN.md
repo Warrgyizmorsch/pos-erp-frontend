@@ -682,3 +682,63 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/settings` | `/settings` | `settings` | `SettingsController` | `SettingsRepository` | Form Sections / Tabs | **Completed (Phase 7)** |
 
 ---
+
+## 8. Post-Implementation Sync / Gap Analysis
+
+### Overview
+This gap analysis compares the updated Next.js source of truth (`src/`) against the migrated Flutter application (`poserp/lib/`).
+
+### Detailed Module Gap Breakdown
+
+| Next.js Source / Module | Current Flutter Status | Required Flutter Change | API Impact | UI Impact | Priority | Dependencies | Implementation Status |
+|---|---|---|---|---|---|---|---|
+| `accounting/audit-logs` | Not Implemented | Create `AccountingAuditLogsView`, controller, service for `/api/accounting/audit-logs` | `GET /api/accounting/audit-logs` | Audit Log Table with JSON diff sheet (old vs new) | High | `AccountingService` | Pending |
+| `accounting/health` | Not Implemented | Create `AccountingHealthView`, controller, service for `/api/accounting/health-check` | `GET /api/accounting/health-check`, `POST /api/accounting/repost-missing` | Diagnostic cards, severity badges, one-click repost/fix buttons | High | `AccountingService` | Pending |
+| `accounting/reconciliation` | Not Implemented | Create 4-tabbed `AccountingReconciliationView` (Ledger, Cash & Bank, Parties, GST) | `GET/POST /api/accounting/reconciliation/*` | 4 Tabs: Ledgers, Cash & Bank, Parties, GST with fix actions | High | `AccountingService` | Pending |
+| `accounting/bank-statement-import` | Not Implemented | Create `BankStatementImportView` with PDF upload, transaction mapping, stepper wizard, and one-click voucher posting | `POST /api/accounting/bank-statement/import`, `POST /api/accounting/bank-statement/:id/post-entries` | Statement upload card, auto-mapped status badges, stepper wizard, one-click post button | Medium | `AccountingService` | Pending |
+| `accounting/mapping-rules` | Not Implemented | Create `MappingRulesView` for fuzzy narration matching rules CRUD | `GET/POST/PUT/DELETE /api/accounting/bank-statement/mappings` | Narration pattern rule table with create/edit modal | Medium | `BankStatementImport` | Pending |
+| `accounting/bank-import-settings` | Not Implemented | Create `BankImportSettingsView` for default bank statement settings | `GET/PUT /api/accounting/bank-statement/settings` | Default ledger fallback dropdowns & toggles | Medium | `BankStatementImport` | Pending |
+| `accounting/settings` | `/accounting/settings` | Create `AccountingSettingsView` for feature toggles & default ledger mappings | `GET/PUT /api/accounting/settings`, `GET /api/accounting/settings/validate` | Feature toggle switches, repair action cards, default ledger selects | High | `AccountingService` | **Completed (Post-Sync)** |
+| `checkout` | Cart Drawer Only | Add dedicated `/checkout` route & view with multi-tender payment breakdown | Uses `saleService.create` | Cart summary, payment method tiles, change calculation, receipt dialog | Medium | `POS` module | Pending |
+| `notifications` | Not Implemented | Add notification drawer / bell icon & `NotificationService` | `GET/PUT/DELETE /api/notifications` | Top bar notification bell with unread badge & drawer list | Low | Shared Foundation | Pending |
+
+### Modules Requiring No Changes (100% Synchronized)
+1. **Auth Module**: `/login`, `/register`, `/forgot-password`, `/profile`
+2. **Catalog & Products**: `/categories`, `/subcategories`, `/products`, `/opening-stock`, `/inventory`
+3. **Party Management**: `/customers`, `/suppliers`, `/transporters`
+4. **Sales Operations**: `/sales`, `/sales/payment-in`, `/sales/return`
+5. **Purchase Operations**: `/purchases`, `/payment-out`, `/purchase-return`
+6. **Cash & Bank / Financials**: `/cash-bank`, `/cheques`, `/loans`, `/shifts`
+7. **Base Accounting Core**: `/accounting/chart-of-accounts`, `/accounting/ledgers`, `/accounting/vouchers`, `/accounting/day-book`, `/accounting/reports`
+8. **Utilities & Backup**: `/activity`, `/backup`, `/utilities/barcode`, `/utilities/import-export`, `/settings`
+
+---
+
+## 9. Ordered Synchronization Plan for Flutter Update
+
+1. **Step 1: Accounting Settings & Foundation Control (`/accounting/settings`)**
+   - Build `AccountingSettingsController`, `AccountingSettingsBinding`, `AccountingSettingsView`.
+   - Connect feature toggles (`accountingEnabled`, `autoVoucherPosting`, etc.) and default ledger mappings.
+
+2. **Step 2: Accounting Health Check & Diagnostics (`/accounting/health`)**
+   - Build `AccountingHealthController`, `AccountingHealthBinding`, `AccountingHealthView`.
+   - Add status diagnostic cards, severity badges, and quick-fix repost triggers.
+
+3. **Step 3: Accounting Reconciliation Hub (`/accounting/reconciliation`)**
+   - Build `AccountingReconciliationController`, `AccountingReconciliationBinding`, `AccountingReconciliationView`.
+   - Implement 4-tabbed view (Ledger Balances, Cash & Bank, Parties, GST).
+
+4. **Step 4: Accounting Audit Logs (`/accounting/audit-logs`)**
+   - Build `AccountingAuditLogsController`, `AccountingAuditLogsBinding`, `AccountingAuditLogsView`.
+   - Implement log search, date range filters, and JSON diff side-sheet.
+
+5. **Step 5: Bank Statement Import & Fuzzy Mapping (`/accounting/bank-statement-import`, `/accounting/mapping-rules`, `/accounting/bank-import-settings`)**
+   - Build `BankStatementImportController`, `BankStatementImportView`, `MappingRulesView`, `BankImportSettingsView`.
+   - Add PDF parsing, auto-match badges, stepper wizard for unknown narrations, and one-click voucher posting.
+
+6. **Step 6: Dedicated POS Checkout View (`/checkout`)**
+   - Build `CheckoutController`, `CheckoutBinding`, `CheckoutView`.
+   - Add full-screen checkout, payment breakdown, change calculation, and printable receipt modal.
+
+
+---

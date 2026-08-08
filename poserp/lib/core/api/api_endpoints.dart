@@ -76,6 +76,28 @@ class ApiEndpoints {
   static const String accountingReportBalanceSheet =
       '/accounting/reports/balance-sheet';
   static const String accountingGstSummary = '/accounting/gst/summary';
+  static const String accountingSettings = '/accounting/settings';
+  static const String accountingSettingsValidate =
+      '/accounting/settings/validate';
+  static const String accountingHealth = '/accounting/health-check';
+  static const String accountingAuditLogs = '/accounting/audit-logs';
+  static const String accountingReconciliationLedgers =
+      '/accounting/reconciliation/ledgers';
+  static const String accountingReconciliationLedgersFix =
+      '/accounting/reconciliation/ledgers/fix';
+  static const String accountingReconciliationCashBank =
+      '/accounting/reconciliation/cash-bank';
+  static const String accountingReconciliationCashBankDetails =
+      '/accounting/reconciliation/cash-bank/details';
+  static const String accountingReconciliationParties =
+      '/accounting/reconciliation/parties';
+  static const String accountingReconciliationGst =
+      '/accounting/reconciliation/gst';
+  static const String bankStatementImport = '/accounting/bank-statement/import';
+  static const String bankStatementMappings =
+      '/accounting/bank-statement/mappings';
+  static const String bankStatementSettings =
+      '/accounting/bank-statement/settings';
 
   // BI Analytics & Reports
   static const String analyticsSales = '/analytics/sales';
