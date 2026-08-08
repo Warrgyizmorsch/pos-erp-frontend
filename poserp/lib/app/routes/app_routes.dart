@@ -40,6 +40,9 @@ abstract class Routes {
   static const accountingHealth = '/accounting/health';
   static const accountingReconciliation = '/accounting/reconciliation';
   static const accountingAuditLogs = '/accounting/audit-logs';
+  static const bankStatementImport = '/accounting/bank-statement-import';
+  static const bankMappingRules = '/accounting/mapping-rules';
+  static const bankImportSettings = '/accounting/bank-import-settings';
   static const reports = '/reports';
   static const activity = '/activity';
   static const backup = '/backup';

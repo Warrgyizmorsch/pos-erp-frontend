@@ -98,6 +98,8 @@ class ApiEndpoints {
       '/accounting/bank-statement/mappings';
   static const String bankStatementSettings =
       '/accounting/bank-statement/settings';
+  static String bankStatementPostEntries(String id) =>
+      '/accounting/bank-statement/$id/post-entries';
 
   // BI Analytics & Reports
   static const String analyticsSales = '/analytics/sales';

@@ -1,6 +1,10 @@
 import 'package:get/get.dart';
 import '../../modules/accounting/audit_logs/bindings/accounting_audit_log_binding.dart';
 import '../../modules/accounting/audit_logs/views/accounting_audit_log_view.dart';
+import '../../modules/accounting/bank_import/bindings/bank_import_binding.dart';
+import '../../modules/accounting/bank_import/views/bank_import_settings_view.dart';
+import '../../modules/accounting/bank_import/views/bank_mapping_rules_view.dart';
+import '../../modules/accounting/bank_import/views/bank_statement_import_view.dart';
 import '../../modules/accounting/coa/bindings/coa_binding.dart';
 import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
 import '../../modules/accounting/dashboard/bindings/accounting_dashboard_binding.dart';
@@ -283,6 +287,21 @@ class AppPages {
       name: Routes.accountingAuditLogs,
       page: () => const AccountingAuditLogView(),
       binding: AccountingAuditLogBinding(),
+    ),
+    GetPage(
+      name: Routes.bankStatementImport,
+      page: () => const BankStatementImportView(),
+      binding: BankImportBinding(),
+    ),
+    GetPage(
+      name: Routes.bankMappingRules,
+      page: () => const BankMappingRulesView(),
+      binding: BankImportBinding(),
+    ),
+    GetPage(
+      name: Routes.bankImportSettings,
+      page: () => const BankImportSettingsView(),
+      binding: BankImportBinding(),
     ),
     GetPage(
       name: Routes.reports,

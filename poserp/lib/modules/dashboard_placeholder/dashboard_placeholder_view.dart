@@ -278,6 +278,14 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Bank Statement Auto-Matching Importer',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () =>
+                          Get.toNamed('/accounting/bank-statement-import'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Open Business Intelligence & Reports Module',
                       variant: AppButtonVariant.primary,
                       width: double.infinity,
