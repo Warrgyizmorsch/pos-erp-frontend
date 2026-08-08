@@ -249,6 +249,20 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 12),
                     AppButton(
+                      text: 'Open Import / Export Module',
+                      variant: AppButtonVariant.secondary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/utilities/import-export'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
+                      text: 'Open System Settings Module',
+                      variant: AppButtonVariant.primary,
+                      width: double.infinity,
+                      onPressed: () => Get.toNamed('/settings'),
+                    ),
+                    const SizedBox(height: 12),
+                    AppButton(
                       text: 'Sign Out',
                       variant: AppButtonVariant.destructive,
                       width: double.infinity,

@@ -36,4 +36,6 @@ abstract class Routes {
   static const activity = '/activity';
   static const backup = '/backup';
   static const barcode = '/utilities/barcode';
+  static const importExport = '/utilities/import-export';
+  static const settings = '/settings';
 }

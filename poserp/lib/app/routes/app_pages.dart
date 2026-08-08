@@ -56,10 +56,14 @@ import '../../modules/sales/return/bindings/sale_return_binding.dart';
 import '../../modules/sales/return/views/sale_return_form_view.dart';
 import '../../modules/sales/return/views/sale_return_list_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
+import '../../modules/settings/bindings/settings_binding.dart';
+import '../../modules/settings/views/settings_view.dart';
 import '../../modules/shifts/bindings/shift_binding.dart';
 import '../../modules/shifts/views/shift_management_view.dart';
 import '../../modules/utilities/barcode/bindings/barcode_binding.dart';
 import '../../modules/utilities/barcode/views/barcode_view.dart';
+import '../../modules/utilities/import_export/bindings/import_export_binding.dart';
+import '../../modules/utilities/import_export/views/import_export_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -243,6 +247,16 @@ class AppPages {
       name: Routes.barcode,
       page: () => const BarcodeView(),
       binding: BarcodeBinding(),
+    ),
+    GetPage(
+      name: Routes.importExport,
+      page: () => const ImportExportView(),
+      binding: ImportExportBinding(),
+    ),
+    GetPage(
+      name: Routes.settings,
+      page: () => const SettingsView(),
+      binding: SettingsBinding(),
     ),
   ];
 }

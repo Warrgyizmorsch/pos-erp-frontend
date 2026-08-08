@@ -9,6 +9,8 @@ class ApiEndpoints {
   static const String categories = '/categories';
   static const String subcategories = '/subcategories';
   static const String products = '/products';
+  static const String importProducts = '/products/bulk-import';
+  static const String exportProducts = '/products/export';
   static const String customers = '/customers';
   static const String suppliers = '/suppliers';
   static const String transporters = '/transporters';
@@ -77,4 +79,6 @@ class ApiEndpoints {
   static const String activityLogs = '/activity-logs';
   static const String backup = '/backup';
   static const String barcode = '/utilities/barcode';
+  static const String importExport = '/utilities/import-export';
+  static const String settings = '/settings';
 }
