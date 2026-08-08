@@ -27,6 +27,7 @@ abstract class Routes {
   static const cheques = '/cheques';
   static const loans = '/loans';
   static const shifts = '/shifts';
+  static const accounting = '/accounting';
   static const chartOfAccounts = '/accounting/chart-of-accounts';
   static const ledgers = '/accounting/ledgers';
   static const ledgerStatement = '/accounting/ledgers/:id';

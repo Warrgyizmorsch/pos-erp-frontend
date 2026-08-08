@@ -665,7 +665,7 @@ To ensure systematic progress, implementation is broken down into 7 incremental 
 | `/loans` | `/loans` | `loans` | `LoanController` | `LoanRepository` | Loan Account Cards | **Completed (Phase 8)** |
 | `/expenses` | `/expenses` | `expenses` | `ExpenseController` | `ExpenseRepository` | Category Filtered Table | **Completed (Phase 5)** |
 | `/expenses/income` | `/expenses/income` | `expenses` | `ExpenseController` | `ExpenseRepository` | Income Entry Table | **Completed (Phase 5)** |
-| `/accounting` | `/accounting` | `accounting` | `AccountingDashboardController` | `AccountingRepository` | Financial Overview Grid | Pending |
+| `/accounting` | `/accounting` | `accounting/dashboard` | `AccountingDashboardController` | `AccountingDashboardRepository` | Financial Overview Grid | **Completed (Phase 8)** |
 | `/accounting/chart-of-accounts` | `/accounting/coa` | `accounting/coa` | `COAController` | `COARepository` | Tree View / Accordion | **Completed (Phase 6)** |
 | `/accounting/ledgers` | `/accounting/ledgers` | `accounting/ledgers` | `LedgerListController` | `LedgerRepository` | Searchable Ledger Table | **Completed (Phase 6)** |
 | `/accounting/vouchers` | `/accounting/vouchers` | `accounting/vouchers` | `VoucherListController` | `VoucherRepository` | Voucher History Table | **Completed (Phase 6)** |

@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import '../../modules/accounting/coa/bindings/coa_binding.dart';
 import '../../modules/accounting/coa/views/chart_of_accounts_view.dart';
+import '../../modules/accounting/dashboard/bindings/accounting_dashboard_binding.dart';
+import '../../modules/accounting/dashboard/views/accounting_dashboard_view.dart';
 import '../../modules/accounting/ledgers/bindings/ledger_binding.dart';
 import '../../modules/accounting/ledgers/views/ledger_list_view.dart';
 import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
@@ -206,6 +208,11 @@ class AppPages {
       name: Routes.shifts,
       page: () => const ShiftManagementView(),
       binding: ShiftBinding(),
+    ),
+    GetPage(
+      name: Routes.accounting,
+      page: () => const AccountingDashboardView(),
+      binding: AccountingDashboardBinding(),
     ),
     GetPage(
       name: Routes.chartOfAccounts,
