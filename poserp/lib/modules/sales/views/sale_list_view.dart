@@ -42,83 +42,84 @@ class SaleListView extends GetView<SaleController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Summary Metrics Row
-              Obx(
-                () => LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final totalStr =
-                        '₹${controller.totalAmount.value.toStringAsFixed(2)}';
-                    final paidStr =
-                        '₹${controller.amountPaid.value.toStringAsFixed(2)}';
-                    final balStr =
-                        '₹${controller.balanceAmount.value.toStringAsFixed(2)}';
+              // Obx(
+              //   () =>
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final totalStr =
+                      '₹${controller.totalAmount.value.toStringAsFixed(2)}';
+                  final paidStr =
+                      '₹${controller.amountPaid.value.toStringAsFixed(2)}';
+                  final balStr =
+                      '₹${controller.balanceAmount.value.toStringAsFixed(2)}';
 
-                    if (isMobile) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Total Sales',
-                                value: totalStr,
-                                icon: Icons.receipt_long_rounded,
-                              ),
+                  if (isMobile) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Total Sales',
+                              value: totalStr,
+                              icon: Icons.receipt_long_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Received',
-                                value: paidStr,
-                                icon: Icons.check_circle_outline_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Received',
+                              value: paidStr,
+                              icon: Icons.check_circle_outline_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Balance Due',
-                                value: balStr,
-                                icon: Icons.pending_actions_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Balance Due',
+                              value: balStr,
+                              icon: Icons.pending_actions_rounded,
                             ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Total Sales Amount',
-                            value: totalStr,
-                            icon: Icons.receipt_long_rounded,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Amount Received',
-                            value: paidStr,
-                            icon: Icons.check_circle_outline_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Balance Due',
-                            value: balStr,
-                            icon: Icons.pending_actions_rounded,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  },
-                ),
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Total Sales Amount',
+                          value: totalStr,
+                          icon: Icons.receipt_long_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Amount Received',
+                          value: paidStr,
+                          icon: Icons.check_circle_outline_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Balance Due',
+                          value: balStr,
+                          icon: Icons.pending_actions_rounded,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
+              // ),
               const SizedBox(height: 16),
 
               // Filter Bar (Search + Payment Method Filter)
