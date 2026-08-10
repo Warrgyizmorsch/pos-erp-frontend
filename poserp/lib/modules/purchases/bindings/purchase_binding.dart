@@ -8,14 +8,19 @@ class PurchaseBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<PurchaseService>(() => PurchaseService(Get.find<ApiClient>()));
+    Get.lazyPut<PurchaseService>(
+      () => PurchaseService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<PurchaseRepository>(
       () => PurchaseRepository(Get.find<PurchaseService>()),
+      fenix: true,
     );
     Get.lazyPut<PurchaseController>(
       () => PurchaseController(Get.find<PurchaseRepository>()),
+      fenix: true,
     );
   }
 }

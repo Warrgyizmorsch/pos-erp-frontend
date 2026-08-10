@@ -18,13 +18,29 @@ class DashboardSummary {
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
+    // Handle /sales/stats/dashboard format as well as legacy/direct format
+    final todayMap = json['today'] is Map<String, dynamic>
+        ? json['today'] as Map<String, dynamic>
+        : {};
+    final lowStockList = json['lowStockProducts'] is List
+        ? json['lowStockProducts'] as List
+        : [];
+
+    final todayRev =
+        (todayMap['totalRevenue'] as num?)?.toDouble() ??
+        (json['todaySales'] as num?)?.toDouble() ??
+        0.0;
+    final lowStock = lowStockList.isNotEmpty
+        ? lowStockList.length
+        : (json['lowStockCount'] as num?)?.toInt() ?? 0;
+
     return DashboardSummary(
-      todaySales: (json['todaySales'] as num?)?.toDouble() ?? 0.0,
+      todaySales: todayRev,
       todayPurchases: (json['todayPurchases'] as num?)?.toDouble() ?? 0.0,
       totalReceivables: (json['totalReceivables'] as num?)?.toDouble() ?? 0.0,
       totalPayables: (json['totalPayables'] as num?)?.toDouble() ?? 0.0,
       cashBankBalance: (json['cashBankBalance'] as num?)?.toDouble() ?? 0.0,
-      lowStockCount: (json['lowStockCount'] as num?)?.toInt() ?? 0,
+      lowStockCount: lowStock,
       totalProducts: (json['totalProducts'] as num?)?.toInt() ?? 0,
     );
   }

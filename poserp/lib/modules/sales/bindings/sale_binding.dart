@@ -8,12 +8,19 @@ class SaleBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<SaleService>(() => SaleService(Get.find<ApiClient>()));
-    Get.lazyPut<SaleRepository>(() => SaleRepository(Get.find<SaleService>()));
+    Get.lazyPut<SaleService>(
+      () => SaleService(Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<SaleRepository>(
+      () => SaleRepository(Get.find<SaleService>()),
+      fenix: true,
+    );
     Get.lazyPut<SaleController>(
       () => SaleController(Get.find<SaleRepository>()),
+      fenix: true,
     );
   }
 }

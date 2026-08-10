@@ -8,16 +8,19 @@ class PaymentInBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
     Get.lazyPut<PaymentInService>(
       () => PaymentInService(Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<PaymentInRepository>(
       () => PaymentInRepository(Get.find<PaymentInService>()),
+      fenix: true,
     );
     Get.lazyPut<PaymentInController>(
       () => PaymentInController(Get.find<PaymentInRepository>()),
+      fenix: true,
     );
   }
 }

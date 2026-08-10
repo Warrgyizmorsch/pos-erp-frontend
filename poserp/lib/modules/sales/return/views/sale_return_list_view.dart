@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
-import '../../../../core/constants/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_list_card.dart';
 import '../../../../core/widgets/app_pagination.dart';
 import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_stat_card.dart';
+import '../../../../core/widgets/app_status_chip.dart';
+import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
@@ -19,443 +20,344 @@ class SaleReturnListView extends GetView<SaleReturnController> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sale Return / Credit Note'),
-        backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-        foregroundColor: isDark
-            ? AppColors.foregroundDark
-            : AppColors.foregroundLight,
-        elevation: 0,
+      appBar: AppTopBar(
+        title: 'Sale Returns & Credit Notes',
+        subtitle: 'Merchandise returns & store credit management',
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: AppButton(
-              text: 'Add Credit Note',
-              icon: const Icon(Icons.add, size: 18),
-              height: 36,
-              onPressed: () => Get.toNamed('/sales/return/create'),
-            ),
+          IconButton(
+            icon: const Icon(Icons.assignment_return_rounded, size: 24),
+            tooltip: 'Add Credit Note',
+            onPressed: () => Get.toNamed('/sales/return/create'),
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Process customer merchandise returns and issue store credit or cash refunds',
-              style: AppTypography.caption(isDark: isDark),
-            ),
-            const SizedBox(height: 16),
+      body: RefreshIndicator(
+        onRefresh: () => controller.loadReturns(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Metrics Summary Row
+              Obx(
+                () => LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+                    final retStr =
+                        '₹${controller.totalReturnedAmount.toStringAsFixed(2)}';
+                    final refStr =
+                        '₹${controller.totalRefundedAmount.toStringAsFixed(2)}';
+                    final credStr =
+                        '₹${controller.totalCreditBalance.toStringAsFixed(2)}';
 
-            // Summary Metrics Cards
-            Obx(
-              () => Row(
-                children: [
-                  Expanded(
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Returned',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.mutedForegroundDark
-                                  : AppColors.mutedForegroundLight,
+                    if (isMobile) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Returned',
+                                value: retStr,
+                                icon: Icons.assignment_return_rounded,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '₹${controller.totalReturnedAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Refunded',
+                                value: refStr,
+                                icon: Icons.price_check_rounded,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Refunded',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.mutedForegroundDark
-                                  : AppColors.mutedForegroundLight,
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Store Credit',
+                                value: credStr,
+                                icon: Icons.account_balance_rounded,
+                              ),
                             ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Returned',
+                            value: retStr,
+                            icon: Icons.assignment_return_rounded,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '₹${controller.totalRefundedAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.success,
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Refunded',
+                            value: refStr,
+                            icon: Icons.price_check_rounded,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Credit Balance Issued',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? AppColors.mutedForegroundDark
-                                  : AppColors.mutedForegroundLight,
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Store Credit Issued',
+                            value: credStr,
+                            icon: Icons.account_balance_rounded,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '₹${controller.totalCreditBalance.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.warning,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Filter Bar
-            Row(
-              children: [
-                Expanded(
-                  child: AppSearchField(
-                    hintText: 'Search by Credit Note or original invoice...',
-                    onChanged: (val) => controller.searchQuery.value = val,
-                  ),
+              // Filter Bar
+              AppCard(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    AppSearchField(
+                      hintText: 'Search by Credit Note or invoice number...',
+                      onChanged: (val) => controller.searchQuery.value = val,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Obx(
+                            () => DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: controller.statusFilter.value,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      'All Status',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'issued',
+                                    child: Text(
+                                      'Issued',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'refunded',
+                                    child: Text(
+                                      'Refunded',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'adjusted',
+                                    child: Text(
+                                      'Adjusted',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'cancelled',
+                                    child: Text(
+                                      'Cancelled',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    controller.setStatusFilter(val);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Obx(
+                            () => DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: controller.refundFilter.value,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      'All Types',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'refund_now',
+                                    child: Text(
+                                      'Refund Now',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'keep_as_credit',
+                                    child: Text(
+                                      'Store Credit',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'adjust_future_invoice',
+                                    child: Text(
+                                      'Future Adjust',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    controller.setRefundFilter(val);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                      borderRadius: AppRadius.lg,
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: controller.statusFilter.value,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Text('All Status'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'issued',
-                            child: Text('Issued'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'refunded',
-                            child: Text('Refunded'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'adjusted',
-                            child: Text('Adjusted'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'cancelled',
-                            child: Text('Cancelled'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) controller.setStatusFilter(val);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                      borderRadius: AppRadius.lg,
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: controller.refundFilter.value,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Text('All Types'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'refund_now',
-                            child: Text('Refund Now'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'keep_as_credit',
-                            child: Text('Store Credit'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'adjust_future_invoice',
-                            child: Text('Future Adjust'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) controller.setRefundFilter(val);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+              ),
+              const SizedBox(height: 16),
 
-            // Main Content Table
-            Expanded(
-              child: Obx(() {
+              // Data List
+              Obx(() {
                 if (controller.isLoading.value) {
-                  return const LoadingIndicator(
-                    message: 'Loading Credit Notes...',
+                  return const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: LoadingIndicator(message: 'Loading Credit Notes...'),
                   );
                 }
 
                 if (controller.returns.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.swap_horiz_outlined,
-                    title: 'No Credit Notes Available',
-                    description: controller.searchQuery.value.isNotEmpty
-                        ? 'No credit notes match your search criteria.'
-                        : 'Record a sale return and issue store credit or cash back.',
-                    action: AppButton(
-                      text: 'Add Credit Note',
-                      icon: const Icon(Icons.add, size: 18),
-                      onPressed: () => Get.toNamed('/sales/return/create'),
+                  return AppCard(
+                    padding: const EdgeInsets.all(24),
+                    child: EmptyState(
+                      icon: Icons.swap_horiz_outlined,
+                      title: 'No Credit Notes Available',
+                      description: controller.searchQuery.value.isNotEmpty
+                          ? 'No credit notes match your search criteria.'
+                          : 'Record a sale return to issue store credit or cash back.',
                     ),
                   );
                 }
 
                 return Column(
                   children: [
-                    Expanded(
-                      child: AppCard(
-                        padding: EdgeInsets.zero,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SingleChildScrollView(
-                            child: DataTable(
-                              headingRowColor: WidgetStateProperty.all(
-                                isDark ? AppColors.cardDark : Colors.grey[100],
-                              ),
-                              columns: const [
-                                DataColumn(label: Text('#')),
-                                DataColumn(label: Text('Date')),
-                                DataColumn(label: Text('Credit Note No')),
-                                DataColumn(label: Text('Original Invoice')),
-                                DataColumn(label: Text('Customer')),
-                                DataColumn(label: Text('Return Type')),
-                                DataColumn(label: Text('Total Returned')),
-                                DataColumn(label: Text('Refunded')),
-                                DataColumn(label: Text('Credit Bal.')),
-                                DataColumn(label: Text('Status')),
-                                DataColumn(label: Text('Actions')),
-                              ],
-                              rows: controller.returns.asMap().entries.map((
-                                entry,
-                              ) {
-                                final idx = entry.key;
-                                final ret = entry.value;
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: controller.returns.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final ret = controller.returns[index];
 
-                                return DataRow(
-                                  cells: [
-                                    DataCell(
-                                      Text(
-                                        '${((controller.currentPage.value - 1) * controller.itemsPerPage) + idx + 1}',
-                                      ),
+                        AppStatusChipType statusType = AppStatusChipType.info;
+                        if (ret.status == 'refunded') {
+                          statusType = AppStatusChipType.success;
+                        } else if (ret.status == 'cancelled') {
+                          statusType = AppStatusChipType.danger;
+                        }
+
+                        return AppListCard(
+                          title: ret.creditNoteNo,
+                          subtitle:
+                              'Customer: ${ret.customerName} • Invoice: ${ret.invoiceNumber}',
+                          trailingText: '₹${ret.grandTotal.toStringAsFixed(2)}',
+                          statusText: ret.status.toUpperCase(),
+                          statusType: statusType,
+                          leadIcon: Icons.assignment_return_rounded,
+                          onTap: () =>
+                              SaleReturnDetailDialog.show(context, ret),
+                          popupMenu: PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert_rounded, size: 20),
+                            padding: EdgeInsets.zero,
+                            onSelected: (val) {
+                              if (val == 'view') {
+                                SaleReturnDetailDialog.show(context, ret);
+                              } else if (val == 'cancel') {
+                                _showCancelConfirm(context, ret);
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              const PopupMenuItem(
+                                value: 'view',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.remove_red_eye_outlined,
+                                      size: 18,
+                                      color: AppColors.primary,
                                     ),
-                                    DataCell(
-                                      Text(ret.returnDate.split('T')[0]),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        ret.creditNoteNo,
-                                        style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        ret.invoiceNumber,
-                                        style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        ret.customerName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        ret.refundType == 'refund_now'
-                                            ? 'Refund Now'
-                                            : ret.refundType == 'keep_as_credit'
-                                            ? 'Store Credit'
-                                            : 'Adjust',
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        '₹${ret.grandTotal.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        '₹${ret.refundedAmount.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: AppColors.success,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        '₹${ret.creditBalance.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: AppColors.warning,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              (ret.status == 'refunded'
-                                                      ? AppColors.success
-                                                      : ret.status ==
-                                                            'cancelled'
-                                                      ? AppColors.danger
-                                                      : AppColors.primary)
-                                                  .withValues(alpha: 0.15),
-                                          borderRadius: AppRadius.sm,
-                                        ),
-                                        child: Text(
-                                          ret.status.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: ret.status == 'refunded'
-                                                ? AppColors.success
-                                                : ret.status == 'cancelled'
-                                                ? AppColors.danger
-                                                : AppColors.primary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.remove_red_eye_outlined,
-                                              size: 18,
-                                            ),
-                                            color: AppColors.primary,
-                                            onPressed: () =>
-                                                SaleReturnDetailDialog.show(
-                                                  context,
-                                                  ret,
-                                                ),
-                                          ),
-                                          if (ret.status != 'cancelled')
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.block_outlined,
-                                                size: 18,
-                                              ),
-                                              color: AppColors.danger,
-                                              onPressed: () =>
-                                                  _showCancelConfirm(
-                                                    context,
-                                                    ret,
-                                                  ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
+                                    SizedBox(width: 8),
+                                    Text('View Details'),
                                   ],
-                                );
-                              }).toList(),
-                            ),
+                                ),
+                              ),
+                              if (ret.status != 'cancelled')
+                                const PopupMenuItem(
+                                  value: 'cancel',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.block_outlined,
+                                        size: 18,
+                                        color: AppColors.danger,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Cancel Credit Note'),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 12),
-                    // Pagination
-                    Obx(
-                      () => AppPagination(
-                        currentPage: controller.currentPage.value,
-                        totalPages: controller.totalPages.value,
-                        onPageChanged: (page) => controller.goToPage(page),
-                      ),
+                    const SizedBox(height: 16),
+                    AppPagination(
+                      currentPage: controller.currentPage.value,
+                      totalPages: controller.totalPages.value,
+                      onPageChanged: (page) => controller.goToPage(page),
                     ),
                   ],
                 );
               }),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'sale_return_add_fab',
+        onPressed: () => Get.toNamed('/sales/return/create'),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.assignment_return_rounded, color: Colors.white),
+        label: const Text(
+          'Add Credit Note',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
         ),
       ),
     );

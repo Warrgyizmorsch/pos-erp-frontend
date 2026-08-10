@@ -4,6 +4,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_list_card.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_stat_card.dart';
+import '../../../../core/widgets/app_status_chip.dart';
+import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/cash_bank_controller.dart';
@@ -19,91 +24,77 @@ class CashBankListView extends GetView<CashBankController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      appBar: AppTopBar(
+        title: 'Cash & Bank Management',
+        subtitle: 'Cash drawer, bank accounts & fund transfers',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz_rounded, size: 24),
+            tooltip: 'Fund Transfer',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const BankTransferDialog(),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => controller.loadDashboardData(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: AppRadius.lg,
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_rounded,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Cash & Bank Management',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Track cash drawer balances, bank accounts, fund transfers, and transactional ledgers.',
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      AppButton(
-                        text: 'Cash Entry',
-                        variant: AppButtonVariant.outline,
-                        icon: const Icon(Icons.payments_outlined, size: 16),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const CashEntryDialog(),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                      AppButton(
-                        text: 'Fund Transfer',
-                        variant: AppButtonVariant.secondary,
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const BankTransferDialog(),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                      AppButton(
-                        text: 'Add Bank Account',
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const BankAccountDialog(),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+              // Action Buttons Row (Mobile Scrollable)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    AppButton(
+                      text: 'Cash Entry',
+                      variant: AppButtonVariant.outline,
+                      icon: const Icon(Icons.payments_outlined, size: 16),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const CashEntryDialog(),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    AppButton(
+                      text: 'Fund Transfer',
+                      variant: AppButtonVariant.secondary,
+                      icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const BankTransferDialog(),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    AppButton(
+                      text: 'Add Bank Account',
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const BankAccountDialog(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Summary Metrics Panel
               Obx(() {
@@ -112,47 +103,86 @@ class CashBankListView extends GetView<CashBankController> {
                 final bankBal = s?.totalBankBalance ?? 0.0;
                 final net = s?.netBalance ?? (cashBal + bankBal);
 
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'CASH DRAWER BALANCE',
-                        value: cashBal,
-                        subtitle: 'Physical cash in drawer',
-                        accentColor: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'TOTAL BANK BALANCE',
-                        value: bankBal,
-                        subtitle:
-                            '${controller.bankAccounts.length} Active Accounts',
-                        accentColor: AppColors.info,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'TOTAL LIQUIDITY POSITION',
-                        value: net,
-                        subtitle: 'Combined Cash + Bank assets',
-                        accentColor: AppColors.success,
-                      ),
-                    ),
-                  ],
+                final cashStr = '₹${cashBal.toStringAsFixed(2)}';
+                final bankStr = '₹${bankBal.toStringAsFixed(2)}';
+                final netStr = '₹${net.toStringAsFixed(2)}';
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+
+                    if (isMobile) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Cash Drawer',
+                                value: cashStr,
+                                icon: Icons.payments_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Bank Accounts',
+                                value: bankStr,
+                                icon: Icons.account_balance_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Total Liquidity',
+                                value: netStr,
+                                icon: Icons.account_balance_wallet_rounded,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Cash Drawer Balance',
+                            value: cashStr,
+                            icon: Icons.payments_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Bank Balance',
+                            value: bankStr,
+                            icon: Icons.account_balance_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Liquidity Position',
+                            value: netStr,
+                            icon: Icons.account_balance_wallet_rounded,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               }),
               const SizedBox(height: 16),
 
-              // Bank Accounts Carousel / Horizontal Grid
+              // Bank Accounts Horizontal Cards
               Obx(() {
                 if (controller.isLoadingAccounts.value) {
-                  return const SizedBox(height: 90, child: LoadingIndicator());
+                  return const SizedBox(height: 80, child: LoadingIndicator());
                 }
                 if (controller.bankAccounts.isEmpty) {
                   return const SizedBox.shrink();
@@ -167,7 +197,7 @@ class CashBankListView extends GetView<CashBankController> {
                     itemBuilder: (context, idx) {
                       final acc = controller.bankAccounts[idx];
                       return Container(
-                        width: 260,
+                        width: 240,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isDark
@@ -197,35 +227,20 @@ class CashBankListView extends GetView<CashBankController> {
                                     ),
                                   ),
                                 ),
-                                Row(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              BankAccountDialog(
-                                                initialAccount: acc,
-                                              ),
-                                        );
-                                      },
-                                      child: const Icon(
-                                        Icons.edit_outlined,
-                                        size: 16,
-                                        color: Colors.grey,
+                                InkWell(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => BankAccountDialog(
+                                        initialAccount: acc,
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    InkWell(
-                                      onTap: () =>
-                                          controller.deleteBankAccount(acc.id),
-                                      child: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 16,
-                                        color: AppColors.danger,
-                                      ),
-                                    ),
-                                  ],
+                                    );
+                                  },
+                                  child: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
@@ -240,7 +255,7 @@ class CashBankListView extends GetView<CashBankController> {
                             Text(
                               '₹${acc.currentBalance.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.success,
                                 fontFamily: 'monospace',
@@ -256,410 +271,129 @@ class CashBankListView extends GetView<CashBankController> {
               const SizedBox(height: 16),
 
               // Filter Bar
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      onChanged: (val) => controller.searchQuery.value = val,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: 'Search by reference number or notes...',
-                        prefixIcon: const Icon(Icons.search, size: 18),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        filled: true,
-                        fillColor: isDark
-                            ? AppColors.inputDark
-                            : Colors.grey[100],
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.md,
-                          borderSide: BorderSide(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                          ),
-                        ),
+              AppCard(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppSearchField(
+                        hintText: 'Search reference number or notes...',
+                        onChanged: (val) => controller.searchQuery.value = val,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Obx(
-                    () => SizedBox(
-                      width: 170,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: controller.typeFilter.value,
-                        dropdownColor: isDark
-                            ? AppColors.cardDark
-                            : AppColors.cardLight,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.inputDark
-                              : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: AppRadius.md,
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
+                    const SizedBox(width: 8),
+                    Obx(
+                      () => DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: controller.typeFilter.value,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'all',
+                              child: Text(
+                                'All Types',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ),
-                          ),
+                            DropdownMenuItem(
+                              value: 'deposit',
+                              child: Text(
+                                'Deposit',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'withdrawal',
+                              child: Text(
+                                'Withdrawal',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'transfer',
+                              child: Text(
+                                'Transfer',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              controller.typeFilter.value = val;
+                            }
+                          },
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Text('All Types'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'deposit',
-                            child: Text('Deposit'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'withdrawal',
-                            child: Text('Withdrawal'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'transfer',
-                            child: Text('Transfer'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            controller.typeFilter.value = val;
-                          }
-                        },
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
 
-              // Data Table
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoadingTransactions.value) {
-                    return const LoadingIndicator();
-                  }
-                  if (controller.transactions.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.account_balance_rounded,
-                      title: 'No Cash & Bank Transactions Found',
-                      description:
-                          'Track transfers, deposits, and cash drawer settlements.',
-                      action: AppButton(
-                        text: 'Record Transfer',
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const BankTransferDialog(),
-                          );
-                        },
-                      ),
-                    );
-                  }
-
-                  return AppCard(
-                    padding: EdgeInsets.zero,
-                    child: ClipRRect(
-                      borderRadius: AppRadius.lg,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: DataTable(
-                                columnSpacing: 20,
-                                headingRowColor: WidgetStateProperty.all(
-                                  isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      '#',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'DATE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'TYPE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'FROM ACCOUNT',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'TO ACCOUNT',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    numeric: true,
-                                    label: Text(
-                                      'AMOUNT',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'STATUS',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                rows: List.generate(
-                                  controller.transactions.length,
-                                  (idx) {
-                                    final item = controller.transactions[idx];
-                                    final dateStr = item.date.split('T')[0];
-
-                                    return DataRow(
-                                      cells: [
-                                        DataCell(
-                                          Text(
-                                            '${idx + 1 + (controller.currentPage.value - 1) * controller.itemsPerPage}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            dateStr,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontFamily: 'monospace',
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary
-                                                  .withAlpha(25),
-                                              borderRadius: AppRadius.full,
-                                            ),
-                                            child: Text(
-                                              item.type.toUpperCase(),
-                                              style: const TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            item.fromAccount ?? 'Cash',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            item.toAccount ?? 'Bank Account',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            '₹${item.amount.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'monospace',
-                                              color: AppColors.success,
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Text(
-                                            item.status.toUpperCase(),
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.success,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Pagination Footer
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: isDark
-                                      ? AppColors.borderDark
-                                      : AppColors.borderLight,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Page ${controller.currentPage.value} of ${controller.totalPages.value}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    AppButton(
-                                      text: 'Previous',
-                                      variant: AppButtonVariant.outline,
-                                      onPressed:
-                                          controller.currentPage.value > 1
-                                          ? () => controller.goToPage(
-                                              controller.currentPage.value - 1,
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    AppButton(
-                                      text: 'Next',
-                                      variant: AppButtonVariant.outline,
-                                      onPressed:
-                                          controller.currentPage.value <
-                                              controller.totalPages.value
-                                          ? () => controller.goToPage(
-                                              controller.currentPage.value + 1,
-                                            )
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+              // Transactions Data List
+              Obx(() {
+                if (controller.isLoadingTransactions.value) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: LoadingIndicator(
+                      message: 'Loading financial transactions...',
                     ),
                   );
-                }),
-              ),
+                }
+                if (controller.transactions.isEmpty) {
+                  return AppCard(
+                    padding: const EdgeInsets.all(24),
+                    child: EmptyState(
+                      icon: Icons.account_balance_rounded,
+                      title: 'No Transactions Found',
+                      description:
+                          'Record bank transfers, deposits, or drawer cash entries.',
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: controller.transactions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final item = controller.transactions[index];
+
+                    return AppListCard(
+                      title: item.type.toUpperCase(),
+                      subtitle:
+                          'From: ${item.fromAccount ?? "Cash"} • To: ${item.toAccount ?? "Bank"} • ${item.date.split("T")[0]}',
+                      trailingText: '₹${item.amount.toStringAsFixed(2)}',
+                      statusText: item.status.toUpperCase(),
+                      statusType: AppStatusChipType.success,
+                      leadIcon: Icons.swap_horiz_rounded,
+                    );
+                  },
+                );
+              }),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMetricCard(
-    BuildContext context, {
-    required String title,
-    required double value,
-    required String subtitle,
-    required Color accentColor,
-  }) {
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              Container(
-                width: 4,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: AppRadius.full,
-                ),
-              ),
-            ],
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'cash_bank_transfer_fab',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const BankTransferDialog(),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white),
+        label: const Text(
+          'Fund Transfer',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
           ),
-          const SizedBox(height: 6),
-          Text(
-            '₹${value.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: accentColor,
-              fontFamily: 'monospace',
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-        ],
+        ),
       ),
     );
   }

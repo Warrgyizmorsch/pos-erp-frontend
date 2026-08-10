@@ -7,12 +7,17 @@ import '../services/stock_service.dart';
 class StockBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<StockService>(() => StockService(Get.find<ApiClient>()));
+    Get.lazyPut<StockService>(
+      () => StockService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<StockRepository>(
       () => StockRepository(Get.find<StockService>()),
+      fenix: true,
     );
     Get.lazyPut<StockController>(
       () => StockController(Get.find<StockRepository>()),
+      fenix: true,
     );
   }
 }

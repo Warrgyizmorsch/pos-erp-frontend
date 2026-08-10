@@ -9,12 +9,15 @@ class POSCheckoutBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<POSCheckoutService>(
       () => POSCheckoutService(Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<POSCheckoutRepository>(
       () => POSCheckoutRepository(Get.find<POSCheckoutService>()),
+      fenix: true,
     );
     Get.lazyPut<POSCheckoutController>(
       () => POSCheckoutController(Get.find<POSCheckoutRepository>()),
+      fenix: true,
     );
   }
 }

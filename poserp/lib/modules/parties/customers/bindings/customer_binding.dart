@@ -8,14 +8,19 @@ class CustomerBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<CustomerService>(() => CustomerService(Get.find<ApiClient>()));
+    Get.lazyPut<CustomerService>(
+      () => CustomerService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<CustomerRepository>(
       () => CustomerRepository(Get.find<CustomerService>()),
+      fenix: true,
     );
     Get.lazyPut<CustomerController>(
       () => CustomerController(Get.find<CustomerRepository>()),
+      fenix: true,
     );
   }
 }

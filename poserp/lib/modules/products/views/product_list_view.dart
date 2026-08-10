@@ -267,6 +267,7 @@ class ProductListView extends GetView<ProductController> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'product_add_fab',
         onPressed: _openCreateDialog,
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add_rounded, color: Colors.white),

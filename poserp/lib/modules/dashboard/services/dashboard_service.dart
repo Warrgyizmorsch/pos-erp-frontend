@@ -8,20 +8,20 @@ class DashboardService {
 
   Future<DashboardSummary> getSummary() async {
     try {
-      final response = await _apiClient.get('/dashboard/summary');
+      final response = await _apiClient.get('/sales/stats/dashboard');
       final body = response.data is Map<String, dynamic> ? response.data : {};
       final data = body['data'] ?? body;
       return DashboardSummary.fromJson(Map<String, dynamic>.from(data));
     } catch (_) {
-      // Fallback demo summary data if API mock isn't populated
+      // Return default empty structure on failure
       return DashboardSummary(
-        todaySales: 18450.0,
-        todayPurchases: 6200.0,
-        totalReceivables: 42500.0,
-        totalPayables: 18900.0,
-        cashBankBalance: 124800.0,
-        lowStockCount: 4,
-        totalProducts: 148,
+        todaySales: 0.0,
+        todayPurchases: 0.0,
+        totalReceivables: 0.0,
+        totalPayables: 0.0,
+        cashBankBalance: 0.0,
+        lowStockCount: 0,
+        totalProducts: 0,
       );
     }
   }

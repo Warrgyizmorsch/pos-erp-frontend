@@ -9,12 +9,15 @@ class PurchaseReturnBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<PurchaseReturnService>(
       () => PurchaseReturnService(Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<PurchaseReturnRepository>(
       () => PurchaseReturnRepository(Get.find<PurchaseReturnService>()),
+      fenix: true,
     );
     Get.lazyPut<PurchaseReturnController>(
       () => PurchaseReturnController(Get.find<PurchaseReturnRepository>()),
+      fenix: true,
     );
   }
 }

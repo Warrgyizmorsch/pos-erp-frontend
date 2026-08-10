@@ -145,6 +145,7 @@ class InventoryView extends GetView<StockController> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'inventory_adjust_fab',
         onPressed: () {
           showDialog(
             context: context,

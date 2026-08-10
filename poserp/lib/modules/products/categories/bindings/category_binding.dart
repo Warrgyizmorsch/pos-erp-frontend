@@ -8,14 +8,19 @@ class CategoryBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<CategoryService>(() => CategoryService(Get.find<ApiClient>()));
+    Get.lazyPut<CategoryService>(
+      () => CategoryService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<CategoryRepository>(
       () => CategoryRepository(Get.find<CategoryService>()),
+      fenix: true,
     );
     Get.lazyPut<CategoryController>(
       () => CategoryController(Get.find<CategoryRepository>()),
+      fenix: true,
     );
   }
 }

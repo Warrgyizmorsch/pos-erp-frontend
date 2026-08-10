@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_list_card.dart';
+import '../../../../core/widgets/app_pagination.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_stat_card.dart';
+import '../../../../core/widgets/app_status_chip.dart';
+import '../../../../core/widgets/app_top_bar.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/expense_controller.dart';
@@ -15,629 +20,363 @@ class ExpenseListView extends GetView<ExpenseController> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      appBar: AppTopBar(
+        title: 'Expenses & Income',
+        subtitle: 'Operational expenses & non-sales income ledger',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_rounded, size: 24),
+            tooltip: 'Add Expense',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    const ExpenseFormDialog(initialEntryType: 'expense'),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => controller.loadExpenses(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: AppRadius.lg,
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_wallet_outlined,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Expenses & Income Manager',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Track business operational expenses, non-sales income, and cash outflow records.',
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      AppButton(
-                        text: 'Categories',
-                        variant: AppButtonVariant.outline,
-                        icon: const Icon(Icons.category_outlined, size: 16),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const ExpenseCategoryDialog(),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                      AppButton(
-                        text: 'Add Income',
-                        variant: AppButtonVariant.secondary,
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const ExpenseFormDialog(
-                              initialEntryType: 'income',
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                      AppButton(
-                        text: 'Add Expense',
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const ExpenseFormDialog(
-                              initialEntryType: 'expense',
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Summary Metrics Panel
-              Obx(
-                () => Row(
+              // Action Buttons Row (Mobile Scrollable)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'TOTAL EXPENSES',
-                        value: controller.totalExpenses,
-                        subtitle: 'Operational cash outflow',
-                        accentColor: AppColors.danger,
-                      ),
+                    AppButton(
+                      text: 'Categories',
+                      variant: AppButtonVariant.outline,
+                      icon: const Icon(Icons.category_outlined, size: 16),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const ExpenseCategoryDialog(),
+                        );
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'TOTAL OTHER INCOME',
-                        value: controller.totalIncome,
-                        subtitle: 'Non-sales cash inflow',
-                        accentColor: AppColors.success,
-                      ),
+                    const SizedBox(width: 8),
+                    AppButton(
+                      text: 'Add Income',
+                      variant: AppButtonVariant.secondary,
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const ExpenseFormDialog(
+                            initialEntryType: 'income',
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildMetricCard(
-                        context,
-                        title: 'NET OPERATING CASH POSITION',
-                        value: controller.netAmount,
-                        subtitle: 'Income minus Expenses',
-                        accentColor: controller.netAmount >= 0
-                            ? AppColors.success
-                            : AppColors.danger,
-                      ),
+                    const SizedBox(width: 8),
+                    AppButton(
+                      text: 'Add Expense',
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      height: 38,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const ExpenseFormDialog(
+                            initialEntryType: 'expense',
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Control & Filter Bar
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      onChanged: (val) => controller.searchQuery.value = val,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: 'Search by title, receipt number or notes...',
-                        prefixIcon: const Icon(Icons.search, size: 18),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        filled: true,
-                        fillColor: isDark
-                            ? AppColors.inputDark
-                            : Colors.grey[100],
-                        border: OutlineInputBorder(
-                          borderRadius: AppRadius.md,
-                          borderSide: BorderSide(
-                            color: isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
+              // Summary Metrics Panel
+              Obx(
+                () => LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+                    final expStr =
+                        '₹${controller.totalExpenses.toStringAsFixed(2)}';
+                    final incStr =
+                        '₹${controller.totalIncome.toStringAsFixed(2)}';
+                    final netStr =
+                        '₹${controller.netAmount.toStringAsFixed(2)}';
 
-                  Obx(
-                    () => SizedBox(
-                      width: 150,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: controller.entryTypeFilter.value,
-                        dropdownColor: isDark
-                            ? AppColors.cardDark
-                            : AppColors.cardLight,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.inputDark
-                              : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: AppRadius.md,
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
+                    if (isMobile) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Expenses (-)',
+                                value: expStr,
+                                icon: Icons.money_off_rounded,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Other Income (+)',
+                                value: incStr,
+                                icon: Icons.attach_money_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Net Position',
+                                value: netStr,
+                                icon: Icons.account_balance_wallet_rounded,
+                              ),
+                            ),
+                          ],
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Text('All Entries'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'expense',
-                            child: Text('Expenses (-)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'income',
-                            child: Text('Income (+)'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            controller.entryTypeFilter.value = val;
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
+                      );
+                    }
 
-                  Obx(
-                    () => SizedBox(
-                      width: 170,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: controller.categoryFilter.value,
-                        dropdownColor: isDark
-                            ? AppColors.cardDark
-                            : AppColors.cardLight,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.inputDark
-                              : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: AppRadius.md,
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
-                            ),
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Expenses (-)',
+                            value: expStr,
+                            icon: Icons.money_off_rounded,
                           ),
                         ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: 'all',
-                            child: Text('All Categories'),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Other Income (+)',
+                            value: incStr,
+                            icon: Icons.attach_money_rounded,
                           ),
-                          ...controller.categories.map(
-                            (c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.name),
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Net Operating Position',
+                            value: netStr,
+                            icon: Icons.account_balance_wallet_rounded,
                           ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            controller.categoryFilter.value = val;
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 16),
 
-              // Data Table
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoadingList.value) {
-                    return const LoadingIndicator();
-                  }
-                  if (controller.expenses.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'No Expense / Income Entries Found',
-                      description:
-                          'Record operational expenses or non-sales income.',
-                      action: AppButton(
-                        text: 'Add Expense',
-                        icon: const Icon(Icons.add, size: 18),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const ExpenseFormDialog(),
-                          );
-                        },
-                      ),
-                    );
-                  }
-
-                  return AppCard(
-                    padding: EdgeInsets.zero,
-                    child: ClipRRect(
-                      borderRadius: AppRadius.lg,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: DataTable(
-                                columnSpacing: 20,
-                                headingRowColor: WidgetStateProperty.all(
-                                  isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      '#',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
+              // Filter Bar
+              AppCard(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    AppSearchField(
+                      hintText: 'Search title, receipt number or notes...',
+                      onChanged: (val) => controller.searchQuery.value = val,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Obx(
+                            () => DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: controller.entryTypeFilter.value,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      'All Entries',
+                                      style: TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  DataColumn(
-                                    label: Text(
-                                      'DATE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
+                                  DropdownMenuItem(
+                                    value: 'expense',
+                                    child: Text(
+                                      'Expenses (-)',
+                                      style: TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  DataColumn(
-                                    label: Text(
-                                      'TITLE / PURPOSE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
+                                  DropdownMenuItem(
+                                    value: 'income',
+                                    child: Text(
+                                      'Income (+)',
+                                      style: TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  DataColumn(
-                                    label: Text(
-                                      'ENTRY TYPE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    controller.entryTypeFilter.value = val;
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Obx(
+                            () => DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: controller.categoryFilter.value,
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text(
+                                      'All Categories',
+                                      style: TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  DataColumn(
-                                    label: Text(
-                                      'CATEGORY',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'PAYMENT METHOD',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    numeric: true,
-                                    label: Text(
-                                      'AMOUNT',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'ACTION',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
+                                  ...controller.categories.map(
+                                    (c) => DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(
+                                        c.name,
+                                        style: const TextStyle(fontSize: 12),
                                       ),
                                     ),
                                   ),
                                 ],
-                                rows: List.generate(controller.expenses.length, (
-                                  idx,
-                                ) {
-                                  final item = controller.expenses[idx];
-                                  final isExpense = item.entryType == 'expense';
-                                  final dateStr = item.date.split('T')[0];
-
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Text(
-                                          '${idx + 1 + (controller.currentPage.value - 1) * controller.itemsPerPage}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          dateStr,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              item.title,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            if (item.referenceNo != null &&
-                                                item.referenceNo!.isNotEmpty)
-                                              Text(
-                                                'Ref: ${item.referenceNo}',
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                (isExpense
-                                                        ? AppColors.danger
-                                                        : AppColors.success)
-                                                    .withAlpha(25),
-                                            borderRadius: AppRadius.full,
-                                          ),
-                                          child: Text(
-                                            item.entryType.toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: isExpense
-                                                  ? AppColors.danger
-                                                  : AppColors.success,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          item.categoryName,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          item.paymentMethod,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          '${isExpense ? '-' : '+'}₹${item.amount.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'monospace',
-                                            color: isExpense
-                                                ? AppColors.danger
-                                                : AppColors.success,
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_outline_rounded,
-                                            size: 18,
-                                            color: AppColors.danger,
-                                          ),
-                                          tooltip: 'Delete Entry',
-                                          onPressed: () =>
-                                              controller.deleteExpense(item.id),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    controller.categoryFilter.value = val;
+                                  }
+                                },
                               ),
                             ),
                           ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: isDark
-                                      ? AppColors.borderDark
-                                      : AppColors.borderLight,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Page ${controller.currentPage.value} of ${controller.totalPages.value}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    AppButton(
-                                      text: 'Previous',
-                                      variant: AppButtonVariant.outline,
-                                      onPressed:
-                                          controller.currentPage.value > 1
-                                          ? () => controller.goToPage(
-                                              controller.currentPage.value - 1,
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    AppButton(
-                                      text: 'Next',
-                                      variant: AppButtonVariant.outline,
-                                      onPressed:
-                                          controller.currentPage.value <
-                                              controller.totalPages.value
-                                          ? () => controller.goToPage(
-                                              controller.currentPage.value + 1,
-                                            )
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+              // Data List
+              Obx(() {
+                if (controller.isLoadingList.value) {
+                  return const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: LoadingIndicator(
+                      message: 'Loading expense records...',
                     ),
                   );
-                }),
-              ),
+                }
+                if (controller.expenses.isEmpty) {
+                  return AppCard(
+                    padding: const EdgeInsets.all(24),
+                    child: EmptyState(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'No Expense Entries Found',
+                      description: controller.searchQuery.value.isNotEmpty
+                          ? 'No entries match your search criteria.'
+                          : 'Record operational expenses or non-sales income.',
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: controller.expenses.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final item = controller.expenses[index];
+                        final isExpense = item.entryType == 'expense';
+
+                        return AppListCard(
+                          title: item.title,
+                          subtitle:
+                              'Category: ${item.categoryName} • Mode: ${item.paymentMethod} • ${item.date.split("T")[0]}',
+                          trailingText:
+                              '${isExpense ? "-" : "+"}₹${item.amount.toStringAsFixed(2)}',
+                          statusText: item.entryType.toUpperCase(),
+                          statusType: isExpense
+                              ? AppStatusChipType.danger
+                              : AppStatusChipType.success,
+                          leadIcon: isExpense
+                              ? Icons.money_off_rounded
+                              : Icons.attach_money_rounded,
+                          popupMenu: PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert_rounded, size: 20),
+                            padding: EdgeInsets.zero,
+                            onSelected: (val) {
+                              if (val == 'delete') {
+                                controller.deleteExpense(item.id);
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: AppColors.danger,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Delete Entry'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    AppPagination(
+                      currentPage: controller.currentPage.value,
+                      totalPages: controller.totalPages.value,
+                      onPageChanged: (page) => controller.goToPage(page),
+                    ),
+                  ],
+                );
+              }),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMetricCard(
-    BuildContext context, {
-    required String title,
-    required double value,
-    required String subtitle,
-    required Color accentColor,
-  }) {
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              Container(
-                width: 4,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: AppRadius.full,
-                ),
-              ),
-            ],
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'expense_add_fab',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) =>
+                const ExpenseFormDialog(initialEntryType: 'expense'),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text(
+          'Add Expense',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
           ),
-          const SizedBox(height: 6),
-          Text(
-            '₹${value.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: accentColor,
-              fontFamily: 'monospace',
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-        ],
+        ),
       ),
     );
   }

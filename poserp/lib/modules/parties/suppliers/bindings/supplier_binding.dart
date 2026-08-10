@@ -8,14 +8,19 @@ class SupplierBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<SupplierService>(() => SupplierService(Get.find<ApiClient>()));
+    Get.lazyPut<SupplierService>(
+      () => SupplierService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<SupplierRepository>(
       () => SupplierRepository(Get.find<SupplierService>()),
+      fenix: true,
     );
     Get.lazyPut<SupplierController>(
       () => SupplierController(Get.find<SupplierRepository>()),
+      fenix: true,
     );
   }
 }

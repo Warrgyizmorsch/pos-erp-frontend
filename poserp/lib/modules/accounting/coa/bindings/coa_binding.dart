@@ -7,8 +7,17 @@ import '../services/coa_service.dart';
 class COABinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<COAService>(() => COAService(Get.find<ApiClient>()));
-    Get.lazyPut<COARepository>(() => COARepository(Get.find<COAService>()));
-    Get.lazyPut<COAController>(() => COAController(Get.find<COARepository>()));
+    Get.lazyPut<COAService>(
+      () => COAService(Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<COARepository>(
+      () => COARepository(Get.find<COAService>()),
+      fenix: true,
+    );
+    Get.lazyPut<COAController>(
+      () => COAController(Get.find<COARepository>()),
+      fenix: true,
+    );
   }
 }

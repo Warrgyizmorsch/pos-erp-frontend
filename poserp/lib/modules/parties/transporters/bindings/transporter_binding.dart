@@ -8,16 +8,19 @@ class TransporterBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
     Get.lazyPut<TransporterService>(
       () => TransporterService(Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<TransporterRepository>(
       () => TransporterRepository(Get.find<TransporterService>()),
+      fenix: true,
     );
     Get.lazyPut<TransporterController>(
       () => TransporterController(Get.find<TransporterRepository>()),
+      fenix: true,
     );
   }
 }

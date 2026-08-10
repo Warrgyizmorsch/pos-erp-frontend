@@ -7,12 +7,17 @@ import '../services/cheque_service.dart';
 class ChequeBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<ChequeService>(() => ChequeService(Get.find<ApiClient>()));
+    Get.lazyPut<ChequeService>(
+      () => ChequeService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<ChequeRepository>(
       () => ChequeRepository(Get.find<ChequeService>()),
+      fenix: true,
     );
     Get.lazyPut<ChequeListController>(
       () => ChequeListController(Get.find<ChequeRepository>()),
+      fenix: true,
     );
   }
 }

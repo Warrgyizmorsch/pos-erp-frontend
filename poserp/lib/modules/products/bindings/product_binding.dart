@@ -12,31 +12,39 @@ class ProductBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
     if (!Get.isRegistered<CategoryService>()) {
       Get.lazyPut<CategoryService>(
         () => CategoryService(Get.find<ApiClient>()),
+        fenix: true,
       );
     }
     if (!Get.isRegistered<CategoryRepository>()) {
       Get.lazyPut<CategoryRepository>(
         () => CategoryRepository(Get.find<CategoryService>()),
+        fenix: true,
       );
     }
     if (!Get.isRegistered<SubcategoryService>()) {
       Get.lazyPut<SubcategoryService>(
         () => SubcategoryService(Get.find<ApiClient>()),
+        fenix: true,
       );
     }
     if (!Get.isRegistered<SubcategoryRepository>()) {
       Get.lazyPut<SubcategoryRepository>(
         () => SubcategoryRepository(Get.find<SubcategoryService>()),
+        fenix: true,
       );
     }
-    Get.lazyPut<ProductService>(() => ProductService(Get.find<ApiClient>()));
+    Get.lazyPut<ProductService>(
+      () => ProductService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<ProductRepository>(
       () => ProductRepository(Get.find<ProductService>()),
+      fenix: true,
     );
     Get.lazyPut<ProductController>(
       () => ProductController(
@@ -44,6 +52,7 @@ class ProductBinding extends Bindings {
         Get.find<CategoryRepository>(),
         Get.find<SubcategoryRepository>(),
       ),
+      fenix: true,
     );
   }
 }

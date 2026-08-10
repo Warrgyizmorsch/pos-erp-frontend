@@ -10,24 +10,34 @@ import '../services/voucher_service.dart';
 class VoucherBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<VoucherService>(() => VoucherService(Get.find<ApiClient>()));
+    Get.lazyPut<VoucherService>(
+      () => VoucherService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<VoucherRepository>(
       () => VoucherRepository(Get.find<VoucherService>()),
+      fenix: true,
     );
 
-    Get.lazyPut<LedgerService>(() => LedgerService(Get.find<ApiClient>()));
+    Get.lazyPut<LedgerService>(
+      () => LedgerService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<LedgerRepository>(
       () => LedgerRepository(Get.find<LedgerService>()),
+      fenix: true,
     );
 
     Get.lazyPut<VoucherListController>(
       () => VoucherListController(Get.find<VoucherRepository>()),
+      fenix: true,
     );
     Get.lazyPut<JournalFormController>(
       () => JournalFormController(
         Get.find<VoucherRepository>(),
         Get.find<LedgerRepository>(),
       ),
+      fenix: true,
     );
   }
 }

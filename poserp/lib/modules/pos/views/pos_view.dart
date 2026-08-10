@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/app_top_bar.dart';
 import '../controllers/pos_controller.dart';
 import '../widgets/pos_item_table.dart';
 import '../widgets/pos_right_panel.dart';
@@ -13,7 +15,7 @@ class POSView extends StatefulWidget {
 }
 
 class _POSViewState extends State<POSView> {
-  int _mobileTabIndex = 0; // 0 for Cart, 1 for Pay
+  int _mobileTabIndex = 0; // 0 for Cart & Items, 1 for Pay & Checkout
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +23,9 @@ class _POSViewState extends State<POSView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('POS Cashier Interface'),
-        backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-        foregroundColor: isDark
-            ? AppColors.foregroundDark
-            : AppColors.foregroundLight,
-        elevation: 0,
+      appBar: AppTopBar(
+        title: 'POS Terminal',
+        subtitle: 'Fast billing & multi-order tabs',
         actions: [
           // Multi-bill Tabs Header
           Obx(
@@ -41,8 +39,8 @@ class _POSViewState extends State<POSView> {
                       padding: const EdgeInsets.only(right: 6.0),
                       child: ActionChip(
                         avatar: Icon(
-                          Icons.receipt,
-                          size: 14,
+                          Icons.receipt_rounded,
+                          size: 16,
                           color: isActive ? Colors.white : AppColors.primary,
                         ),
                         label: Text(
@@ -66,13 +64,14 @@ class _POSViewState extends State<POSView> {
                   }),
                   IconButton(
                     icon: const Icon(
-                      Icons.add_circle,
+                      Icons.add_circle_outline_rounded,
                       color: AppColors.primary,
+                      size: 22,
                     ),
                     tooltip: 'Create New Bill Tab',
                     onPressed: () => controller.createNewBill(),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
@@ -100,7 +99,7 @@ class _POSViewState extends State<POSView> {
             );
           }
 
-          // Mobile / Tablet Tabbed View (< 1024dp)
+          // Mobile / Tablet View (<1024dp)
           return Column(
             children: [
               Expanded(
@@ -111,7 +110,77 @@ class _POSViewState extends State<POSView> {
                       : const POSRightPanel(),
                 ),
               ),
-              // Bottom Navigation Bar
+              // Mobile Quick Summary Bar when on Cart Tab
+              if (_mobileTabIndex == 0)
+                Obx(() {
+                  final bill = controller.activeBill;
+                  final total = bill?.grandTotal ?? 0.0;
+                  final count = bill?.totalItems ?? 0;
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(20),
+                          blurRadius: 8,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$count ITEMS IN CART',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              '₹${total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(0, AppSizes.minTouchTarget),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                          ),
+                          label: const Text(
+                            'Checkout',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          onPressed: () => setState(() => _mobileTabIndex = 1),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              // Mobile Bottom Navigation Bar
               BottomNavigationBar(
                 currentIndex: _mobileTabIndex,
                 selectedItemColor: AppColors.primary,
@@ -123,8 +192,8 @@ class _POSViewState extends State<POSView> {
                     label: 'Cart & Items',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.account_balance_wallet_outlined),
-                    activeIcon: Icon(Icons.account_balance_wallet),
+                    icon: Icon(Icons.payment_outlined),
+                    activeIcon: Icon(Icons.payment_rounded),
                     label: 'Pay & Checkout',
                   ),
                 ],

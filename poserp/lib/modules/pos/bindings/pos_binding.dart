@@ -8,10 +8,19 @@ class POSBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
-    Get.lazyPut<POSService>(() => POSService(Get.find<ApiClient>()));
-    Get.lazyPut<POSRepository>(() => POSRepository(Get.find<POSService>()));
-    Get.lazyPut<POSController>(() => POSController(Get.find<POSRepository>()));
+    Get.lazyPut<POSService>(
+      () => POSService(Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<POSRepository>(
+      () => POSRepository(Get.find<POSService>()),
+      fenix: true,
+    );
+    Get.lazyPut<POSController>(
+      () => POSController(Get.find<POSRepository>()),
+      fenix: true,
+    );
   }
 }

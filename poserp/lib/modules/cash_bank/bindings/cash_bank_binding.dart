@@ -7,12 +7,17 @@ import '../services/cash_bank_service.dart';
 class CashBankBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<CashBankService>(() => CashBankService(Get.find<ApiClient>()));
+    Get.lazyPut<CashBankService>(
+      () => CashBankService(Get.find<ApiClient>()),
+      fenix: true,
+    );
     Get.lazyPut<CashBankRepository>(
       () => CashBankRepository(Get.find<CashBankService>()),
+      fenix: true,
     );
     Get.lazyPut<CashBankController>(
       () => CashBankController(Get.find<CashBankRepository>()),
+      fenix: true,
     );
   }
 }

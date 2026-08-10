@@ -7,10 +7,17 @@ import '../services/loan_service.dart';
 class LoanBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<LoanService>(() => LoanService(Get.find<ApiClient>()));
-    Get.lazyPut<LoanRepository>(() => LoanRepository(Get.find<LoanService>()));
+    Get.lazyPut<LoanService>(
+      () => LoanService(Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<LoanRepository>(
+      () => LoanRepository(Get.find<LoanService>()),
+      fenix: true,
+    );
     Get.lazyPut<LoanController>(
       () => LoanController(Get.find<LoanRepository>()),
+      fenix: true,
     );
   }
 }

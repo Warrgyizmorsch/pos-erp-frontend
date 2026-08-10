@@ -85,7 +85,7 @@ class AppButton extends StatelessWidget {
             borderRadius: AppRadius.lg,
             side: borderSide,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         onPressed: effectiveOnPressed,
         child: isLoading
@@ -101,15 +101,17 @@ class AppButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
-                  Text(
-                    maxLines: 1,
-                    text,
-                    style: TextStyle(
+                  if (icon != null) ...[icon!, const SizedBox(width: 6)],
+                  Flexible(
+                    child: Text(
+                      text,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: foregroundColor,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: foregroundColor,
+                      ),
                     ),
                   ),
                 ],

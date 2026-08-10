@@ -8,16 +8,19 @@ class PaymentOutBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ApiClient>()) {
-      Get.lazyPut<ApiClient>(() => ApiClient());
+      Get.lazyPut<ApiClient>(() => ApiClient(), fenix: true);
     }
     Get.lazyPut<PaymentOutService>(
       () => PaymentOutService(Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<PaymentOutRepository>(
       () => PaymentOutRepository(Get.find<PaymentOutService>()),
+      fenix: true,
     );
     Get.lazyPut<PaymentOutController>(
       () => PaymentOutController(Get.find<PaymentOutRepository>()),
+      fenix: true,
     );
   }
 }
