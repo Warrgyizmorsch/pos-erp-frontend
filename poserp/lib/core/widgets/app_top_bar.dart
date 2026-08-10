@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../modules/authentication/controllers/auth_controller.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/app_roles.dart';
@@ -97,36 +98,92 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
           actions ??
           [
             IconButton(
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(Icons.notifications_outlined, size: 22),
-                  Positioned(
-                    right: -1,
-                    top: -1,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppColors.danger,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Text(
-                        '1',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              icon: const Icon(Icons.notifications_outlined, size: 22),
               tooltip: 'Notifications',
               onPressed: () => Get.toNamed('/notifications'),
             ),
+            PopupMenuButton<String>(
+              icon: CircleAvatar(
+                radius: 14,
+                backgroundColor: AppColors.primary.withAlpha(30),
+                child: const Icon(
+                  Icons.person_outline,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              tooltip: 'Profile & Account Options',
+              onSelected: (val) {
+                if (val == 'settings') {
+                  Get.toNamed('/settings');
+                } else if (val == 'logout') {
+                  _showLogoutDialog(context);
+                }
+              },
+              itemBuilder: (ctx) => [
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.settings_outlined,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: 8),
+                      Text('Profile & Settings'),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        size: 18,
+                        color: AppColors.danger,
+                      ),
+                      SizedBox(width: 8),
+                      Text('Logout', style: TextStyle(color: AppColors.danger)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(width: 8),
           ],
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
+        title: const Text('Confirm Logout'),
+        content: const Text(
+          'Are you sure you want to end your session and log out of POS ERP?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Get.back();
+              if (Get.isRegistered<AuthController>()) {
+                Get.find<AuthController>().logout();
+              } else {
+                Get.offAllNamed('/login');
+              }
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
   }
 }
