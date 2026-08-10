@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import 'app_more_modules_sheet.dart';
 
 class AppBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -74,7 +73,6 @@ class AppBottomNavBar extends StatelessWidget {
                 icon: Icons.grid_view_outlined,
                 activeIcon: Icons.grid_view_rounded,
                 label: 'More',
-                isMoreLauncher: true,
               ),
             ],
           ),
@@ -89,23 +87,11 @@ class AppBottomNavBar extends StatelessWidget {
     required IconData icon,
     required IconData activeIcon,
     required String label,
-    bool isMoreLauncher = false,
   }) {
-    final isSelected = !isMoreLauncher && currentIndex == index;
+    final isSelected = currentIndex == index;
 
     return InkWell(
-      onTap: () {
-        if (isMoreLauncher) {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (ctx) => const AppMoreModulesSheet(),
-          );
-        } else {
-          onTap(index);
-        }
-      },
+      onTap: () => onTap(index),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

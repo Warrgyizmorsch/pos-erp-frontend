@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_roles.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../core/widgets/more_modules_view.dart';
 import '../../parties/customers/views/customer_list_view.dart';
 import '../../products/inventory/views/inventory_view.dart';
 import '../../purchases/views/purchase_list_view.dart';
@@ -27,12 +28,14 @@ class DashboardView extends GetView<DashboardController> {
       final navIndex = controller.activeBottomNavIndex.value;
 
       return Scaffold(
-        appBar: AppTopBar(
-          title: 'POS ERP',
-          subtitle: 'Welcome back, ${user?.name ?? "User"}',
-          showBackButton: false,
-          userRole: role,
-        ),
+        appBar: navIndex == 5
+            ? null
+            : AppTopBar(
+                title: 'POS ERP',
+                subtitle: 'Welcome back, ${user?.name ?? "User"}',
+                showBackButton: false,
+                userRole: role,
+              ),
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: () => controller.loadDashboard(),
@@ -53,6 +56,9 @@ class DashboardView extends GetView<DashboardController> {
 
                 // Tab 4: Customers & Parties
                 const CustomerListView(),
+
+                // Tab 5: More System Modules Full Screen View
+                const MoreModulesView(),
               ],
             ),
           ),

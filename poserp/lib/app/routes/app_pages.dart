@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../core/middleware/role_middleware.dart';
 import '../../core/permissions/permission_service.dart';
+import '../../core/widgets/more_modules_view.dart';
 import '../../modules/accounting/audit_logs/bindings/accounting_audit_log_binding.dart';
 import '../../modules/accounting/audit_logs/views/accounting_audit_log_view.dart';
 import '../../modules/accounting/bank_import/bindings/bank_import_binding.dart';
@@ -121,6 +122,11 @@ class AppPages {
       name: Routes.dashboard,
       page: () => const DashboardView(),
       binding: DashboardBinding(),
+      middlewares: [RoleMiddleware(PermissionService.allRoles)],
+    ),
+    GetPage(
+      name: Routes.more,
+      page: () => const MoreModulesView(),
       middlewares: [RoleMiddleware(PermissionService.allRoles)],
     ),
 
