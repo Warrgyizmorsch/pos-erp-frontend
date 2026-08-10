@@ -41,7 +41,8 @@ import '../../modules/cash_bank/views/cash_bank_list_view.dart';
 import '../../modules/cash_bank/views/cash_view.dart';
 import '../../modules/cheques/bindings/cheque_binding.dart';
 import '../../modules/cheques/views/cheque_list_view.dart';
-import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
+import '../../modules/dashboard/bindings/dashboard_binding.dart';
+import '../../modules/dashboard/views/dashboard_view.dart';
 import '../../modules/expenses/bindings/expense_binding.dart';
 import '../../modules/expenses/views/expense_list_view.dart';
 import '../../modules/expenses/views/income_view.dart';
@@ -115,15 +116,15 @@ class AppPages {
       binding: AuthBinding(),
     ),
 
-    // Dashboard (All Authenticated Roles)
+    // Mobile Executive Dashboard (All Authenticated Roles)
     GetPage(
       name: Routes.dashboard,
-      page: () => const DashboardPlaceholderView(),
-      binding: AuthBinding(),
+      page: () => const DashboardView(),
+      binding: DashboardBinding(),
       middlewares: [RoleMiddleware(PermissionService.allRoles)],
     ),
 
-    // Parties Master (Admin, Manager, Cashier)
+    // Inventory Master (Admin, Manager, Stock Manager)
     GetPage(
       name: Routes.categories,
       page: () => const CategoryListView(),
@@ -155,7 +156,7 @@ class AppPages {
       middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
 
-    // Parties (Admin, Manager, Cashier)
+    // Parties Master (Admin, Manager, Cashier)
     GetPage(
       name: Routes.customers,
       page: () => const CustomerListView(),

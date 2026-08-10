@@ -54,7 +54,9 @@ class TrialBalanceView extends GetView<FinancialReportsController> {
                               const SizedBox(width: 10),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withAlpha(25),
                                   borderRadius: AppRadius.full,
@@ -73,10 +75,7 @@ class TrialBalanceView extends GetView<FinancialReportsController> {
                           const SizedBox(height: 2),
                           const Text(
                             'Validation-level double-entry debit vs credit balance summary by ledger.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 13, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -105,57 +104,103 @@ class TrialBalanceView extends GetView<FinancialReportsController> {
                         ),
                         columns: const [
                           DataColumn(
-                              label: Text('LEDGER NAME & CODE',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey))),
+                            label: Text(
+                              'LEDGER NAME & CODE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                           DataColumn(
-                              label: Text('ACCOUNT GROUP',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey))),
+                            label: Text(
+                              'ACCOUNT GROUP',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                           DataColumn(
-                              numeric: true,
-                              label: Text('DEBIT BALANCE',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey))),
+                            numeric: true,
+                            label: Text(
+                              'DEBIT BALANCE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                           DataColumn(
-                              numeric: true,
-                              label: Text('CREDIT BALANCE',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey))),
+                            numeric: true,
+                            label: Text(
+                              'CREDIT BALANCE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                         ],
                         rows: const [
-                          DataRow(cells: [
-                            DataCell(Text('HDFC Bank Account (1001)',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataCell(Text('Bank Accounts')),
-                            DataCell(Text('₹2,45,000.00',
-                                style: TextStyle(fontFamily: 'monospace'))),
-                            DataCell(Text('-')),
-                          ]),
-                          DataRow(cells: [
-                            DataCell(Text('Sales Revenue (4001)',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataCell(Text('Sales Accounts')),
-                            DataCell(Text('-')),
-                            DataCell(Text('₹3,85,000.00',
-                                style: TextStyle(fontFamily: 'monospace'))),
-                          ]),
-                          DataRow(cells: [
-                            DataCell(Text('Purchases Account (5001)',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataCell(Text('Purchase Accounts')),
-                            DataCell(Text('₹1,40,000.00',
-                                style: TextStyle(fontFamily: 'monospace'))),
-                            DataCell(Text('-')),
-                          ]),
+                          DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  'HDFC Bank Account (1001)',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataCell(Text('Bank Accounts')),
+                              DataCell(
+                                Text(
+                                  '₹2,45,000.00',
+                                  style: TextStyle(fontFamily: 'monospace'),
+                                ),
+                              ),
+                              DataCell(Text('-')),
+                            ],
+                          ),
+                          DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  'Sales Revenue (4001)',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataCell(Text('Sales Accounts')),
+                              DataCell(Text('-')),
+                              DataCell(
+                                Text(
+                                  '₹3,85,000.00',
+                                  style: TextStyle(fontFamily: 'monospace'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  'Purchases Account (5001)',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataCell(Text('Purchase Accounts')),
+                              DataCell(
+                                Text(
+                                  '₹1,40,000.00',
+                                  style: TextStyle(fontFamily: 'monospace'),
+                                ),
+                              ),
+                              DataCell(Text('-')),
+                            ],
+                          ),
                         ],
                       ),
                     ),

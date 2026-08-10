@@ -742,6 +742,33 @@ All routes in `AppPages.pages` are protected by `RoleMiddleware([allowedRoles])`
 - **Static Analysis Status**: Clean (`0 issues found`, `flutter analyze` exit code 0).
 - **Role-Based Guards**: Live GetX `RoleMiddleware` protecting every route and UI action.
 
+---
+
+## 11. Production Mobile-First UI/UX Design System & Dashboard Architecture
+
+### 11.1 Touch Target & Mobile Standards
+- **Touch Target Sizes**: Minimum 48.0dp touch heights for all interactive buttons, cards, list rows, form fields, and icons (`AppSizes.minTouchTarget = 48.0`).
+- **Spacing Grid**: 8pt grid (`AppSpacing.xs = 4.0`, `sm = 8.0`, `md = 12.0`, `lg = 16.0`, `xl = 20.0`).
+- **Typography & Radius**: Google Inter font with clean weights; rounded cards (`AppRadius.md = 12.0`, `lg = 16.0`, `full = 999.0`).
+- **Colors & Surface**: Primary Teal (`#14B8A6`), Surface Card fills (`#FFFFFF` light / `#0F2A2A` dark), Status Chips (Success Green, Danger Rose, Warning Amber, Info Sky).
+
+### 11.2 Application Shell & Bottom Navigation Architecture
+The app shell uses a 5-tab floating/sticky bottom navigation bar (`AppBottomNavBar`):
+1. **Tab 0 — Dashboard**: Role-tailored executive dashboard.
+2. **Tab 1 — Sales**: Sales Invoices & Credit Notes list.
+3. **Tab 2 — Purchases**: Purchase Bills & Debit Notes list.
+4. **Tab 3 — Inventory**: Products catalog & stock manager.
+5. **Tab 4 — Parties**: Customers, Suppliers, Transporters master.
+6. **Tab 5 — More**: Slide-over bottom sheet drawer (`AppMoreSheet`) launching permitted secondary modules (Accounting, Reports, Cash & Bank, Shifts, Activity Audit Logs, Backup, Utilities, System Settings).
+
+### 11.3 Role-Specific Dashboard Specifications
+The production dashboard renders dynamically based on `user.role` (no developer demo switchers):
+- **Admin Dashboard** (`AdminDashboardWidget`): Sales KPI, Purchases KPI, Receivables, Payables, Cash & Bank balance, Low stock alert list, Quick Actions.
+- **Cashier Dashboard** (`CashierDashboardWidget`): Active Register Shift card, Launch POS Terminal button, Today's Sales, Quick Billing, Payment-In, Sale Returns.
+- **Stock Manager Dashboard** (`StockManagerDashboardWidget`): Catalog items count, Low Stock alerts, Opening Stock, Stock Adjustment, Purchase Bills, Debit Notes.
+- **Accountant Dashboard** (`AccountantDashboardWidget`): Receivables & Payables, Payment-In/Out summaries, Ledgers, Vouchers, Trial Balance, P&L, Balance Sheet, GST Summary.
+
+
    - Connect feature toggles (`accountingEnabled`, `autoVoucherPosting`, etc.) and default ledger mappings.
 
 2. **Step 2: Accounting Health Check & Diagnostics (`/accounting/health`)**
