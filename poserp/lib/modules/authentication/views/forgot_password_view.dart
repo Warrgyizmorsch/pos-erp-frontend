@@ -50,10 +50,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
           children: [
             const Text(
               'Reset Password',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
@@ -73,8 +70,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 backgroundColor: AppColors.success.withAlpha(20),
                 child: Row(
                   children: [
-                    const Icon(Icons.mark_email_read_rounded,
-                        color: AppColors.success, size: 28),
+                    const Icon(
+                      Icons.mark_email_read_rounded,
+                      color: AppColors.success,
+                      size: 28,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -92,7 +92,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                           Text(
                             'We sent reset link & OTP instructions to ${_emailController.text.trim()}',
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -131,8 +133,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   minimumSize: const Size(0, AppSizes.minTouchTarget),
                 ),
                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                label: const Text('Back to Sign In',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Back to Sign In',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 onPressed: () => Get.toNamed('/login'),
               ),
             ),
