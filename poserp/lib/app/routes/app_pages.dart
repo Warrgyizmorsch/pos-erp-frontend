@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import '../../core/middleware/role_middleware.dart';
+import '../../core/permissions/permission_service.dart';
 import '../../modules/accounting/audit_logs/bindings/accounting_audit_log_binding.dart';
 import '../../modules/accounting/audit_logs/views/accounting_audit_log_view.dart';
 import '../../modules/accounting/bank_import/bindings/bank_import_binding.dart';
@@ -19,6 +21,7 @@ import '../../modules/accounting/reconciliation/views/accounting_reconciliation_
 import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
+import '../../modules/accounting/reports/views/trial_balance_view.dart';
 import '../../modules/accounting/settings/bindings/accounting_settings_binding.dart';
 import '../../modules/accounting/settings/views/accounting_settings_view.dart';
 import '../../modules/accounting/vouchers/bindings/voucher_binding.dart';
@@ -33,14 +36,19 @@ import '../../modules/authentication/views/register_view.dart';
 import '../../modules/backup/bindings/backup_binding.dart';
 import '../../modules/backup/views/backup_view.dart';
 import '../../modules/cash_bank/bindings/cash_bank_binding.dart';
+import '../../modules/cash_bank/views/bank_view.dart';
 import '../../modules/cash_bank/views/cash_bank_list_view.dart';
+import '../../modules/cash_bank/views/cash_view.dart';
 import '../../modules/cheques/bindings/cheque_binding.dart';
 import '../../modules/cheques/views/cheque_list_view.dart';
 import '../../modules/dashboard_placeholder/dashboard_placeholder_view.dart';
 import '../../modules/expenses/bindings/expense_binding.dart';
 import '../../modules/expenses/views/expense_list_view.dart';
+import '../../modules/expenses/views/income_view.dart';
 import '../../modules/loans/bindings/loan_binding.dart';
 import '../../modules/loans/views/loan_list_view.dart';
+import '../../modules/notifications/bindings/notification_binding.dart';
+import '../../modules/notifications/views/notification_view.dart';
 import '../../modules/parties/customers/bindings/customer_binding.dart';
 import '../../modules/parties/customers/views/customer_list_view.dart';
 import '../../modules/parties/suppliers/bindings/supplier_binding.dart';
@@ -48,6 +56,8 @@ import '../../modules/parties/suppliers/views/supplier_list_view.dart';
 import '../../modules/parties/transporters/bindings/transporter_binding.dart';
 import '../../modules/parties/transporters/views/transporter_list_view.dart';
 import '../../modules/pos/bindings/pos_binding.dart';
+import '../../modules/pos/bindings/pos_checkout_binding.dart';
+import '../../modules/pos/views/pos_checkout_view.dart';
 import '../../modules/pos/views/pos_view.dart';
 import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
@@ -88,6 +98,7 @@ import 'app_routes.dart';
 
 class AppPages {
   static final pages = [
+    // Authentication (Public)
     GetPage(
       name: Routes.login,
       page: () => LoginView(),
@@ -103,235 +114,347 @@ class AppPages {
       page: () => ForgotPasswordView(),
       binding: AuthBinding(),
     ),
+
+    // Dashboard (All Authenticated Roles)
     GetPage(
       name: Routes.dashboard,
       page: () => const DashboardPlaceholderView(),
       binding: AuthBinding(),
+      middlewares: [RoleMiddleware(PermissionService.allRoles)],
     ),
+
+    // Parties Master (Admin, Manager, Cashier)
     GetPage(
       name: Routes.categories,
       page: () => const CategoryListView(),
       binding: CategoryBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
     GetPage(
       name: Routes.subcategories,
       page: () => const SubcategoryListView(),
       binding: SubcategoryBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
     GetPage(
       name: Routes.products,
       page: () => const ProductListView(),
       binding: ProductBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
     GetPage(
       name: Routes.openingStock,
       page: () => const OpeningStockView(),
       binding: OpeningStockBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
     GetPage(
       name: Routes.inventory,
       page: () => const InventoryView(),
       binding: StockBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
+
+    // Parties (Admin, Manager, Cashier)
     GetPage(
       name: Routes.customers,
       page: () => const CustomerListView(),
       binding: CustomerBinding(),
+      middlewares: [RoleMiddleware(PermissionService.partiesRoles)],
     ),
     GetPage(
       name: Routes.suppliers,
       page: () => const SupplierListView(),
       binding: SupplierBinding(),
+      middlewares: [RoleMiddleware(PermissionService.partiesRoles)],
     ),
     GetPage(
       name: Routes.transporters,
       page: () => const TransporterListView(),
       binding: TransporterBinding(),
+      middlewares: [RoleMiddleware(PermissionService.partiesRoles)],
     ),
+
+    // Sales & POS Billing (Admin, Manager, Cashier)
     GetPage(
       name: Routes.pos,
       page: () => const POSView(),
       binding: POSBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
+    ),
+    GetPage(
+      name: Routes.checkout,
+      page: () => const POSCheckoutView(),
+      binding: POSCheckoutBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),
     GetPage(
       name: Routes.sales,
       page: () => const SaleListView(),
       binding: SaleBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),
     GetPage(
       name: Routes.paymentIn,
       page: () => const PaymentInListView(),
       binding: PaymentInBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),
     GetPage(
       name: Routes.saleReturn,
       page: () => const SaleReturnListView(),
       binding: SaleReturnBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),
     GetPage(
       name: Routes.saleReturnCreate,
       page: () => const SaleReturnFormView(),
       binding: SaleReturnBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),
+
+    // Purchase Management (Admin, Manager, Stock Manager)
     GetPage(
       name: Routes.purchases,
       page: () => const PurchaseListView(),
       binding: PurchaseBinding(),
+      middlewares: [RoleMiddleware(PermissionService.purchaseRoles)],
     ),
     GetPage(
       name: Routes.purchaseCreate,
       page: () => const PurchaseFormView(),
       binding: PurchaseBinding(),
+      middlewares: [RoleMiddleware(PermissionService.purchaseRoles)],
     ),
     GetPage(
       name: Routes.purchaseDetail,
       page: () => const PurchaseDetailView(),
       binding: PurchaseBinding(),
+      middlewares: [RoleMiddleware(PermissionService.purchaseRoles)],
     ),
     GetPage(
       name: Routes.purchaseReturn,
       page: () => const PurchaseReturnListView(),
       binding: PurchaseReturnBinding(),
+      middlewares: [RoleMiddleware(PermissionService.purchaseRoles)],
     ),
     GetPage(
       name: Routes.paymentOut,
       page: () => const PaymentOutListView(),
       binding: PaymentOutBinding(),
+      middlewares: [RoleMiddleware(PermissionService.purchaseRoles)],
     ),
+
+    // Expenses & Income (Admin, Manager, Accountant)
     GetPage(
       name: Routes.expenses,
       page: () => const ExpenseListView(),
       binding: ExpenseBinding(),
+      middlewares: [RoleMiddleware(PermissionService.expenseRoles)],
+    ),
+    GetPage(
+      name: Routes.income,
+      page: () => const IncomeView(),
+      binding: ExpenseBinding(),
+      middlewares: [RoleMiddleware(PermissionService.expenseRoles)],
+    ),
+
+    // Cash & Bank (Admin, Accountant)
+    GetPage(
+      name: Routes.cash,
+      page: () => const CashView(),
+      binding: CashBankBinding(),
+      middlewares: [RoleMiddleware(PermissionService.cashBankRoles)],
+    ),
+    GetPage(
+      name: Routes.bank,
+      page: () => const BankView(),
+      binding: CashBankBinding(),
+      middlewares: [RoleMiddleware(PermissionService.cashBankRoles)],
     ),
     GetPage(
       name: Routes.cashBank,
       page: () => const CashBankListView(),
       binding: CashBankBinding(),
+      middlewares: [RoleMiddleware(PermissionService.cashBankRoles)],
     ),
     GetPage(
       name: Routes.cheques,
       page: () => const ChequeListView(),
       binding: ChequeBinding(),
+      middlewares: [RoleMiddleware(PermissionService.cashBankRoles)],
     ),
     GetPage(
       name: Routes.loans,
       page: () => const LoanListView(),
       binding: LoanBinding(),
+      middlewares: [RoleMiddleware(PermissionService.cashBankRoles)],
     ),
+
+    // Cashier Shifts (Admin, Manager, Cashier)
     GetPage(
       name: Routes.shifts,
       page: () => const ShiftManagementView(),
       binding: ShiftBinding(),
+      middlewares: [RoleMiddleware(PermissionService.shiftRoles)],
     ),
+
+    // Accounting Engine (Admin, Accountant)
     GetPage(
       name: Routes.accounting,
       page: () => const AccountingDashboardView(),
       binding: AccountingDashboardBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.chartOfAccounts,
       page: () => const ChartOfAccountsView(),
       binding: COABinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.ledgers,
       page: () => const LedgerListView(),
       binding: LedgerBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.ledgerStatement,
       page: () => const LedgerStatementView(),
       binding: LedgerBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.vouchers,
       page: () => const VoucherListView(),
       binding: VoucherBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.journalCreate,
       page: () => const JournalFormView(),
       binding: VoucherBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.dayBook,
       page: () => const DayBookView(),
       binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.trialBalance,
+      page: () => const TrialBalanceView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.financialReports,
       page: () => const FinancialReportsView(),
       binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.gstReports,
       page: () => const FinancialReportsView(),
       binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.accountingSettings,
       page: () => const AccountingSettingsView(),
       binding: AccountingSettingsBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.accountingHealth,
       page: () => const AccountingHealthView(),
       binding: AccountingHealthBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.accountingReconciliation,
       page: () => const AccountingReconciliationView(),
       binding: AccountingReconciliationBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.accountingAuditLogs,
       page: () => const AccountingAuditLogView(),
       binding: AccountingAuditLogBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.bankStatementImport,
       page: () => const BankStatementImportView(),
       binding: BankImportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.bankMappingRules,
       page: () => const BankMappingRulesView(),
       binding: BankImportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
     GetPage(
       name: Routes.bankImportSettings,
       page: () => const BankImportSettingsView(),
       binding: BankImportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
+
+    // Reports & BI (Admin, Manager, Accountant)
     GetPage(
       name: Routes.reports,
       page: () => const ReportsView(),
       binding: ReportsBinding(),
+      middlewares: [RoleMiddleware(PermissionService.reportsRoles)],
     ),
+
+    // Activity Audit Logs (Admin Only)
     GetPage(
       name: Routes.activity,
       page: () => const ActivityLogView(),
       binding: ActivityLogBinding(),
+      middlewares: [RoleMiddleware(PermissionService.adminOnlyRoles)],
     ),
+
+    // Sync & Backup (Admin Only)
     GetPage(
       name: Routes.backup,
       page: () => const BackupView(),
       binding: BackupBinding(),
+      middlewares: [RoleMiddleware(PermissionService.adminOnlyRoles)],
     ),
+
+    // Utilities (Admin, Manager)
     GetPage(
       name: Routes.barcode,
       page: () => const BarcodeView(),
       binding: BarcodeBinding(),
+      middlewares: [RoleMiddleware(PermissionService.utilityRoles)],
     ),
     GetPage(
       name: Routes.importExport,
       page: () => const ImportExportView(),
       binding: ImportExportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.utilityRoles)],
     ),
+
+    // System Settings (Admin Only)
     GetPage(
       name: Routes.settings,
       page: () => const SettingsView(),
       binding: SettingsBinding(),
+      middlewares: [RoleMiddleware(PermissionService.adminOnlyRoles)],
+    ),
+
+    // Notifications (All Authenticated Roles)
+    GetPage(
+      name: Routes.notifications,
+      page: () => const NotificationView(),
+      binding: NotificationBinding(),
+      middlewares: [RoleMiddleware(PermissionService.allRoles)],
     ),
   ];
 }

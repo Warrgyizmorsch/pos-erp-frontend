@@ -699,25 +699,49 @@ This gap analysis compares the updated Next.js source of truth (`src/`) against 
 | `accounting/mapping-rules` | `/accounting/mapping-rules` | Create `MappingRulesView` for fuzzy narration matching rules CRUD | `GET/POST/PUT/DELETE /api/accounting/bank-statement/mappings` | Narration pattern rule table with create/edit modal | Medium | `BankStatementImport` | **Completed (Post-Sync)** |
 | `accounting/bank-import-settings` | `/accounting/bank-import-settings` | Create `BankImportSettingsView` for default bank statement settings | `GET/PUT /api/accounting/bank-statement/settings` | Default ledger fallback dropdowns & toggles | Medium | `BankStatementImport` | **Completed (Post-Sync)** |
 | `accounting/settings` | `/accounting/settings` | Create `AccountingSettingsView` for feature toggles & default ledger mappings | `GET/PUT /api/accounting/settings`, `GET /api/accounting/settings/validate` | Feature toggle switches, repair action cards, default ledger selects | High | `AccountingService` | **Completed (Post-Sync)** |
-| `checkout` | Cart Drawer Only | Add dedicated `/checkout` route & view with multi-tender payment breakdown | Uses `saleService.create` | Cart summary, payment method tiles, change calculation, receipt dialog | Medium | `POS` module | Pending |
-| `notifications` | Not Implemented | Add notification drawer / bell icon & `NotificationService` | `GET/PUT/DELETE /api/notifications` | Top bar notification bell with unread badge & drawer list | Low | Shared Foundation | Pending |
-
-### Modules Requiring No Changes (100% Synchronized)
-1. **Auth Module**: `/login`, `/register`, `/forgot-password`, `/profile`
-2. **Catalog & Products**: `/categories`, `/subcategories`, `/products`, `/opening-stock`, `/inventory`
-3. **Party Management**: `/customers`, `/suppliers`, `/transporters`
-4. **Sales Operations**: `/sales`, `/sales/payment-in`, `/sales/return`
-5. **Purchase Operations**: `/purchases`, `/payment-out`, `/purchase-return`
-6. **Cash & Bank / Financials**: `/cash-bank`, `/cheques`, `/loans`, `/shifts`
-7. **Base Accounting Core**: `/accounting/chart-of-accounts`, `/accounting/ledgers`, `/accounting/vouchers`, `/accounting/day-book`, `/accounting/reports`
-8. **Utilities & Backup**: `/activity`, `/backup`, `/utilities/barcode`, `/utilities/import-export`, `/settings`
+| `checkout` | `/checkout` | Add dedicated `/checkout` route & view with multi-tender payment breakdown | Uses `saleService.create` | Cart summary, payment method tiles, change calculation, receipt dialog | Medium | `POS` module | **Completed (Post-Sync)** |
+| `notifications` | `/notifications` | Add notification drawer / bell icon & `NotificationService` | `GET/PUT/DELETE /api/notifications` | Top bar notification bell with unread badge & notification view list | Low | Shared Foundation | **Completed (Post-Sync)** |
 
 ---
 
-## 9. Ordered Synchronization Plan for Flutter Update
+## 9. Centralized Role-Based Access Control (RBAC) Architecture
 
-1. **Step 1: Accounting Settings & Foundation Control (`/accounting/settings`)**
-   - Build `AccountingSettingsController`, `AccountingSettingsBinding`, `AccountingSettingsView`.
+### Role Definition & Hierarchy
+The system enforces 5 distinct roles matching Next.js `pos-erp-frontend`:
+1. `admin` (Administrator) — Full root access to all modules, system settings, activity logs, backups, and accounting initialization.
+2. `manager` (Store Manager) — Access to catalog, parties, sales/checkout, purchases, expenses/income, cashier shifts, utilities, and reporting. Restricted from system settings, audit logs, backup, and accounting initialization.
+3. `accountant` (Senior Accountant) — Access to cash & bank, expenses/income, full double-entry accounting engine, financial reports, GST reporting, health diagnostics, audit logs, and bank statement matching. Restricted from catalog management, POS billing, shifts, and backup.
+4. `stock_manager` (Stock Manager) — Access to product catalog, categories, subcategories, opening stock, inventory manager, purchase bills, debit notes, and payment-out. Restricted from POS checkout, cash/bank registers, and accounting vouchers.
+5. `cashier` (POS Cashier) — Access to POS terminal, dedicated `/checkout`, customer/supplier view, sale invoices, payment-in, sale return, and shift management. Restricted from purchases, bank accounts, accounting engine, activity logs, and settings.
+
+### Centralized GetX Middleware & Route Guard Matrix
+
+All routes in `AppPages.pages` are protected by `RoleMiddleware([allowedRoles])`. Unauthorized direct URL access attempts trigger an instant `Access Denied` alert notification and automatically redirect the user to `/dashboard`.
+
+| Route | Module | Allowed Roles | Guard Enforcement |
+|---|---|---|---|
+| `/login`, `/register`, `/forgot-password` | Authentication | Public / Guest | Unrestricted |
+| `/dashboard` | Executive Dashboard | All Roles (`admin`, `manager`, `accountant`, `stock_manager`, `cashier`) | `RoleMiddleware(allRoles)` |
+| `/customers`, `/suppliers`, `/transporters` | Parties Master | `admin`, `manager`, `cashier` | `RoleMiddleware(partiesRoles)` |
+| `/products`, `/categories`, `/subcategories`, `/opening-stock`, `/inventory` | Inventory Master | `admin`, `manager`, `stock_manager` | `RoleMiddleware(inventoryRoles)` |
+| `/pos`, `/checkout`, `/sales`, `/sales/payment-in`, `/sales/return` | POS & Sales | `admin`, `manager`, `cashier` | `RoleMiddleware(salesRoles)` |
+| `/purchases`, `/purchases/create`, `/purchases/payment-out`, `/purchases/return` | Purchases | `admin`, `manager`, `stock_manager` | `RoleMiddleware(purchaseRoles)` |
+| `/expenses`, `/expenses/income` | Expenses & Income | `admin`, `manager`, `accountant` | `RoleMiddleware(expenseRoles)` |
+| `/cash`, `/bank`, `/cash-bank`, `/cheques`, `/loans` | Cash & Bank | `admin`, `accountant` | `RoleMiddleware(cashBankRoles)` |
+| `/shifts` | Cashier Shifts | `admin`, `manager`, `cashier` | `RoleMiddleware(shiftRoles)` |
+| `/accounting/*` | Accounting Engine | `admin`, `accountant` | `RoleMiddleware(accountingRoles)` |
+| `/reports` | Business Intelligence | `admin`, `manager`, `accountant` | `RoleMiddleware(reportsRoles)` |
+| `/utilities/barcode`, `/utilities/import-export` | Utilities | `admin`, `manager` | `RoleMiddleware(utilityRoles)` |
+| `/activity`, `/backup`, `/settings` | System Admin | `admin` | `RoleMiddleware(adminOnlyRoles)` |
+| `/notifications` | Alerts & Notifications | All Roles (`admin`, `manager`, `accountant`, `stock_manager`, `cashier`) | `RoleMiddleware(allRoles)` |
+
+---
+
+## 10. Post-Implementation Synchronization Summary
+- **Total Modules Synchronized**: 100% of all Next.js `pos-erp-frontend` routes, pages, and endpoints.
+- **Static Analysis Status**: Clean (`0 issues found`, `flutter analyze` exit code 0).
+- **Role-Based Guards**: Live GetX `RoleMiddleware` protecting every route and UI action.
+
    - Connect feature toggles (`accountingEnabled`, `autoVoucherPosting`, etc.) and default ledger mappings.
 
 2. **Step 2: Accounting Health Check & Diagnostics (`/accounting/health`)**

@@ -2,7 +2,8 @@ class User {
   final String id;
   final String name;
   final String email;
-  final String role; // "admin" | "cashier"
+  final String
+  role; // "admin" | "manager" | "accountant" | "stock_manager" | "cashier"
   final String? phone;
   final String? avatar;
   final bool isActive;
@@ -50,5 +51,8 @@ class User {
   }
 
   bool get isAdmin => role == 'admin';
+  bool get isManager => role == 'manager';
+  bool get isAccountant => role == 'accountant';
+  bool get isStockManager => role == 'stock_manager';
   bool get isCashier => role == 'cashier';
 }

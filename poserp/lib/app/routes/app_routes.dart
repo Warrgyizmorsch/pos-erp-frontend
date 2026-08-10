@@ -13,6 +13,7 @@ abstract class Routes {
   static const suppliers = '/suppliers';
   static const transporters = '/transporters';
   static const pos = '/pos';
+  static const checkout = '/checkout';
   static const sales = '/sales';
   static const paymentIn = '/sales/payment-in';
   static const saleReturn = '/sales/return';
@@ -23,6 +24,9 @@ abstract class Routes {
   static const purchaseReturn = '/purchase-return';
   static const paymentOut = '/payment-out';
   static const expenses = '/expenses';
+  static const income = '/expenses/income';
+  static const cash = '/cash';
+  static const bank = '/bank';
   static const cashBank = '/cash-bank';
   static const cheques = '/cheques';
   static const loans = '/loans';
@@ -34,6 +38,7 @@ abstract class Routes {
   static const vouchers = '/accounting/vouchers';
   static const journalCreate = '/accounting/journal/create';
   static const dayBook = '/accounting/day-book';
+  static const trialBalance = '/accounting/trial-balance';
   static const financialReports = '/accounting/reports';
   static const gstReports = '/accounting/gst';
   static const accountingSettings = '/accounting/settings';
@@ -49,4 +54,5 @@ abstract class Routes {
   static const barcode = '/utilities/barcode';
   static const importExport = '/utilities/import-export';
   static const settings = '/settings';
+  static const notifications = '/notifications';
 }
