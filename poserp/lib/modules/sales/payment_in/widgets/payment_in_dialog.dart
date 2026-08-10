@@ -130,9 +130,9 @@ class _PaymentInDialogState extends State<PaymentInDialog> {
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
       backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
+        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 720),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(20.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -154,7 +154,7 @@ class _PaymentInDialogState extends State<PaymentInDialog> {
                               ? 'Edit Payment-In'
                               : 'Add Payment-In',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -166,239 +166,297 @@ class _PaymentInDialogState extends State<PaymentInDialog> {
                     ),
                   ],
                 ),
-                const Divider(height: 20),
+                const Divider(height: 16),
 
                 Flexible(
                   child: SingleChildScrollView(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left Side (Customer & Unpaid Invoices)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Customer / Party *',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? AppColors.foregroundDark
-                                      : AppColors.foregroundLight,
-                                ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isMobile = constraints.maxWidth < 550;
+
+                        final leftCol = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Customer / Party *',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? AppColors.foregroundDark
+                                    : AppColors.foregroundLight,
                               ),
-                              const SizedBox(height: 6),
-                              DropdownButtonFormField<Customer>(
-                                initialValue: _selectedCustomer,
-                                dropdownColor: isDark
-                                    ? AppColors.cardDark
-                                    : AppColors.cardLight,
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  filled: true,
-                                  fillColor: isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: AppRadius.md,
-                                    borderSide: BorderSide(
-                                      color: isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ),
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<Customer>(
+                              initialValue: _selectedCustomer,
+                              dropdownColor: isDark
+                                  ? AppColors.cardDark
+                                  : AppColors.cardLight,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? AppColors.inputDark
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.md,
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight,
                                   ),
                                 ),
-                                items: controller.availableCustomers
-                                    .map(
-                                      (c) => DropdownMenuItem<Customer>(
-                                        value: c,
-                                        child: Text(
-                                          '${c.name} (${c.phone})',
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (c) {
-                                  setState(() {
-                                    _selectedCustomer = c;
-                                    _linkedInvoiceId = null;
-                                  });
-                                  if (c != null) {
-                                    controller.fetchUnpaidInvoices(c.id);
-                                  }
-                                },
                               ),
-                              const SizedBox(height: 16),
+                              items: controller.availableCustomers
+                                  .map(
+                                    (c) => DropdownMenuItem<Customer>(
+                                      value: c,
+                                      child: Text(
+                                        '${c.name} (${c.phone})',
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (c) {
+                                setState(() {
+                                  _selectedCustomer = c;
+                                  _linkedInvoiceId = null;
+                                });
+                                if (c != null) {
+                                  controller.fetchUnpaidInvoices(c.id);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
 
-                              // Unpaid Invoices List
-                              Text(
-                                'Unpaid Invoices',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? AppColors.mutedForegroundDark
-                                      : AppColors.mutedForegroundLight,
-                                ),
+                            // Unpaid Invoices List
+                            Text(
+                              'Unpaid Invoices',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? AppColors.mutedForegroundDark
+                                    : AppColors.mutedForegroundLight,
                               ),
-                              const SizedBox(height: 6),
-                              Obx(() {
-                                if (controller.isFetchingUnpaid.value) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(12.0),
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                            ),
+                            const SizedBox(height: 6),
+                            Obx(() {
+                              if (controller.isFetchingUnpaid.value) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                                  );
-                                }
-                                if (controller.unpaidInvoices.isEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? AppColors.inputDark
-                                          : Colors.grey[100],
-                                      borderRadius: AppRadius.md,
-                                    ),
-                                    child: const Text(
-                                      'No unpaid invoices found.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                return Column(
-                                  children: controller.unpaidInvoices.map((
-                                    inv,
-                                  ) {
-                                    final isSelected =
-                                        _linkedInvoiceId == inv.id;
-                                    final balance = inv.balanceDue;
-                                    return GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          if (isSelected) {
-                                            _linkedInvoiceId = null;
-                                          } else {
-                                            _linkedInvoiceId = inv.id;
-                                            _amountController.text = balance
-                                                .toStringAsFixed(2);
-                                          }
-                                        });
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 6,
-                                        ),
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? AppColors.primary.withValues(
-                                                  alpha: 0.1,
-                                                )
-                                              : (isDark
-                                                    ? AppColors.inputDark
-                                                    : Colors.grey[100]),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? AppColors.primary
-                                                : Colors.transparent,
-                                          ),
-                                          borderRadius: AppRadius.md,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  inv.invoiceNumber,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  inv.createdAt?.split(
-                                                        'T',
-                                                      )[0] ??
-                                                      '',
-                                                  style: const TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Text(
-                                              'Due: ₹${balance.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.danger,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  ),
                                 );
-                              }),
-                              const SizedBox(height: 12),
+                              }
+                              if (controller.unpaidInvoices.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.inputDark
+                                        : Colors.grey[100],
+                                    borderRadius: AppRadius.md,
+                                  ),
+                                  child: const Text(
+                                    'No unpaid invoices found.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                );
+                              }
 
-                              AppTextField(
-                                label: 'Notes / Description (Optional)',
-                                hintText: 'Enter payment notes...',
-                                controller: _descriptionController,
+                              return Column(
+                                children: controller.unpaidInvoices.map((inv) {
+                                  final isSelected = _linkedInvoiceId == inv.id;
+                                  final balance = inv.balanceDue;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _linkedInvoiceId = null;
+                                        } else {
+                                          _linkedInvoiceId = inv.id;
+                                          _amountController.text = balance
+                                              .toStringAsFixed(2);
+                                        }
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 6),
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.primary.withValues(
+                                                alpha: 0.1,
+                                              )
+                                            : (isDark
+                                                  ? AppColors.inputDark
+                                                  : Colors.grey[100]),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : Colors.transparent,
+                                        ),
+                                        borderRadius: AppRadius.md,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                inv.invoiceNumber,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                              Text(
+                                                inv.createdAt?.split('T')[0] ??
+                                                    '',
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Text(
+                                            'Due: ₹${balance.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.danger,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            }),
+                            const SizedBox(height: 12),
+
+                            AppTextField(
+                              label: 'Notes / Description (Optional)',
+                              hintText: 'Enter payment notes...',
+                              controller: _descriptionController,
+                            ),
+                          ],
+                        );
+
+                        final rightCol = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppTextField(
+                              label: 'Date',
+                              controller: _dateController,
+                              isRequired: true,
+                            ),
+                            const SizedBox(height: 12),
+
+                            AppTextField(
+                              label: 'Amount Received (₹)',
+                              hintText: '0.00',
+                              controller: _amountController,
+                              keyboardType: TextInputType.number,
+                              isRequired: true,
+                              validator: (v) =>
+                                  v == null ||
+                                      double.tryParse(v) == null ||
+                                      double.parse(v) <= 0
+                                  ? 'Enter valid amount'
+                                  : null,
+                            ),
+                            const SizedBox(height: 12),
+
+                            Text(
+                              'Payment Mode *',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? AppColors.foregroundDark
+                                    : AppColors.foregroundLight,
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        // Right Side (Date, Amount, Mode, Bank Account, Ref)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppTextField(
-                                label: 'Date',
-                                controller: _dateController,
-                                isRequired: true,
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              initialValue: _paymentMode,
+                              dropdownColor: isDark
+                                  ? AppColors.cardDark
+                                  : AppColors.cardLight,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? AppColors.inputDark
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.md,
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Cash',
+                                  child: Text('Cash'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Bank',
+                                  child: Text('Bank Transfer'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'UPI',
+                                  child: Text('UPI / QR'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Card',
+                                  child: Text('Card'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Cheque',
+                                  child: Text('Cheque'),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _paymentMode = val;
+                                    if (val.toLowerCase() == 'cash') {
+                                      _selectedBankAccountId = null;
+                                    }
+                                  });
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
 
-                              AppTextField(
-                                label: 'Amount Received (₹)',
-                                hintText: '0.00',
-                                controller: _amountController,
-                                keyboardType: TextInputType.number,
-                                isRequired: true,
-                                validator: (v) =>
-                                    v == null ||
-                                        double.tryParse(v) == null ||
-                                        double.parse(v) <= 0
-                                    ? 'Enter valid amount'
-                                    : null,
-                              ),
-                              const SizedBox(height: 12),
-
+                            if (_paymentMode.toLowerCase() != 'cash') ...[
                               Text(
-                                'Payment Mode *',
+                                'Collect in Bank Account *',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -409,7 +467,7 @@ class _PaymentInDialogState extends State<PaymentInDialog> {
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                initialValue: _paymentMode,
+                                initialValue: _selectedBankAccountId,
                                 dropdownColor: isDark
                                     ? AppColors.cardDark
                                     : AppColors.cardLight,
@@ -431,111 +489,57 @@ class _PaymentInDialogState extends State<PaymentInDialog> {
                                     ),
                                   ),
                                 ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: 'Cash',
-                                    child: Text('Cash'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Bank',
-                                    child: Text('Bank Transfer'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'UPI',
-                                    child: Text('UPI / QR'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Card',
-                                    child: Text('Card'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'Cheque',
-                                    child: Text('Cheque'),
-                                  ),
-                                ],
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    setState(() {
-                                      _paymentMode = val;
-                                      if (val.toLowerCase() == 'cash') {
-                                        _selectedBankAccountId = null;
-                                      }
-                                    });
-                                  }
-                                },
+                                items: controller.bankAccounts
+                                    .map(
+                                      (acc) => DropdownMenuItem<String>(
+                                        value:
+                                            acc['_id']?.toString() ??
+                                            acc['id']?.toString(),
+                                        child: Text(
+                                          '${acc['accountName']} (${acc['bankName'] ?? ''})',
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) => setState(
+                                  () => _selectedBankAccountId = val,
+                                ),
                               ),
                               const SizedBox(height: 12),
-
-                              if (_paymentMode.toLowerCase() != 'cash') ...[
-                                Text(
-                                  'Collect in Bank Account *',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? AppColors.foregroundDark
-                                        : AppColors.foregroundLight,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                DropdownButtonFormField<String>(
-                                  initialValue: _selectedBankAccountId,
-                                  dropdownColor: isDark
-                                      ? AppColors.cardDark
-                                      : AppColors.cardLight,
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    filled: true,
-                                    fillColor: isDark
-                                        ? AppColors.inputDark
-                                        : Colors.grey[100],
-                                    border: OutlineInputBorder(
-                                      borderRadius: AppRadius.md,
-                                      borderSide: BorderSide(
-                                        color: isDark
-                                            ? AppColors.borderDark
-                                            : AppColors.borderLight,
-                                      ),
-                                    ),
-                                  ),
-                                  items: controller.bankAccounts
-                                      .map(
-                                        (acc) => DropdownMenuItem<String>(
-                                          value:
-                                              acc['_id']?.toString() ??
-                                              acc['id']?.toString(),
-                                          child: Text(
-                                            '${acc['accountName']} (${acc['bankName'] ?? ''})',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (val) => setState(
-                                    () => _selectedBankAccountId = val,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-
-                              AppTextField(
-                                label: 'Reference / Transaction ID (Optional)',
-                                hintText: 'e.g. UTR / Cheque No.',
-                                controller: _referenceController,
-                              ),
                             ],
-                          ),
-                        ),
-                      ],
+
+                            AppTextField(
+                              label: 'Reference / Transaction ID (Optional)',
+                              hintText: 'e.g. UTR / Cheque No.',
+                              controller: _referenceController,
+                            ),
+                          ],
+                        );
+
+                        if (isMobile) {
+                          return Column(
+                            children: [
+                              leftCol,
+                              const SizedBox(height: 16),
+                              rightCol,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: leftCol),
+                            const SizedBox(width: 16),
+                            Expanded(child: rightCol),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 Obx(
                   () => Row(

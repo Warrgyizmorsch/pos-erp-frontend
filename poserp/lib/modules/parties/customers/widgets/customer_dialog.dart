@@ -142,7 +142,7 @@ class _CustomerDialogState extends State<CustomerDialog>
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
       backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+        constraints: const BoxConstraints(maxWidth: 550, maxHeight: 720),
         child: Column(
           children: [
             // Modal Header
@@ -182,218 +182,241 @@ class _CustomerDialogState extends State<CustomerDialog>
                 padding: const EdgeInsets.all(20),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    children: [
-                      // Header Fields: Name, Phone & GSTIN
-                      Row(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 450;
+
+                      final nameField = AppTextField(
+                        label: 'Customer Name',
+                        hintText: 'Enter name',
+                        controller: _nameController,
+                        isRequired: true,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Name is required'
+                            : null,
+                      );
+
+                      final phoneField = AppTextField(
+                        label: 'Phone Number',
+                        hintText: 'Enter phone',
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        isRequired: true,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Phone is required'
+                            : null,
+                      );
+
+                      final emailField = AppTextField(
+                        label: 'Email Address',
+                        hintText: 'customer@example.com',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                      );
+
+                      final stateField = AppTextField(
+                        label: 'State Code',
+                        hintText: 'e.g. 27',
+                        controller: _stateCodeController,
+                      );
+
+                      return Column(
                         children: [
-                          Expanded(
-                            child: AppTextField(
-                              label: 'Customer Name',
-                              hintText: 'Enter name',
-                              controller: _nameController,
-                              isRequired: true,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Name is required'
-                                  : null,
+                          if (isMobile) ...[
+                            nameField,
+                            const SizedBox(height: 10),
+                            phoneField,
+                          ] else
+                            Row(
+                              children: [
+                                Expanded(child: nameField),
+                                const SizedBox(width: 12),
+                                Expanded(child: phoneField),
+                              ],
                             ),
+                          const SizedBox(height: 12),
+                          AppTextField(
+                            label: 'GSTIN (Optional)',
+                            hintText: 'Enter 15-digit GSTIN',
+                            controller: _gstController,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppTextField(
-                              label: 'Phone Number',
-                              hintText: 'Enter phone',
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              isRequired: true,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Phone is required'
-                                  : null,
-                            ),
+                          const SizedBox(height: 16),
+
+                          TabBar(
+                            controller: _tabController,
+                            labelColor: AppColors.primary,
+                            unselectedLabelColor: isDark
+                                ? AppColors.mutedForegroundDark
+                                : AppColors.mutedForegroundLight,
+                            indicatorColor: AppColors.primary,
+                            tabs: const [
+                              Tab(text: 'GST & ADDRESS'),
+                              Tab(text: 'CREDIT & BALANCE'),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      AppTextField(
-                        label: 'GSTIN (Optional)',
-                        hintText: 'Enter 15-digit GSTIN',
-                        controller: _gstController,
-                      ),
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                      // Tabs: GST & Address / Credit & Balance
-                      TabBar(
-                        controller: _tabController,
-                        labelColor: AppColors.primary,
-                        unselectedLabelColor: isDark
-                            ? AppColors.mutedForegroundDark
-                            : AppColors.mutedForegroundLight,
-                        indicatorColor: AppColors.primary,
-                        tabs: const [
-                          Tab(text: 'GST & ADDRESS'),
-                          Tab(text: 'CREDIT & BALANCE'),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      SizedBox(
-                        height: 280,
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            // Tab 1: GST & Address
-                            SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  Row(
+                          SizedBox(
+                            height: 280,
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                // Tab 1: GST & Address
+                                SingleChildScrollView(
+                                  child: Column(
                                     children: [
-                                      Expanded(
-                                        child: AppTextField(
-                                          label: 'Email Address',
-                                          hintText: 'customer@example.com',
-                                          controller: _emailController,
-                                          keyboardType:
-                                              TextInputType.emailAddress,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: AppTextField(
-                                          label: 'State Code',
-                                          hintText: 'e.g. 27',
-                                          controller: _stateCodeController,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  AppTextField(
-                                    label: 'Billing Address',
-                                    hintText: 'Enter full billing address...',
-                                    controller: _addressController,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Tab 2: Credit & Balance
-                            SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: AppTextField(
-                                          label: 'Opening Balance',
-                                          hintText: '0.00',
-                                          controller: _openingBalanceController,
-                                          keyboardType: TextInputType.number,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                      if (isMobile) ...[
+                                        emailField,
+                                        const SizedBox(height: 10),
+                                        stateField,
+                                      ] else
+                                        Row(
                                           children: [
-                                            Text(
-                                              'Balance Type',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: isDark
-                                                    ? AppColors.foregroundDark
-                                                    : AppColors.foregroundLight,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            DropdownButtonFormField<String>(
-                                              initialValue: _openingBalanceType,
-                                              dropdownColor: isDark
-                                                  ? AppColors.cardDark
-                                                  : AppColors.cardLight,
-                                              decoration: InputDecoration(
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 10,
-                                                    ),
-                                                filled: true,
-                                                fillColor: isDark
-                                                    ? AppColors.cardDark
-                                                    : AppColors.cardLight,
-                                                border: OutlineInputBorder(
-                                                  borderRadius: AppRadius.lg,
-                                                  borderSide: BorderSide(
-                                                    color: isDark
-                                                        ? AppColors.inputDark
-                                                        : AppColors.inputLight,
-                                                  ),
-                                                ),
-                                              ),
-                                              items: const [
-                                                DropdownMenuItem(
-                                                  value: 'Receivable',
-                                                  child: Text(
-                                                    'To Receive (Udhar)',
-                                                  ),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'Payable',
-                                                  child: Text(
-                                                    'To Pay (Advance)',
-                                                  ),
-                                                ),
-                                              ],
-                                              onChanged: (val) {
-                                                if (val != null) {
-                                                  setState(
-                                                    () => _openingBalanceType =
-                                                        val,
-                                                  );
-                                                }
-                                              },
-                                            ),
+                                            Expanded(child: emailField),
+                                            const SizedBox(width: 12),
+                                            Expanded(child: stateField),
                                           ],
                                         ),
+                                      const SizedBox(height: 12),
+                                      AppTextField(
+                                        label: 'Billing Address',
+                                        hintText:
+                                            'Enter full billing address...',
+                                        controller: _addressController,
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  AppTextField(
-                                    label: 'As Of Date',
-                                    hintText: 'YYYY-MM-DD',
-                                    controller: _openingBalanceDateController,
+                                ),
+
+                                // Tab 2: Credit & Balance
+                                SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: AppTextField(
+                                              label: 'Opening Balance',
+                                              hintText: '0.00',
+                                              controller:
+                                                  _openingBalanceController,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Balance Type',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: isDark
+                                                        ? AppColors
+                                                              .foregroundDark
+                                                        : AppColors
+                                                              .foregroundLight,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                DropdownButtonFormField<String>(
+                                                  initialValue:
+                                                      _openingBalanceType,
+                                                  dropdownColor: isDark
+                                                      ? AppColors.cardDark
+                                                      : AppColors.cardLight,
+                                                  decoration: InputDecoration(
+                                                    contentPadding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 10,
+                                                        ),
+                                                    filled: true,
+                                                    fillColor: isDark
+                                                        ? AppColors.cardDark
+                                                        : AppColors.cardLight,
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          AppRadius.lg,
+                                                      borderSide: BorderSide(
+                                                        color: isDark
+                                                            ? AppColors
+                                                                  .inputDark
+                                                            : AppColors
+                                                                  .inputLight,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  items: const [
+                                                    DropdownMenuItem(
+                                                      value: 'Receivable',
+                                                      child: Text('To Receive'),
+                                                    ),
+                                                    DropdownMenuItem(
+                                                      value: 'Payable',
+                                                      child: Text('To Pay'),
+                                                    ),
+                                                  ],
+                                                  onChanged: (val) {
+                                                    if (val != null) {
+                                                      setState(
+                                                        () =>
+                                                            _openingBalanceType =
+                                                                val,
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      AppTextField(
+                                        label: 'As Of Date',
+                                        hintText: 'YYYY-MM-DD',
+                                        controller:
+                                            _openingBalanceDateController,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SwitchListTile(
+                                        title: const Text(
+                                          'Custom Credit Limit',
+                                        ),
+                                        subtitle: const Text(
+                                          'Set maximum credit limit for this customer',
+                                        ),
+                                        value: _hasCustomCreditLimit,
+                                        onChanged: (val) => setState(
+                                          () => _hasCustomCreditLimit = val,
+                                        ),
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      if (_hasCustomCreditLimit) ...[
+                                        const SizedBox(height: 8),
+                                        AppTextField(
+                                          label: 'Credit Limit Amount (₹)',
+                                          hintText: 'Enter limit amount',
+                                          controller: _creditLimitController,
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  const SizedBox(height: 16),
-                                  SwitchListTile(
-                                    title: const Text('Custom Credit Limit'),
-                                    subtitle: const Text(
-                                      'Set maximum credit limit for this customer',
-                                    ),
-                                    value: _hasCustomCreditLimit,
-                                    onChanged: (val) => setState(
-                                      () => _hasCustomCreditLimit = val,
-                                    ),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  if (_hasCustomCreditLimit) ...[
-                                    const SizedBox(height: 8),
-                                    AppTextField(
-                                      label: 'Credit Limit Amount (₹)',
-                                      hintText: 'Enter limit amount',
-                                      controller: _creditLimitController,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ],
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -432,9 +455,7 @@ class _CustomerDialogState extends State<CustomerDialog>
                           const SizedBox(width: 8),
                         ],
                         AppButton(
-                          text: widget.customer != null
-                              ? 'Update Customer'
-                              : 'Save Customer',
+                          text: widget.customer != null ? 'Update' : 'Save',
                           isLoading: controller.isSubmitting.value,
                           onPressed: () => _handleSave(stayOpen: false),
                         ),
