@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_typography.dart';
+import '../../../core/constants/app_sizes.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -41,16 +41,22 @@ class RegisterView extends GetView<AuthController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Create account',
-              style: AppTypography.pageTitle(isDark: isDark),
+            const Text(
+              'Create Account',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Get started with POS ERP',
-              style: AppTypography.caption(isDark: isDark),
+              'Get started with POS ERP for your retail or warehouse store',
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark
+                    ? AppColors.mutedForegroundDark
+                    : AppColors.mutedForegroundLight,
+              ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
+
             // Full Name Input
             AppTextField(
               label: 'Full name',
@@ -59,7 +65,8 @@ class RegisterView extends GetView<AuthController> {
               validator: Validators.name,
               isRequired: true,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
             // Email Input
             AppTextField(
               label: 'Email address',
@@ -69,15 +76,17 @@ class RegisterView extends GetView<AuthController> {
               validator: Validators.email,
               isRequired: true,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
             // Phone Input
             AppTextField(
-              label: 'Phone (optional)',
+              label: 'Phone number (optional)',
               hintText: '+91 9876543210',
               controller: _phoneController,
               keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
             // Password Input
             Obx(
               () => AppTextField(
@@ -90,8 +99,8 @@ class RegisterView extends GetView<AuthController> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword.value
-                        ? Icons.visibility_off
-                        : Icons.visibility,
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
                     size: 20,
                     color: isDark
                         ? AppColors.mutedForegroundDark
@@ -101,7 +110,8 @@ class RegisterView extends GetView<AuthController> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
             // Confirm Password Input
             AppTextField(
               label: 'Confirm password',
@@ -113,32 +123,44 @@ class RegisterView extends GetView<AuthController> {
               isRequired: true,
             ),
             const SizedBox(height: 24),
-            // Submit Button
+
+            // Register Button
             Obx(
               () => AppButton(
-                text: 'Create account',
+                text: 'Create Account',
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                 width: double.infinity,
-                height: 44,
+                height: AppSizes.buttonHeightMd,
                 isLoading: controller.isLoading.value,
                 onPressed: _onRegister,
               ),
             ),
-            const SizedBox(height: 24),
-            // Login Navigation Link
+            const SizedBox(height: 20),
+
+            // Sign In Link
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'Already have an account? ',
-                  style: AppTypography.caption(isDark: isDark),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark
+                        ? AppColors.mutedForegroundDark
+                        : AppColors.mutedForegroundLight,
+                  ),
                 ),
-                GestureDetector(
-                  onTap: () => Get.toNamed('/login'),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: const Size(0, AppSizes.minTouchTarget),
+                  ),
+                  onPressed: () => Get.toNamed('/login'),
                   child: const Text(
-                    'Sign in',
+                    'Sign In',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
                   ),
