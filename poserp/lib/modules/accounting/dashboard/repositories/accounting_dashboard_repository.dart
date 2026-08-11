@@ -26,4 +26,15 @@ class AccountingDashboardRepository {
       );
     }
   }
+
+  Future<void> restoreDefaultLedgers() async {
+    try {
+      await _service.restoreDefaultLedgers();
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(
+        message: 'Failed to restore default system COA ledgers.',
+      );
+    }
+  }
 }

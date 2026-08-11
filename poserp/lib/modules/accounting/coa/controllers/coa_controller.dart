@@ -15,33 +15,90 @@ class COAController extends GetxController {
   final RxList<ChartGroup> chartGroups = <ChartGroup>[].obs;
   final RxBool isLoading = true.obs;
   final RxBool isInitializing = false.obs;
+
   final RxString searchQuery = ''.obs;
+  final RxString selectedNature =
+      'ALL'.obs; // ALL, ASSET, LIABILITY, INCOME, EXPENSE
 
   int get assetGroupsCount =>
-      chartGroups.where((g) => g.nature.toLowerCase().contains('asset')).length;
+      chartGroups.where((g) => g.nature.toUpperCase().contains('ASSET')).length;
 
   int get liabilityGroupsCount =>
-      chartGroups.where((g) => g.nature.toLowerCase().contains('liab')).length;
+      chartGroups.where((g) => g.nature.toUpperCase().contains('LIAB')).length;
 
   int get equityGroupsCount => chartGroups
-      .where((g) => g.nature.toLowerCase().contains('equity'))
+      .where((g) => g.nature.toUpperCase().contains('EQUITY'))
       .length;
 
   int get incomeExpenseGroupsCount => chartGroups
       .where(
         (g) =>
-            g.nature.toLowerCase().contains('income') ||
-            g.nature.toLowerCase().contains('revenue') ||
-            g.nature.toLowerCase().contains('expense'),
+            g.nature.toUpperCase().contains('INCOME') ||
+            g.nature.toUpperCase().contains('REVENUE') ||
+            g.nature.toUpperCase().contains('EXPENSE'),
       )
       .length;
+
+  List<ChartGroup> get filteredChartGroups {
+    final query = searchQuery.value.trim().toLowerCase();
+    final nature = selectedNature.value.toUpperCase();
+
+    if (query.isEmpty && nature == 'ALL') {
+      return chartGroups;
+    }
+
+    ChartGroup? filterNode(ChartGroup group) {
+      final natureMatches = nature == 'ALL' || group.nature.contains(nature);
+      final groupMatches =
+          query.isEmpty ||
+          group.name.toLowerCase().contains(query) ||
+          group.code.toLowerCase().contains(query);
+
+      final filteredLedgers = group.ledgers
+          .where(
+            (l) =>
+                query.isEmpty ||
+                l.name.toLowerCase().contains(query) ||
+                l.code.toLowerCase().contains(query),
+          )
+          .toList();
+
+      final filteredChildren = group.subgroups
+          .map((child) => filterNode(child))
+          .whereType<ChartGroup>()
+          .toList();
+
+      if ((natureMatches && groupMatches) ||
+          filteredLedgers.isNotEmpty ||
+          filteredChildren.isNotEmpty) {
+        return ChartGroup(
+          id: group.id,
+          code: group.code,
+          name: group.name,
+          nature: group.nature,
+          normalBalance: group.normalBalance,
+          isSystem: group.isSystem,
+          affectsGrossProfit: group.affectsGrossProfit,
+          isActive: group.isActive,
+          parent: group.parent,
+          subgroups: filteredChildren,
+          ledgers: filteredLedgers,
+        );
+      }
+
+      return null;
+    }
+
+    return chartGroups
+        .map((g) => filterNode(g))
+        .whereType<ChartGroup>()
+        .toList();
+  }
 
   @override
   void onInit() {
     super.onInit();
     loadData();
-
-    debounce(searchQuery, (_) {}, time: const Duration(milliseconds: 300));
   }
 
   Future<void> loadData() async {

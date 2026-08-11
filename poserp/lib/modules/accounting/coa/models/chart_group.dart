@@ -4,7 +4,11 @@ class ChartGroup {
   final String id;
   final String code;
   final String name;
-  final String nature; // 'asset', 'liability', 'equity', 'revenue', 'expense'
+  final String nature; // ASSET, LIABILITY, INCOME, EXPENSE
+  final String normalBalance; // DEBIT, CREDIT
+  final bool isSystem;
+  final bool affectsGrossProfit;
+  final bool isActive;
   final String? parent;
   final List<ChartGroup> subgroups;
   final List<ChartLedger> ledgers;
@@ -14,6 +18,10 @@ class ChartGroup {
     required this.code,
     required this.name,
     required this.nature,
+    this.normalBalance = 'DEBIT',
+    this.isSystem = false,
+    this.affectsGrossProfit = false,
+    this.isActive = true,
     this.parent,
     this.subgroups = const [],
     this.ledgers = const [],
@@ -21,16 +29,9 @@ class ChartGroup {
 
   factory ChartGroup.fromJson(Map<String, dynamic> json) {
     final subList = <ChartGroup>[];
-    if (json['subgroups'] != null && json['subgroups'] is List) {
-      for (final sub in json['subgroups']) {
-        if (sub is Map<String, dynamic>) {
-          try {
-            subList.add(ChartGroup.fromJson(sub));
-          } catch (_) {}
-        }
-      }
-    } else if (json['children'] != null && json['children'] is List) {
-      for (final sub in json['children']) {
+    final rawSub = json['childGroups'] ?? json['subgroups'] ?? json['children'];
+    if (rawSub != null && rawSub is List) {
+      for (final sub in rawSub) {
         if (sub is Map<String, dynamic>) {
           try {
             subList.add(ChartGroup.fromJson(sub));
@@ -40,16 +41,9 @@ class ChartGroup {
     }
 
     final ledgerList = <ChartLedger>[];
-    if (json['ledgers'] != null && json['ledgers'] is List) {
-      for (final l in json['ledgers']) {
-        if (l is Map<String, dynamic>) {
-          try {
-            ledgerList.add(ChartLedger.fromJson(l));
-          } catch (_) {}
-        }
-      }
-    } else if (json['accounts'] != null && json['accounts'] is List) {
-      for (final l in json['accounts']) {
+    final rawLedgers = json['ledgers'] ?? json['accounts'];
+    if (rawLedgers != null && rawLedgers is List) {
+      for (final l in rawLedgers) {
         if (l is Map<String, dynamic>) {
           try {
             ledgerList.add(ChartLedger.fromJson(l));
@@ -59,16 +53,27 @@ class ChartGroup {
     }
 
     return ChartGroup(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      id:
+          json['groupId']?.toString() ??
+          json['_id']?.toString() ??
+          json['id']?.toString() ??
+          '',
       code: json['code']?.toString() ?? '',
       name:
-          json['name']?.toString() ?? json['groupName']?.toString() ?? 'Group',
-      nature:
-          json['nature']?.toString() ??
-          json['category']?.toString() ??
-          json['type']?.toString() ??
-          'asset',
-      parent: json['parent']?.toString() ?? json['parentGroup']?.toString(),
+          json['groupName']?.toString() ?? json['name']?.toString() ?? 'Group',
+      nature: (json['nature'] ?? json['category'] ?? json['type'] ?? 'ASSET')
+          .toString()
+          .toUpperCase(),
+      normalBalance: (json['normalBalance'] ?? 'DEBIT')
+          .toString()
+          .toUpperCase(),
+      isSystem: json['isSystemDefault'] == true || json['isSystem'] == true,
+      affectsGrossProfit: json['affectsGrossProfit'] == true,
+      isActive: json['isActive'] != false,
+      parent:
+          json['parentGroupId']?.toString() ??
+          json['parent']?.toString() ??
+          json['parentGroup']?.toString(),
       subgroups: subList,
       ledgers: ledgerList,
     );
