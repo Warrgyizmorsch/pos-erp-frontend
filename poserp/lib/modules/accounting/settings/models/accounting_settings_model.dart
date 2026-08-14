@@ -43,7 +43,7 @@ class AccountingSettingsModel {
     String? extractId(dynamic val) {
       if (val == null) return null;
       if (val is String) return val;
-      if (val is Map) return val['_id']?.toString();
+      if (val is Map) return val['_id']?.toString() ?? val['id']?.toString();
       return null;
     }
 
@@ -120,6 +120,31 @@ class AccountingSettingsValidation {
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
+    );
+  }
+}
+
+class AccountingStatusModel {
+  final bool initialized;
+  final bool accountingEnabled;
+  final int missingDefaultLedgersCount;
+  final int missingDefaultGroupsCount;
+
+  AccountingStatusModel({
+    required this.initialized,
+    required this.accountingEnabled,
+    required this.missingDefaultLedgersCount,
+    required this.missingDefaultGroupsCount,
+  });
+
+  factory AccountingStatusModel.fromJson(Map<String, dynamic> json) {
+    return AccountingStatusModel(
+      initialized: json['initialized'] == true,
+      accountingEnabled: json['accountingEnabled'] == true,
+      missingDefaultLedgersCount:
+          (json['missingDefaultLedgersCount'] as num?)?.toInt() ?? 0,
+      missingDefaultGroupsCount:
+          (json['missingDefaultGroupsCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

@@ -1,5 +1,6 @@
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
+import '../../ledgers/models/accounting_ledger.dart';
 import '../models/accounting_settings_model.dart';
 
 class AccountingSettingsService {
@@ -33,6 +34,61 @@ class AccountingSettingsService {
     final body = response.data is Map<String, dynamic> ? response.data : {};
     final data = body['data'] ?? body;
     return AccountingSettingsValidation.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<AccountingStatusModel> getStatus() async {
+    final response = await _apiClient.get('/accounting/status');
+    final body = response.data is Map<String, dynamic> ? response.data : {};
+    final data = body['data'] ?? body;
+    return AccountingStatusModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<List<AccountingLedger>> getLedgers() async {
+    dynamic responseData;
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.accountingLedgers,
+        queryParameters: {'isActive': true, 'status': 'ACTIVE'},
+      );
+      responseData = response.data;
+    } catch (_) {
+      try {
+        final response = await _apiClient.get(ApiEndpoints.accountingLedgers);
+        responseData = response.data;
+      } catch (_) {
+        return [];
+      }
+    }
+
+    List list = [];
+    if (responseData is Map<String, dynamic>) {
+      final Map<String, dynamic> body = responseData;
+      if (body['data'] != null && body['data'] is List) {
+        list = body['data'] as List;
+      } else if (body['ledgers'] != null && body['ledgers'] is List) {
+        list = body['ledgers'] as List;
+      }
+    } else if (responseData is List) {
+      list = responseData;
+    }
+
+    final ledgers = <AccountingLedger>[];
+    for (final item in list) {
+      if (item is Map<String, dynamic>) {
+        try {
+          ledgers.add(AccountingLedger.fromJson(item));
+        } catch (_) {}
+      }
+    }
+    return ledgers;
+  }
+
+  Future<void> initializeAccounting() async {
+    await _apiClient.post('/accounting/initialize');
+  }
+
+  Future<void> restoreDefaultLedgers() async {
+    await _apiClient.post('/accounting/restore-defaults');
   }
 
   Future<void> linkCashBankLedgers() async {

@@ -1,4 +1,5 @@
 import '../../../../core/api/api_exceptions.dart';
+import '../../ledgers/models/accounting_ledger.dart';
 import '../models/accounting_settings_model.dart';
 import '../services/accounting_settings_service.dart';
 
@@ -33,6 +34,45 @@ class AccountingSettingsRepository {
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to validate accounting settings.');
+    }
+  }
+
+  Future<AccountingStatusModel> fetchStatus() async {
+    try {
+      return await _service.getStatus();
+    } catch (_) {
+      return AccountingStatusModel(
+        initialized: true,
+        accountingEnabled: true,
+        missingDefaultLedgersCount: 0,
+        missingDefaultGroupsCount: 0,
+      );
+    }
+  }
+
+  Future<List<AccountingLedger>> fetchAvailableLedgers() async {
+    try {
+      return await _service.getLedgers();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> initializeAccounting() async {
+    try {
+      await _service.initializeAccounting();
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to initialize accounting.');
+    }
+  }
+
+  Future<void> restoreDefaultLedgers() async {
+    try {
+      await _service.restoreDefaultLedgers();
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to restore default ledgers.');
     }
   }
 

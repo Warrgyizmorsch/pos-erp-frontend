@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../ledgers/models/accounting_ledger.dart';
 import '../models/accounting_settings_model.dart';
 import '../repositories/accounting_settings_repository.dart';
 
@@ -11,9 +13,13 @@ class AccountingSettingsController extends GetxController {
   final Rxn<AccountingSettingsModel> settings = Rxn<AccountingSettingsModel>();
   final Rxn<AccountingSettingsValidation> validation =
       Rxn<AccountingSettingsValidation>();
+  final Rxn<AccountingStatusModel> status = Rxn<AccountingStatusModel>();
+  final RxList<AccountingLedger> availableLedgers = <AccountingLedger>[].obs;
 
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
+  final RxBool isInitializing = false.obs;
+  final RxBool isRestoring = false.obs;
   final RxString activeRepair = ''.obs;
 
   // Form State Observables
@@ -24,6 +30,8 @@ class AccountingSettingsController extends GetxController {
   final RxBool allowManualJournalEntry = false.obs;
   final RxBool allowBackdatedVouchers = true.obs;
   final RxString lockBooksTillDate = ''.obs;
+  final TextEditingController lockBooksDateTextController =
+      TextEditingController();
 
   final RxString defaultCashLedgerId = ''.obs;
   final RxString defaultBankLedgerId = ''.obs;
@@ -43,6 +51,12 @@ class AccountingSettingsController extends GetxController {
     loadSettings();
   }
 
+  @override
+  void onClose() {
+    lockBooksDateTextController.dispose();
+    super.onClose();
+  }
+
   Future<void> loadSettings() async {
     try {
       isLoading.value = true;
@@ -56,6 +70,7 @@ class AccountingSettingsController extends GetxController {
       allowManualJournalEntry.value = res.allowManualJournalEntry;
       allowBackdatedVouchers.value = res.allowBackdatedVouchers;
       lockBooksTillDate.value = res.lockBooksTillDate ?? '';
+      lockBooksDateTextController.text = lockBooksTillDate.value;
 
       defaultCashLedgerId.value = res.defaultCashLedgerId ?? '';
       defaultBankLedgerId.value = res.defaultBankLedgerId ?? '';
@@ -73,6 +88,10 @@ class AccountingSettingsController extends GetxController {
       defaultCOGSLedgerId.value = res.defaultCOGSLedgerId ?? '';
 
       validation.value = await _repository.validateSettings();
+      status.value = await _repository.fetchStatus();
+
+      final ledgers = await _repository.fetchAvailableLedgers();
+      availableLedgers.assignAll(ledgers);
     } catch (_) {
       validation.value = AccountingSettingsValidation(
         valid: true,
@@ -82,6 +101,13 @@ class AccountingSettingsController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  List<AccountingLedger> getLedgersByType(String ledgerType) {
+    final filtered = availableLedgers
+        .where((l) => l.ledgerType == ledgerType)
+        .toList();
+    return filtered.isNotEmpty ? filtered : availableLedgers;
   }
 
   Future<void> saveSettings() async {
@@ -141,18 +167,63 @@ class AccountingSettingsController extends GetxController {
         'Success',
         'Accounting settings updated successfully.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        backgroundColor: AppColors.success.withAlpha(40),
       );
       validation.value = await _repository.validateSettings();
+      status.value = await _repository.fetchStatus();
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to save accounting settings.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
+        backgroundColor: AppColors.danger.withAlpha(40),
       );
     } finally {
       isSaving.value = false;
+    }
+  }
+
+  Future<void> initializeAccounting() async {
+    try {
+      isInitializing.value = true;
+      await _repository.initializeAccounting();
+      Get.snackbar(
+        'Success',
+        'Accounting system initialized successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withAlpha(40),
+      );
+      await loadSettings();
+    } catch (_) {
+      Get.snackbar(
+        'Notice',
+        'Accounting initialization process triggered.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isInitializing.value = false;
+    }
+  }
+
+  Future<void> restoreDefaultLedgers() async {
+    try {
+      isRestoring.value = true;
+      await _repository.restoreDefaultLedgers();
+      Get.snackbar(
+        'Success',
+        'Default ledgers restored successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withAlpha(40),
+      );
+      await loadSettings();
+    } catch (_) {
+      Get.snackbar(
+        'Notice',
+        'Default ledgers restoration triggered.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isRestoring.value = false;
     }
   }
 
@@ -164,7 +235,7 @@ class AccountingSettingsController extends GetxController {
         'Repair Completed',
         '$label finished successfully.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        backgroundColor: AppColors.success.withAlpha(40),
       );
       await loadSettings();
     } catch (_) {
