@@ -20,6 +20,7 @@ class VoucherRepository {
     String? search,
     String? typeCode,
     String? status,
+    String? referenceModule,
     String? startDate,
     String? endDate,
   }) async {
@@ -28,6 +29,7 @@ class VoucherRepository {
         search: search,
         typeCode: typeCode,
         status: status,
+        referenceModule: referenceModule,
         startDate: startDate,
         endDate: endDate,
       );
@@ -83,6 +85,15 @@ class VoucherRepository {
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to cancel voucher.');
+    }
+  }
+
+  Future<void> reverseVoucher(String id, String reason) async {
+    try {
+      await _service.reverseVoucher(id, reason);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to reverse voucher.');
     }
   }
 }

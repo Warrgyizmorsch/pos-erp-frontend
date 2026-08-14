@@ -3,6 +3,7 @@ class AccountingVoucherEntry {
   final String ledgerId;
   final String ledgerName;
   final String ledgerCode;
+  final String groupName;
   final double debit;
   final double credit;
   final String? narration;
@@ -12,6 +13,7 @@ class AccountingVoucherEntry {
     required this.ledgerId,
     required this.ledgerName,
     required this.ledgerCode,
+    required this.groupName,
     required this.debit,
     required this.credit,
     this.narration,
@@ -19,32 +21,43 @@ class AccountingVoucherEntry {
 
   factory AccountingVoucherEntry.fromJson(Map<String, dynamic> json) {
     String lId = '';
-    String lName = 'Ledger';
-    String lCode = '';
+    String lName = json['ledgerName']?.toString() ?? 'Ledger';
+    String lCode = json['ledgerCode']?.toString() ?? '';
+    String gName = json['groupName']?.toString() ?? '-';
 
     if (json['ledgerId'] != null) {
       if (json['ledgerId'] is Map<String, dynamic>) {
-        lId =
-            json['ledgerId']['_id']?.toString() ??
-            json['ledgerId']['id']?.toString() ??
-            '';
-        lName = json['ledgerId']['name']?.toString() ?? 'Ledger';
-        lCode = json['ledgerId']['code']?.toString() ?? '';
+        final lObj = json['ledgerId'] as Map<String, dynamic>;
+        lId = lObj['_id']?.toString() ?? lObj['id']?.toString() ?? '';
+        lName =
+            lObj['name']?.toString() ?? lObj['ledgerName']?.toString() ?? lName;
+        lCode =
+            lObj['code']?.toString() ?? lObj['ledgerCode']?.toString() ?? lCode;
+
+        if (lObj['groupId'] is Map<String, dynamic>) {
+          gName = lObj['groupId']['name']?.toString() ?? gName;
+        } else if (lObj['group'] is Map<String, dynamic>) {
+          gName = lObj['group']['name']?.toString() ?? gName;
+        }
       } else {
         lId = json['ledgerId'].toString();
       }
     }
 
-    if (json['ledger'] != null && lName == 'Ledger') {
+    if (json['ledger'] != null) {
       if (json['ledger'] is Map<String, dynamic>) {
-        lId =
-            json['ledger']['_id']?.toString() ??
-            json['ledger']['id']?.toString() ??
-            lId;
-        lName = json['ledger']['name']?.toString() ?? lName;
-        lCode = json['ledger']['code']?.toString() ?? lCode;
-      } else {
-        lName = json['ledger'].toString();
+        final lObj = json['ledger'] as Map<String, dynamic>;
+        lId = lObj['_id']?.toString() ?? lObj['id']?.toString() ?? lId;
+        lName =
+            lObj['name']?.toString() ?? lObj['ledgerName']?.toString() ?? lName;
+        lCode =
+            lObj['code']?.toString() ?? lObj['ledgerCode']?.toString() ?? lCode;
+
+        if (lObj['groupId'] is Map<String, dynamic>) {
+          gName = lObj['groupId']['name']?.toString() ?? gName;
+        } else if (lObj['group'] is Map<String, dynamic>) {
+          gName = lObj['group']['name']?.toString() ?? gName;
+        }
       }
     }
 
@@ -53,6 +66,7 @@ class AccountingVoucherEntry {
       ledgerId: lId,
       ledgerName: lName,
       ledgerCode: lCode,
+      groupName: gName,
       debit: (json['debit'] as num?)?.toDouble() ?? 0.0,
       credit: (json['credit'] as num?)?.toDouble() ?? 0.0,
       narration: json['narration']?.toString(),

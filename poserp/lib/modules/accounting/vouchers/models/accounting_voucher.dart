@@ -6,7 +6,14 @@ class AccountingVoucher {
   final String date;
   final String voucherTypeCode;
   final String voucherTypeName;
+  final String? referenceModule;
+  final String? referenceNo;
+  final String? reversalVoucherId;
+  final String? postedAt;
+  final String? cancelledAt;
   final double totalAmount;
+  final double totalDebit;
+  final double totalCredit;
   final String? narration;
   final String status; // 'DRAFT', 'POSTED', 'CANCELLED', 'REVERSED'
   final List<AccountingVoucherEntry> entries;
@@ -17,49 +24,84 @@ class AccountingVoucher {
     required this.date,
     required this.voucherTypeCode,
     required this.voucherTypeName,
+    this.referenceModule,
+    this.referenceNo,
+    this.reversalVoucherId,
+    this.postedAt,
+    this.cancelledAt,
     required this.totalAmount,
+    required this.totalDebit,
+    required this.totalCredit,
     this.narration,
     required this.status,
     required this.entries,
   });
 
+  bool get canCancelOrReverse =>
+      status == 'POSTED' &&
+      (reversalVoucherId == null || reversalVoucherId!.isEmpty);
+
   factory AccountingVoucher.fromJson(Map<String, dynamic> json) {
-    final entryList = <AccountingVoucherEntry>[];
+    Map<String, dynamic> vData = json;
+    List rawEntries = [];
+
+    if (json['voucher'] is Map<String, dynamic>) {
+      vData = json['voucher'] as Map<String, dynamic>;
+    }
+
     if (json['entries'] != null && json['entries'] is List) {
-      for (final e in json['entries']) {
-        if (e is Map<String, dynamic>) {
-          try {
-            entryList.add(AccountingVoucherEntry.fromJson(e));
-          } catch (_) {}
-        }
+      rawEntries = json['entries'] as List;
+    } else if (vData['entries'] != null && vData['entries'] is List) {
+      rawEntries = vData['entries'] as List;
+    }
+
+    final entryList = <AccountingVoucherEntry>[];
+    for (final e in rawEntries) {
+      if (e is Map<String, dynamic>) {
+        try {
+          entryList.add(AccountingVoucherEntry.fromJson(e));
+        } catch (_) {}
       }
     }
 
+    final double totAmt =
+        (vData['totalAmount'] as num?)?.toDouble() ??
+        (vData['amount'] as num?)?.toDouble() ??
+        (vData['totalDebit'] as num?)?.toDouble() ??
+        0.0;
+
+    final double tDebit = (vData['totalDebit'] as num?)?.toDouble() ?? totAmt;
+    final double tCredit = (vData['totalCredit'] as num?)?.toDouble() ?? totAmt;
+
     return AccountingVoucher(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      id: vData['_id']?.toString() ?? vData['id']?.toString() ?? '',
       voucherNo:
-          json['voucherNo']?.toString() ??
-          json['voucherNumber']?.toString() ??
-          json['referenceNo']?.toString() ??
+          vData['voucherNo']?.toString() ??
+          vData['voucherNumber']?.toString() ??
+          vData['referenceNo']?.toString() ??
           '',
       date:
-          json['date']?.toString() ??
-          json['createdAt']?.toString() ??
+          vData['date']?.toString() ??
+          vData['createdAt']?.toString() ??
           DateTime.now().toIso8601String(),
       voucherTypeCode:
-          json['voucherTypeCode']?.toString() ??
-          json['typeCode']?.toString() ??
+          vData['voucherTypeCode']?.toString() ??
+          vData['typeCode']?.toString() ??
           'JV',
       voucherTypeName:
-          json['voucherTypeName']?.toString() ??
-          json['type']?.toString() ??
+          vData['voucherTypeName']?.toString() ??
+          vData['type']?.toString() ??
           'Journal Voucher',
-      totalAmount:
-          (json['totalAmount'] as num?)?.toDouble() ??
-          (json['amount'] as num?)?.toDouble() ??
-          0.0,
-      narration: json['narration']?.toString() ?? json['remarks']?.toString(),
-      status: json['status']?.toString().toUpperCase() ?? 'POSTED',
+      referenceModule: vData['referenceModule']?.toString(),
+      referenceNo: vData['referenceNo']?.toString(),
+      reversalVoucherId: vData['reversalVoucherId']?.toString(),
+      postedAt: vData['postedAt']?.toString(),
+      cancelledAt: vData['cancelledAt']?.toString(),
+      totalAmount: totAmt,
+      totalDebit: tDebit,
+      totalCredit: tCredit,
+      narration: vData['narration']?.toString() ?? vData['remarks']?.toString(),
+      status: vData['status']?.toString().toUpperCase() ?? 'POSTED',
       entries: entryList,
     );
   }

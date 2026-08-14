@@ -60,6 +60,7 @@ class VoucherService {
     String? search,
     String? typeCode,
     String? status,
+    String? referenceModule,
     String? startDate,
     String? endDate,
   }) async {
@@ -69,9 +70,13 @@ class VoucherService {
     }
     if (typeCode != null && typeCode != 'ALL') {
       queryParams['typeCode'] = typeCode;
+      queryParams['voucherTypeCode'] = typeCode;
     }
     if (status != null && status != 'ALL') {
       queryParams['status'] = status;
+    }
+    if (referenceModule != null && referenceModule.trim().isNotEmpty) {
+      queryParams['referenceModule'] = referenceModule.trim();
     }
     if (startDate != null && startDate.isNotEmpty) {
       queryParams['startDate'] = startDate;
@@ -153,6 +158,13 @@ class VoucherService {
   Future<void> cancelVoucher(String id, String reason) async {
     await _apiClient.post(
       '${ApiEndpoints.accountingVouchers}/$id/cancel',
+      data: {'reason': reason},
+    );
+  }
+
+  Future<void> reverseVoucher(String id, String reason) async {
+    await _apiClient.post(
+      '${ApiEndpoints.accountingVouchers}/$id/reverse',
       data: {'reason': reason},
     );
   }
