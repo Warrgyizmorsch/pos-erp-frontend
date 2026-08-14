@@ -9,9 +9,32 @@ class AccountingReportService {
 
   AccountingReportService(this._apiClient);
 
-  Future<DayBook> getDayBook({String? date, String? search}) async {
+  Future<DayBook> getDayBook({
+    String? startDate,
+    String? endDate,
+    String? voucherTypeCode,
+    String? ledgerId,
+    String? search,
+    String? date,
+  }) async {
     final Map<String, dynamic> queryParams = {};
-    if (date != null && date.isNotEmpty) queryParams['date'] = date;
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['startDate'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['endDate'] = endDate;
+    }
+    if (voucherTypeCode != null &&
+        voucherTypeCode.isNotEmpty &&
+        voucherTypeCode != 'ALL') {
+      queryParams['voucherTypeCode'] = voucherTypeCode;
+    }
+    if (ledgerId != null && ledgerId.isNotEmpty && ledgerId != 'ALL') {
+      queryParams['ledgerId'] = ledgerId;
+    }
+    if (date != null && date.isNotEmpty) {
+      queryParams['date'] = date;
+    }
     if (search != null && search.trim().isNotEmpty) {
       queryParams['search'] = search.trim();
     }

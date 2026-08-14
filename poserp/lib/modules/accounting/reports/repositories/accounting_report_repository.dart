@@ -9,9 +9,23 @@ class AccountingReportRepository {
 
   AccountingReportRepository(this._service);
 
-  Future<DayBook> fetchDayBook({String? date, String? search}) async {
+  Future<DayBook> fetchDayBook({
+    String? startDate,
+    String? endDate,
+    String? voucherTypeCode,
+    String? ledgerId,
+    String? search,
+    String? date,
+  }) async {
     try {
-      return await _service.getDayBook(date: date, search: search);
+      return await _service.getDayBook(
+        startDate: startDate,
+        endDate: endDate,
+        voucherTypeCode: voucherTypeCode,
+        ledgerId: ledgerId,
+        search: search,
+        date: date,
+      );
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to fetch Day Book.');
