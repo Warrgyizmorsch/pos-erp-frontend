@@ -35,11 +35,13 @@ class AccountingReportRepository {
   Future<TrialBalanceReport> fetchTrialBalance({
     String? startDate,
     String? endDate,
+    String? asOnDate,
   }) async {
     try {
       return await _service.getTrialBalance(
         startDate: startDate,
         endDate: endDate,
+        asOnDate: asOnDate,
       );
     } catch (e) {
       if (e is AppException) rethrow;

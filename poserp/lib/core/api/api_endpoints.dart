@@ -69,6 +69,8 @@ class ApiEndpoints {
   static const String accountingJournalDraft = '/accounting/journal/draft';
   static const String accountingJournalPost = '/accounting/journal/post';
   static const String accountingDayBook = '/accounting/day-book';
+  static const String accountingTrialBalanceBasic =
+      '/accounting/trial-balance/basic';
   static const String accountingReportTrialBalance =
       '/accounting/reports/trial-balance';
   static const String accountingReportProfitLoss =

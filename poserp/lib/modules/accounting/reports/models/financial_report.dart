@@ -13,24 +13,50 @@ class TrialBalanceRow {
     required this.credit,
   });
 
+  String get ledgerName => accountName;
+  String get code => accountCode;
+  double get debitBalance => debit;
+  double get creditBalance => credit;
+
   factory TrialBalanceRow.fromJson(Map<String, dynamic> json) {
+    final String name =
+        json['ledgerName']?.toString() ??
+        json['name']?.toString() ??
+        json['accountName']?.toString() ??
+        json['ledger']?.toString() ??
+        'Ledger';
+
+    final String code =
+        json['code']?.toString() ??
+        json['accountCode']?.toString() ??
+        json['ledgerCode']?.toString() ??
+        '';
+
+    final String group =
+        json['groupName']?.toString() ?? json['group']?.toString() ?? '-';
+
+    final double d =
+        (json['debitBalance'] as num?)?.toDouble() ??
+        (json['closingDebit'] as num?)?.toDouble() ??
+        (json['debit'] as num?)?.toDouble() ??
+        (json['periodDebit'] as num?)?.toDouble() ??
+        (json['openingDebit'] as num?)?.toDouble() ??
+        0.0;
+
+    final double c =
+        (json['creditBalance'] as num?)?.toDouble() ??
+        (json['closingCredit'] as num?)?.toDouble() ??
+        (json['credit'] as num?)?.toDouble() ??
+        (json['periodCredit'] as num?)?.toDouble() ??
+        (json['openingCredit'] as num?)?.toDouble() ??
+        0.0;
+
     return TrialBalanceRow(
-      accountCode:
-          json['code']?.toString() ?? json['accountCode']?.toString() ?? '',
-      accountName:
-          json['name']?.toString() ??
-          json['accountName']?.toString() ??
-          'Ledger',
-      groupName:
-          json['group']?.toString() ?? json['groupName']?.toString() ?? '-',
-      debit:
-          (json['debit'] as num?)?.toDouble() ??
-          (json['debitBalance'] as num?)?.toDouble() ??
-          0.0,
-      credit:
-          (json['credit'] as num?)?.toDouble() ??
-          (json['creditBalance'] as num?)?.toDouble() ??
-          0.0,
+      accountCode: code,
+      accountName: name,
+      groupName: group,
+      debit: d,
+      credit: c,
     );
   }
 }

@@ -54,6 +54,7 @@ class AccountingReportService {
   Future<TrialBalanceReport> getTrialBalance({
     String? startDate,
     String? endDate,
+    String? asOnDate,
   }) async {
     final Map<String, dynamic> queryParams = {};
     if (startDate != null && startDate.isNotEmpty) {
@@ -62,14 +63,28 @@ class AccountingReportService {
     if (endDate != null && endDate.isNotEmpty) {
       queryParams['endDate'] = endDate;
     }
+    if (asOnDate != null && asOnDate.isNotEmpty) {
+      queryParams['asOnDate'] = asOnDate;
+      queryParams['asOfDate'] = asOnDate;
+    }
 
-    final response = await _apiClient.get(
-      ApiEndpoints.accountingReportTrialBalance,
-      queryParameters: queryParams,
-    );
+    dynamic responseData;
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.accountingTrialBalanceBasic,
+        queryParameters: queryParams,
+      );
+      responseData = response.data;
+    } catch (_) {
+      final response = await _apiClient.get(
+        ApiEndpoints.accountingReportTrialBalance,
+        queryParameters: queryParams,
+      );
+      responseData = response.data;
+    }
 
-    final Map<String, dynamic> body = response.data is Map<String, dynamic>
-        ? response.data
+    final Map<String, dynamic> body = responseData is Map<String, dynamic>
+        ? responseData
         : {};
     final data = body['data'] ?? body;
     return TrialBalanceReport.fromJson(data as Map<String, dynamic>);
