@@ -17,6 +17,7 @@ import { useThemeStore } from "@/store/themeStore";
 import { authService } from "@/services/authService";
 import { KeyboardShortcutsSettings } from "@/components/settings/KeyboardShortcutsSettings";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { UserManagement } from "@/components/settings/UserManagement";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuthStore();
@@ -209,7 +210,13 @@ export default function SettingsPage() {
         </motion.div>
       )}
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.3 : 0.2 }}>
+      {isAdmin && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <UserManagement />
+        </motion.div>
+      )}
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.4 : 0.2 }}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" />Security</CardTitle>
@@ -234,7 +241,7 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.4 : 0.3 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.5 : 0.3 }}>
         <KeyboardShortcutsSettings />
       </motion.div>
 

@@ -203,7 +203,7 @@ export default function ProductsPage() {
     const subcatId = product.subcategoryId
       ? typeof product.subcategoryId === "string"
         ? product.subcategoryId
-        : (product.subcategoryId as any)._id
+        : (product.subcategoryId as any)?._id
       : "";
 
     setForm({
@@ -390,7 +390,7 @@ export default function ProductsPage() {
                         s._id ===
                         (typeof product.subcategoryId === "string"
                           ? product.subcategoryId
-                          : (product.subcategoryId as any)._id),
+                          : (product.subcategoryId as any)?._id),
                     );
                     if (subcat) subcatName = subcat.name;
                   }
@@ -629,7 +629,7 @@ export default function ProductsPage() {
                             const pId =
                               typeof s.parentCategoryId === "string"
                                 ? s.parentCategoryId
-                                : (s.parentCategoryId as any)._id;
+                                : (s.parentCategoryId as any)?._id;
                             return pId === form.category;
                           })
                           .map((sub) => (

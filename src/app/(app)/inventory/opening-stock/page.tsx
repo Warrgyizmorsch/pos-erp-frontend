@@ -1000,7 +1000,7 @@ export default function OpeningStockPage() {
                 <Select value={newProductForm.subcategoryId} onValueChange={(v) => setNewProductForm({ ...newProductForm, subcategoryId: v })} disabled={!newProductForm.category}>
                   <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
                   <SelectContent>
-                    {subcategories.filter((s) => { const pId = typeof s.parentCategoryId === "string" ? s.parentCategoryId : (s.parentCategoryId as any)._id; return pId === newProductForm.category; }).map((sub) => <SelectItem key={sub._id} value={sub._id}>{sub.name}</SelectItem>)}
+                    {subcategories.filter((s) => { const pId = typeof s.parentCategoryId === "string" ? s.parentCategoryId : (s.parentCategoryId as any)?._id; return pId === newProductForm.category; }).map((sub) => <SelectItem key={sub._id} value={sub._id}>{sub.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

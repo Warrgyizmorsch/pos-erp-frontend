@@ -28,9 +28,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardSkeleton } from "@/components/shared/LoadingSkeleton";
 import { saleService } from "@/services/saleService";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import type { DashboardStats } from "@/types";
 import { toast } from "sonner";
+
+import { SalesSection } from "@/components/dashboard/SalesSection";
+import { InventorySection } from "@/components/dashboard/InventorySection";
+import { AccountingSection } from "@/components/dashboard/AccountingSection";
+import { CashierSection } from "@/components/dashboard/CashierSection";
 
 const monthNames = [
   "Jan",
@@ -48,6 +53,7 @@ const monthNames = [
 ];
 
 export default function DashboardPage() {
+  const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,24 +73,15 @@ export default function DashboardPage() {
     void loadStats();
   }, []);
 
-  const salesChartData =
-    (stats?.salesByMonth ?? []).map((item) => ({
-      name: monthNames[item._id.month - 1],
-      revenue: item.totalRevenue,
-      sales: item.totalSales,
-    })) || [];
+  // Helper for permission checks
+  const hasPermission = (module: string) => {
+    return user?.permissions?.includes(module) || user?.role === 'admin';
+  };
 
-  const dailyChartData =
-    (stats?.salesByDay ?? []).map((item) => ({
-      name: new Date(item._id).toLocaleDateString("en-IN", {
-        weekday: "short",
-      }),
-      revenue: item.totalRevenue,
-      sales: item.totalSales,
-    })) || [];
-
-  const recentSales = stats?.recentSales ?? [];
-  const lowStockProducts = stats?.lowStockProducts ?? [];
+  const showSales = hasPermission('sales') || hasPermission('dashboard');
+  const showInventory = hasPermission('inventory') || hasPermission('products');
+  const showAccounting = hasPermission('accounting') || hasPermission('bank') || hasPermission('cash-bank');
+  const showCashier = hasPermission('shifts') || hasPermission('pos');
 
   if (loading) {
     return (
@@ -104,282 +101,42 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-10">
       <PageHeader
         title="Dashboard"
-        description="Overview of your business performance"
+        description={`Overview of your business performance (Role: ${user?.role})`}
         icon={TrendingUp}
       />
 
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          title="Today's Sales"
-          value={stats?.today?.totalSales || 0}
-          subtitle={formatCurrency(stats?.today?.totalRevenue || 0)}
-          icon={ShoppingCart}
-          color="orange"
-        />
-        <StatCard
-          title="Monthly Revenue"
-          value={formatCurrency(stats?.monthly?.totalRevenue || 0)}
-          subtitle={`${stats?.monthly?.totalSales || 0} orders`}
-          icon={DollarSign}
-          color="emerald"
-        />
-        <StatCard
-          title="Products"
-          value={stats?.totalProducts || 0}
-          icon={Package}
-          color="slate"
-        />
-        <StatCard
-          title="Customers"
-          value={stats?.totalCustomers || 0}
-          icon={Users}
-          color="amber"
-        />
-        <StatCard
-          title="Low Stock"
-          value={lowStockProducts.length}
-          subtitle="Items need restock"
-          icon={AlertTriangle}
-          color="rose"
-        />
-      </div>
+      {showSales && (
+        <div>
+          <SalesSection stats={stats} />
+        </div>
+      )}
 
-      {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Revenue Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <AreaChart
-                    data={
-                      salesChartData.length > 0
-                        ? salesChartData
-                        : [{ name: "No data", revenue: 0, sales: 0 }]
-                    }
-                  >
-                    <defs>
-                      <linearGradient
-                        id="revenueGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#f97316"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#f97316"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-border"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      className="text-xs"
-                      tick={{ fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      className="text-xs"
-                      tick={{ fill: "var(--muted-foreground)" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "12px",
-                        color: "var(--foreground)",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      fill="url(#revenueGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {showInventory && (
+        <div className="pt-6 border-t border-border/50">
+          <InventorySection stats={stats} />
+        </div>
+      )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-emerald-500" />
-                Daily Sales (Last 7 Days)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <BarChart
-                    data={
-                      dailyChartData.length > 0
-                        ? dailyChartData
-                        : [{ name: "No data", revenue: 0, sales: 0 }]
-                    }
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-border"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      className="text-xs"
-                      tick={{ fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      className="text-xs"
-                      tick={{ fill: "var(--muted-foreground)" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "12px",
-                        color: "var(--foreground)",
-                      }}
-                    />
-                    <Bar
-                      dataKey="revenue"
-                      fill="#22c55e"
-                      radius={[6, 6, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+      {showAccounting && (
+        <div className="pt-6 border-t border-border/50">
+          <AccountingSection stats={stats} />
+        </div>
+      )}
 
-      {/* Bottom widgets */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent Sales */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Sales</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentSales.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No sales yet
-                  </p>
-                )}
-                {recentSales.slice(0, 6).map((sale) => (
-                  <div
-                    key={sale._id}
-                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                        <ArrowUpRight className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {sale.customerName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {sale.invoiceNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">
-                        {formatCurrency(sale.totalAmount)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(sale.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {showCashier && (
+        <div className="pt-6 border-t border-border/50">
+          <CashierSection stats={stats} />
+        </div>
+      )}
 
-        {/* Low Stock Alerts */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                Low Stock Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {lowStockProducts.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    All products are well stocked
-                  </p>
-                )}
-                {lowStockProducts.map((product) => (
-                  <div
-                    key={product._id}
-                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.sku}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={product.stock === 0 ? "destructive" : "warning"}
-                    >
-                      {product.stock === 0
-                        ? "Out of stock"
-                        : `${product.stock} left`}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+      {!showSales && !showInventory && !showAccounting && !showCashier && (
+        <div className="text-center py-12 text-muted-foreground">
+          You don't have permission to view any dashboard widgets.
+        </div>
+      )}
     </div>
   );
 }
