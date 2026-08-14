@@ -16,6 +16,14 @@ class AccountingDashboardRepository {
     }
   }
 
+  Future<AccountingReportDashboard?> fetchReportDashboard() async {
+    try {
+      return await _service.getReportDashboard();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> initializeEngine() async {
     try {
       await _service.initializeAccounting();

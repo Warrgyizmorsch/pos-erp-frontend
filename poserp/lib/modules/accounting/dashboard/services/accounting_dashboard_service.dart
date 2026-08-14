@@ -14,6 +14,13 @@ class AccountingDashboardService {
     return AccountingDashboard.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<AccountingReportDashboard> getReportDashboard() async {
+    final response = await _apiClient.get('/accounting/reports/dashboard');
+    final body = response.data is Map<String, dynamic> ? response.data : {};
+    final data = body['data'] ?? body;
+    return AccountingReportDashboard.fromJson(data as Map<String, dynamic>);
+  }
+
   Future<void> initializeAccounting() async {
     await _apiClient.post(ApiEndpoints.accountingInitialize);
   }
