@@ -17,15 +17,63 @@ class JournalFormView extends GetView<JournalFormController> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+              // 1. Header Toolbar
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+
+                  if (isMobile) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back_rounded),
+                              onPressed: () => Get.back(),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(25),
+                                borderRadius: AppRadius.md,
+                              ),
+                              child: const Icon(
+                                Icons.edit_note_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                'Create Journal Voucher',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Manually post debit and credit ledger entries to general ledger.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back_rounded),
@@ -57,81 +105,96 @@ class JournalFormView extends GetView<JournalFormController> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Post balanced debit and credit ledger entries to general ledger.',
+                            'Manually post debit and credit ledger entries to general ledger.',
                             style: TextStyle(fontSize: 13, color: Colors.grey),
                           ),
                         ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // Voucher Main Details Card
+              // 2. Voucher Main Details Card
               AppCard(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 180,
-                      child: TextField(
-                        controller: controller.dateController,
-                        style: const TextStyle(fontSize: 13),
-                        decoration: InputDecoration(
-                          labelText: 'Posting Date',
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.inputDark
-                              : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: AppRadius.md,
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
-                            ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+
+                    final dateInput = TextField(
+                      controller: controller.dateController,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Posting Date (YYYY-MM-DD)',
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: isDark
+                            ? AppColors.inputDark
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadius.md,
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: controller.narrationController,
-                        style: const TextStyle(fontSize: 13),
-                        decoration: InputDecoration(
-                          labelText: 'Voucher Narration / Remarks',
-                          hintText: 'Describe transaction purpose...',
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.inputDark
-                              : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: AppRadius.md,
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
-                            ),
+                    );
+
+                    final narrationInput = TextField(
+                      controller: controller.narrationController,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Voucher Narration / Remarks',
+                        hintText: 'Describe transaction purpose...',
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: isDark
+                            ? AppColors.inputDark
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadius.md,
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    );
+
+                    if (isMobile) {
+                      return Column(
+                        children: [
+                          dateInput,
+                          const SizedBox(height: 12),
+                          narrationInput,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        SizedBox(width: 200, child: dateInput),
+                        const SizedBox(width: 16),
+                        Expanded(child: narrationInput),
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Line Items Grid Header & Add Row Button
+              // 3. Line Items Header & Add Row Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -144,7 +207,7 @@ class JournalFormView extends GetView<JournalFormController> {
                     ),
                   ),
                   AppButton(
-                    text: 'Add Entry Row',
+                    text: 'Add Row',
                     variant: AppButtonVariant.outline,
                     icon: const Icon(Icons.add_rounded, size: 16),
                     onPressed: () => controller.addRow(),
@@ -153,7 +216,7 @@ class JournalFormView extends GetView<JournalFormController> {
               ),
               const SizedBox(height: 8),
 
-              // Rows Table
+              // 4. Entry Rows Table (Scrollable on Mobile)
               Expanded(
                 child: Obx(() {
                   if (controller.isLoadingLedgers.value) {
@@ -162,193 +225,287 @@ class JournalFormView extends GetView<JournalFormController> {
 
                   return AppCard(
                     padding: const EdgeInsets.all(12),
-                    child: ListView.separated(
-                      itemCount: controller.rows.length,
-                      separatorBuilder: (_, unused) =>
-                          const Divider(height: 16),
-                      itemBuilder: (context, idx) {
-                        final row = controller.rows[idx];
-                        return Row(
-                          children: [
-                            // Ledger Select
-                            Expanded(
-                              flex: 3,
-                              child: DropdownButtonFormField<String>(
-                                initialValue: row.ledgerId.isNotEmpty
-                                    ? row.ledgerId
-                                    : null,
-                                hint: const Text(
-                                  'Select Ledger Account',
-                                  style: TextStyle(fontSize: 12),
+                    child: SingleChildScrollView(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minWidth: 700),
+                          child: Column(
+                            children: [
+                              // Table Header Row
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
                                 ),
-                                dropdownColor: isDark
-                                    ? AppColors.cardDark
-                                    : AppColors.cardLight,
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  filled: true,
-                                  fillColor: isDark
+                                decoration: BoxDecoration(
+                                  color: isDark
                                       ? AppColors.inputDark
                                       : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: AppRadius.md,
-                                    borderSide: BorderSide(
-                                      color: isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ),
-                                  ),
+                                  borderRadius: AppRadius.sm,
                                 ),
-                                items: controller.ledgers.map((l) {
-                                  return DropdownMenuItem<String>(
-                                    value: l.id,
-                                    child: Text(
-                                      '${l.name} (${l.code})',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12),
+                                child: Row(
+                                  children: const [
+                                    SizedBox(
+                                      width: 220,
+                                      child: Text(
+                                        'Ledger',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                     ),
-                                  );
-                                }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    row.ledgerId = val;
-                                  }
-                                },
+                                    SizedBox(width: 10),
+                                    SizedBox(
+                                      width: 120,
+                                      child: Text(
+                                        'Debit (₹)',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    SizedBox(
+                                      width: 120,
+                                      child: Text(
+                                        'Credit (₹)',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    SizedBox(
+                                      width: 200,
+                                      child: Text(
+                                        'Line Narration',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 40),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
+                              const SizedBox(height: 8),
 
-                            // Debit Input
-                            Expanded(
-                              flex: 2,
-                              child: TextField(
-                                controller: row.debitController,
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: 'Debit (₹)',
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  filled: true,
-                                  fillColor: isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: AppRadius.md,
-                                    borderSide: BorderSide(
-                                      color: isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (val) {
-                                  if (val.isNotEmpty &&
-                                      (double.tryParse(val) ?? 0) > 0) {
-                                    row.creditController.text = '';
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
+                              // Table Row Inputs
+                              ...controller.rows.map((row) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: Row(
+                                    children: [
+                                      // Ledger Dropdown
+                                      SizedBox(
+                                        width: 220,
+                                        child: DropdownButtonFormField<String>(
+                                          isExpanded: true,
+                                          initialValue: row.ledgerId.isNotEmpty
+                                              ? row.ledgerId
+                                              : null,
+                                          hint: const Text(
+                                            'Select Ledger',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                          dropdownColor: isDark
+                                              ? AppColors.cardDark
+                                              : AppColors.cardLight,
+                                          decoration: InputDecoration(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 8,
+                                                ),
+                                            filled: true,
+                                            fillColor: isDark
+                                                ? AppColors.inputDark
+                                                : Colors.grey[100],
+                                            border: OutlineInputBorder(
+                                              borderRadius: AppRadius.md,
+                                              borderSide: BorderSide(
+                                                color: isDark
+                                                    ? AppColors.borderDark
+                                                    : AppColors.borderLight,
+                                              ),
+                                            ),
+                                          ),
+                                          items: controller.ledgers.map((l) {
+                                            return DropdownMenuItem<String>(
+                                              value: l.id,
+                                              child: Text(
+                                                '${l.name} · ${l.code}',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              row.ledgerId = val;
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
 
-                            // Credit Input
-                            Expanded(
-                              flex: 2,
-                              child: TextField(
-                                controller: row.creditController,
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: 'Credit (₹)',
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  filled: true,
-                                  fillColor: isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: AppRadius.md,
-                                    borderSide: BorderSide(
-                                      color: isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (val) {
-                                  if (val.isNotEmpty &&
-                                      (double.tryParse(val) ?? 0) > 0) {
-                                    row.debitController.text = '';
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
+                                      // Debit Input
+                                      SizedBox(
+                                        width: 120,
+                                        child: TextField(
+                                          controller: row.debitController,
+                                          keyboardType: TextInputType.number,
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'monospace',
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: '0.00',
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 8,
+                                                ),
+                                            filled: true,
+                                            fillColor: isDark
+                                                ? AppColors.inputDark
+                                                : Colors.grey[100],
+                                            border: OutlineInputBorder(
+                                              borderRadius: AppRadius.md,
+                                              borderSide: BorderSide(
+                                                color: isDark
+                                                    ? AppColors.borderDark
+                                                    : AppColors.borderLight,
+                                              ),
+                                            ),
+                                          ),
+                                          onChanged: (val) {
+                                            if (val.isNotEmpty &&
+                                                (double.tryParse(val) ?? 0) >
+                                                    0) {
+                                              row.creditController.text = '';
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
 
-                            // Line Narration
-                            Expanded(
-                              flex: 3,
-                              child: TextField(
-                                controller: row.narrationController,
-                                style: const TextStyle(fontSize: 12),
-                                decoration: InputDecoration(
-                                  hintText: 'Line narration (optional)',
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  filled: true,
-                                  fillColor: isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
-                                  border: OutlineInputBorder(
-                                    borderRadius: AppRadius.md,
-                                    borderSide: BorderSide(
-                                      color: isDark
-                                          ? AppColors.borderDark
-                                          : AppColors.borderLight,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
+                                      // Credit Input
+                                      SizedBox(
+                                        width: 120,
+                                        child: TextField(
+                                          controller: row.creditController,
+                                          keyboardType: TextInputType.number,
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'monospace',
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: '0.00',
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 8,
+                                                ),
+                                            filled: true,
+                                            fillColor: isDark
+                                                ? AppColors.inputDark
+                                                : Colors.grey[100],
+                                            border: OutlineInputBorder(
+                                              borderRadius: AppRadius.md,
+                                              borderSide: BorderSide(
+                                                color: isDark
+                                                    ? AppColors.borderDark
+                                                    : AppColors.borderLight,
+                                              ),
+                                            ),
+                                          ),
+                                          onChanged: (val) {
+                                            if (val.isNotEmpty &&
+                                                (double.tryParse(val) ?? 0) >
+                                                    0) {
+                                              row.debitController.text = '';
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
 
-                            // Delete Row Button
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: AppColors.danger,
-                                size: 20,
-                              ),
-                              onPressed: () => controller.removeRow(row.id),
-                            ),
-                          ],
-                        );
-                      },
+                                      // Line Narration Input
+                                      SizedBox(
+                                        width: 200,
+                                        child: TextField(
+                                          controller: row.narrationController,
+                                          style: const TextStyle(fontSize: 12),
+                                          decoration: InputDecoration(
+                                            hintText: 'Line narration',
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 8,
+                                                ),
+                                            filled: true,
+                                            fillColor: isDark
+                                                ? AppColors.inputDark
+                                                : Colors.grey[100],
+                                            border: OutlineInputBorder(
+                                              borderRadius: AppRadius.md,
+                                              borderSide: BorderSide(
+                                                color: isDark
+                                                    ? AppColors.borderDark
+                                                    : AppColors.borderLight,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+
+                                      // Delete Button
+                                      SizedBox(
+                                        width: 34,
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: AppColors.danger,
+                                            size: 18,
+                                          ),
+                                          onPressed: controller.rows.length > 2
+                                              ? () =>
+                                                    controller.removeRow(row.id)
+                                              : null,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   );
                 }),
               ),
               const SizedBox(height: 16),
 
-              // Real-Time Balancing Card Footer
+              // 5. Balancing Summary & Action Footer
               Obx(() {
                 final dTot = controller.totalDebit.value;
                 final cTot = controller.totalCredit.value;
@@ -357,133 +514,202 @@ class JournalFormView extends GetView<JournalFormController> {
 
                 return AppCard(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 600;
+
+                      final metricsGrid = Row(
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Total Debit',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Total Debit',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '₹${dTot.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    '₹${dTot.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 24),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Total Credit',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Total Credit',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '₹${cTot.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'monospace',
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    '₹${cTot.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 24),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Difference',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Difference',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '₹${diff.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: isBal
-                                      ? AppColors.success
-                                      : AppColors.danger,
-                                  fontFamily: 'monospace',
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    '₹${diff.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: isBal
+                                          ? AppColors.success
+                                          : AppColors.danger,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                              horizontal: 8,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: isBal
-                                  ? AppColors.success.withAlpha(20)
-                                  : AppColors.danger.withAlpha(20),
+                              color:
+                                  (isBal
+                                          ? AppColors.success
+                                          : AppColors.warning)
+                                      .withAlpha(20),
                               borderRadius: AppRadius.full,
                             ),
                             child: Text(
-                              isBal ? 'BALANCED' : 'UNBALANCED',
+                              isBal ? 'Balanced' : 'Not Balanced',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: isBal
                                     ? AppColors.success
-                                    : AppColors.danger,
+                                    : AppColors.warning,
                               ),
                             ),
                           ),
                         ],
-                      ),
+                      );
 
-                      // Submit Actions
-                      Row(
+                      if (isMobile) {
+                        return Column(
+                          children: [
+                            metricsGrid,
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'Cancel',
+                                    variant: AppButtonVariant.outline,
+                                    height: 38,
+                                    onPressed: () => Get.back(),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'Save Draft',
+                                    variant: AppButtonVariant.secondary,
+                                    height: 38,
+                                    isLoading: controller.isSubmitting.value,
+                                    onPressed: isBal
+                                        ? () => controller.submit('draft')
+                                        : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'Post',
+                                    variant: AppButtonVariant.primary,
+                                    height: 38,
+                                    isLoading: controller.isSubmitting.value,
+                                    onPressed: isBal
+                                        ? () => controller.submit('post')
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          AppButton(
-                            text: 'Cancel',
-                            variant: AppButtonVariant.outline,
-                            onPressed: () => Get.back(),
-                          ),
-                          const SizedBox(width: 10),
-                          AppButton(
-                            text: 'Save Draft',
-                            variant: AppButtonVariant.secondary,
-                            icon: const Icon(Icons.save_outlined, size: 16),
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: isBal
-                                ? () => controller.submit('draft')
-                                : null,
-                          ),
-                          const SizedBox(width: 10),
-                          AppButton(
-                            text: 'Post Journal',
-                            variant: AppButtonVariant.primary,
-                            icon: const Icon(Icons.send_rounded, size: 16),
-                            isLoading: controller.isSubmitting.value,
-                            onPressed: isBal
-                                ? () => controller.submit('post')
-                                : null,
+                          Expanded(child: metricsGrid),
+                          const SizedBox(width: 16),
+                          Row(
+                            children: [
+                              AppButton(
+                                text: 'Cancel',
+                                variant: AppButtonVariant.outline,
+                                onPressed: () => Get.back(),
+                              ),
+                              const SizedBox(width: 10),
+                              AppButton(
+                                text: 'Save Draft',
+                                variant: AppButtonVariant.secondary,
+                                icon: const Icon(Icons.save_outlined, size: 16),
+                                isLoading: controller.isSubmitting.value,
+                                onPressed: isBal
+                                    ? () => controller.submit('draft')
+                                    : null,
+                              ),
+                              const SizedBox(width: 10),
+                              AppButton(
+                                text: 'Post Voucher',
+                                variant: AppButtonVariant.primary,
+                                icon: const Icon(Icons.send_rounded, size: 16),
+                                isLoading: controller.isSubmitting.value,
+                                onPressed: isBal
+                                    ? () => controller.submit('post')
+                                    : null,
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 );
               }),
