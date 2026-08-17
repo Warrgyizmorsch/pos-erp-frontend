@@ -794,180 +794,331 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: AppRadius.lg,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.inputDark : Colors.grey[100],
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                  ),
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      'TAX HEAD',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'OUTPUT TAX',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'INPUT TAX',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'PAYABLE',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'EXCESS ITC',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rows.length,
-              separatorBuilder: (_, index) => Divider(
-                height: 1,
-                color: isDark
-                    ? AppColors.borderDark.withAlpha(50)
-                    : Colors.grey[200],
-              ),
-              itemBuilder: (context, index) {
-                final r = rows[index];
-                final isTotalRow = r.head.contains('TOTAL');
-
-                return Container(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 700),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Table Header Toolbar
+                Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  color: isTotalRow
-                      ? (isDark ? AppColors.inputDark : Colors.grey[100])
-                      : null,
-                  child: Row(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.inputDark : Colors.grey[100],
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                    ),
+                  ),
+                  child: const Row(
                     children: [
-                      Expanded(
-                        flex: 3,
+                      SizedBox(
+                        width: 180,
                         child: Text(
-                          r.head,
+                          'TAX HEAD',
                           style: TextStyle(
-                            fontSize: isTotalRow ? 12 : 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: Colors.grey,
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
+                      SizedBox(
+                        width: 130,
                         child: Text(
-                          '₹${r.output.toStringAsFixed(2)}',
+                          'OUTPUT TAX',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: isTotalRow ? 12 : 13,
-                            fontWeight: isTotalRow
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontFamily: 'monospace',
-                            color: AppColors.danger,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          '₹${r.input.toStringAsFixed(2)}',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: isTotalRow ? 12 : 13,
-                            fontWeight: isTotalRow
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontFamily: 'monospace',
-                            color: AppColors.info,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          '₹${r.payable.toStringAsFixed(2)}',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: isTotalRow ? 12 : 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                            color: AppColors.warning,
+                            letterSpacing: 0.5,
+                            color: Colors.grey,
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
+                      SizedBox(
+                        width: 130,
                         child: Text(
-                          '₹${r.excessITC.toStringAsFixed(2)}',
+                          'INPUT TAX',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: isTotalRow ? 12 : 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                            color: AppColors.success,
+                            letterSpacing: 0.5,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 130,
+                        child: Text(
+                          'PAYABLE',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 130,
+                        child: Text(
+                          'EXCESS ITC',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: Colors.grey,
                           ),
                         ),
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+
+                // 2. Interactive Zebra-Striped Table Rows
+                Column(
+                  children: List.generate(rows.length, (index) {
+                    final r = rows[index];
+                    final isTotalRow = r.head.contains('TOTAL');
+                    final isOdd = index % 2 == 1;
+
+                    IconData headIcon = Icons.account_balance_wallet_rounded;
+                    Color headColor = AppColors.primary;
+
+                    if (r.head.contains('CGST')) {
+                      headIcon = Icons.account_balance_rounded;
+                      headColor = Colors.indigo;
+                    } else if (r.head.contains('SGST')) {
+                      headIcon = Icons.location_city_rounded;
+                      headColor = Colors.teal;
+                    } else if (r.head.contains('IGST')) {
+                      headIcon = Icons.language_rounded;
+                      headColor = Colors.purple;
+                    }
+
+                    if (isTotalRow) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.inputDark
+                              : Colors.grey.shade100,
+                          border: Border(
+                            top: BorderSide(
+                              color: isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.borderLight,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 180,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.functions_rounded,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'TOTAL',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.output.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.danger,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.input.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.info,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.payable.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.warning,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.excessITC.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return InkWell(
+                      onTap: () {},
+                      hoverColor: AppColors.primary.withAlpha(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isOdd
+                              ? (isDark
+                                    ? AppColors.inputDark.withAlpha(40)
+                                    : Colors.grey[50])
+                              : Colors.transparent,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isDark
+                                  ? AppColors.borderDark.withAlpha(30)
+                                  : Colors.grey[200]!,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 180,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: headColor.withAlpha(25),
+                                      borderRadius: AppRadius.sm,
+                                    ),
+                                    child: Icon(
+                                      headIcon,
+                                      size: 13,
+                                      color: headColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      r.head,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.output.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.danger,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.input.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.info,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.payable.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.warning,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                '₹${r.excessITC.toStringAsFixed(2)}',
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
