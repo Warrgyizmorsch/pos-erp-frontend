@@ -1503,7 +1503,9 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       }
       if (rawData['hsnSummary'] is List) {
         for (final item in rawData['hsnSummary']) {
-          if (item is Map<String, dynamic>) rowList.add(item);
+          if (item is Map<String, dynamic>) {
+            rowList.add({'section': 'HSN Summary', ...item});
+          }
         }
       }
       if (rawData['outward'] is List) {
@@ -1617,11 +1619,53 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       }
     }
 
-    List<String> keys = rowList.first.keys.take(14).toList();
-    if (keys.contains('section') && keys.first != 'section') {
-      keys.remove('section');
-      keys.insert(0, 'section');
+    final Set<String> keySet = {};
+    for (final r in rowList) {
+      keySet.addAll(r.keys);
     }
+
+    List<String> keys = keySet.toList();
+
+    // Priority order for GSTR & accounting report columns
+    const priorityColumns = [
+      'section',
+      'date',
+      'invoiceDate',
+      'invoiceNo',
+      'noteNo',
+      'voucherNo',
+      'customerName',
+      'partyName',
+      'supplierName',
+      'customerGSTIN',
+      'gstin',
+      'invoiceType',
+      'hsn',
+      'hsnCode',
+      'description',
+      'unit',
+      'stateOfSupply',
+      'taxableAmount',
+      'taxableValue',
+      'cgst',
+      'sgst',
+      'igst',
+      'totalTax',
+      'invoiceTotal',
+      'totalValue',
+    ];
+
+    keys.sort((a, b) {
+      final indexA = priorityColumns.indexOf(a);
+      final indexB = priorityColumns.indexOf(b);
+
+      if (indexA != -1 && indexB != -1) return indexA.compareTo(indexB);
+      if (indexA != -1) return -1;
+      if (indexB != -1) return 1;
+      return a.compareTo(b);
+    });
+
+    keys = keys.take(15).toList();
 
     // Auto-calculate column totals for numeric money keys
     final Map<String, double> totals = {};
@@ -1748,6 +1792,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                                 k.toLowerCase().contains('tax') ||
                                 k.toLowerCase().contains('amount') ||
                                 k.toLowerCase().contains('value') ||
+                                k.toLowerCase().contains('total') ||
                                 k.toLowerCase().contains('cgst') ||
                                 k.toLowerCase().contains('sgst') ||
                                 k.toLowerCase().contains('igst') ||
@@ -1768,6 +1813,8 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                                 chipColor = AppColors.info;
                               } else if (strVal.contains('CREDIT')) {
                                 chipColor = AppColors.warning;
+                              } else if (strVal.contains('HSN')) {
+                                chipColor = Colors.purple;
                               } else if (strVal.contains('OUTWARD')) {
                                 chipColor = AppColors.danger;
                               } else if (strVal.contains('INWARD')) {
