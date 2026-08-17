@@ -26,6 +26,7 @@ import '../../modules/accounting/reports/views/cash_book_report_view.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
 import '../../modules/accounting/reports/views/profit_loss_report_view.dart';
+import '../../modules/accounting/reports/views/receivables_report_view.dart';
 import '../../modules/accounting/reports/views/trial_balance_view.dart';
 import '../../modules/accounting/settings/bindings/accounting_settings_binding.dart';
 import '../../modules/accounting/settings/views/accounting_settings_view.dart';
@@ -386,6 +387,12 @@ class AppPages {
     GetPage(
       name: Routes.bankBookReport,
       page: () => const BankBookReportView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.receivablesReport,
+      page: () => const ReceivablesReportView(),
       binding: AccountingReportBinding(),
       middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),

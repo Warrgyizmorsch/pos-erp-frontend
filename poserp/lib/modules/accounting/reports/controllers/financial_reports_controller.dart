@@ -21,6 +21,8 @@ class FinancialReportsController extends GetxController {
   final Rxn<BalanceSheetReport> balanceSheet = Rxn<BalanceSheetReport>();
   final Rxn<BookReport> cashBook = Rxn<BookReport>();
   final Rxn<BookReport> bankBook = Rxn<BookReport>();
+  final Rxn<PartyOutstandingReport> receivables = Rxn<PartyOutstandingReport>();
+  final Rxn<PartyOutstandingReport> payables = Rxn<PartyOutstandingReport>();
   final Rxn<GstReportSummary> gstSummary = Rxn<GstReportSummary>();
   final Rxn<AccountingReportDashboardModel> dashboardMetrics =
       Rxn<AccountingReportDashboardModel>();
@@ -44,6 +46,10 @@ class FinancialReportsController extends GetxController {
       selectedTabIndex.value = 1;
     } else if (route.contains('balance-sheet')) {
       selectedTabIndex.value = 2;
+    } else if (route.contains('receivables')) {
+      selectedTabIndex.value = 6;
+    } else if (route.contains('payables')) {
+      selectedTabIndex.value = 7;
     } else if (route.contains('cash-book')) {
       selectedTabIndex.value = 4;
     } else if (route.contains('bank-book')) {
@@ -72,6 +78,10 @@ class FinancialReportsController extends GetxController {
       } else if (route.contains('balance-sheet') ||
           selectedTabIndex.value == 2) {
         await loadBalanceSheet();
+      } else if (route.contains('receivables') || selectedTabIndex.value == 6) {
+        await loadReceivables();
+      } else if (route.contains('payables') || selectedTabIndex.value == 7) {
+        await loadPayables();
       } else if (route.contains('cash-book') || selectedTabIndex.value == 4) {
         await loadCashBook();
       } else if (route.contains('bank-book') || selectedTabIndex.value == 5) {
@@ -108,6 +118,34 @@ class FinancialReportsController extends GetxController {
         asOfDate: endDate.value.isNotEmpty ? endDate.value : asOnDate.value,
       );
       balanceSheet.value = bs;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadReceivables() async {
+    try {
+      isLoading.value = true;
+      final rec = await _repository.fetchReceivables(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      receivables.value = rec;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadPayables() async {
+    try {
+      isLoading.value = true;
+      final pay = await _repository.fetchPayables(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      payables.value = pay;
     } catch (_) {
     } finally {
       isLoading.value = false;

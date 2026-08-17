@@ -178,6 +178,114 @@ class BookReport {
   }
 }
 
+class PartyOutstandingRow {
+  final String ledgerId;
+  final String ledgerName;
+  final String code;
+  final double openingBalance;
+  final String openingBalanceType;
+  final double debit;
+  final double credit;
+  final double receivable;
+  final double payable;
+  final double advance;
+  final String balanceType;
+
+  PartyOutstandingRow({
+    required this.ledgerId,
+    required this.ledgerName,
+    required this.code,
+    required this.openingBalance,
+    required this.openingBalanceType,
+    required this.debit,
+    required this.credit,
+    required this.receivable,
+    required this.payable,
+    required this.advance,
+    required this.balanceType,
+  });
+
+  factory PartyOutstandingRow.fromJson(Map<String, dynamic> json) {
+    return PartyOutstandingRow(
+      ledgerId: json['ledgerId']?.toString() ?? '',
+      ledgerName:
+          json['ledgerName']?.toString() ?? json['name']?.toString() ?? 'Party',
+      code: json['code']?.toString() ?? '',
+      openingBalance: (json['openingBalance'] as num?)?.toDouble() ?? 0.0,
+      openingBalanceType: json['openingBalanceType']?.toString() ?? 'DEBIT',
+      debit:
+          (json['debit'] as num?)?.toDouble() ??
+          (json['sales'] as num?)?.toDouble() ??
+          0.0,
+      credit:
+          (json['credit'] as num?)?.toDouble() ??
+          (json['receipts'] as num?)?.toDouble() ??
+          0.0,
+      receivable:
+          (json['receivable'] as num?)?.toDouble() ??
+          (json['due'] as num?)?.toDouble() ??
+          0.0,
+      payable: (json['payable'] as num?)?.toDouble() ?? 0.0,
+      advance: (json['advance'] as num?)?.toDouble() ?? 0.0,
+      balanceType: json['balanceType']?.toString() ?? 'DEBIT',
+    );
+  }
+}
+
+class PartyOutstandingTotals {
+  final double totalReceivable;
+  final double totalPayable;
+  final double totalAdvance;
+
+  PartyOutstandingTotals({
+    required this.totalReceivable,
+    required this.totalPayable,
+    required this.totalAdvance,
+  });
+
+  factory PartyOutstandingTotals.fromJson(Map<String, dynamic> json) {
+    return PartyOutstandingTotals(
+      totalReceivable:
+          (json['totalReceivable'] as num?)?.toDouble() ??
+          (json['totalReceivables'] as num?)?.toDouble() ??
+          0.0,
+      totalPayable:
+          (json['totalPayable'] as num?)?.toDouble() ??
+          (json['totalPayables'] as num?)?.toDouble() ??
+          0.0,
+      totalAdvance: (json['totalAdvance'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class PartyOutstandingReport {
+  final PartyOutstandingTotals totals;
+  final List<PartyOutstandingRow> rows;
+
+  PartyOutstandingReport({required this.totals, required this.rows});
+
+  factory PartyOutstandingReport.fromJson(Map<String, dynamic> json) {
+    final rowList = <PartyOutstandingRow>[];
+    final rawRows = (json['rows'] ?? json['data'] ?? []) as List;
+    for (final item in rawRows) {
+      if (item is Map<String, dynamic>) {
+        try {
+          rowList.add(PartyOutstandingRow.fromJson(item));
+        } catch (_) {}
+      }
+    }
+
+    final totalsObj = json['totals'] is Map<String, dynamic>
+        ? json['totals'] as Map<String, dynamic>
+        : json;
+
+    return PartyOutstandingReport(
+      totals: PartyOutstandingTotals.fromJson(totalsObj),
+      rows: rowList,
+    );
+  }
+}
+
 class TrialBalanceRow {
   final String accountCode;
   final String accountName;

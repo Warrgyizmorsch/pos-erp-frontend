@@ -91,6 +91,33 @@ class AccountingReportRepository {
     }
   }
 
+  Future<PartyOutstandingReport> fetchReceivables({
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      return await _service.getReceivables(
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Receivables report.');
+    }
+  }
+
+  Future<PartyOutstandingReport> fetchPayables({
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      return await _service.getPayables(startDate: startDate, endDate: endDate);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Payables report.');
+    }
+  }
+
   Future<GstReportSummary> fetchGstSummary({
     String? startDate,
     String? endDate,
