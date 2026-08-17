@@ -104,6 +104,9 @@ class FinancialReportRow {
     required this.amount,
   });
 
+  double get balance => amount;
+  String get ledgerName => name;
+
   factory FinancialReportRow.fromJson(Map<String, dynamic> json) {
     return FinancialReportRow(
       code: json['code']?.toString() ?? '',
@@ -218,9 +221,9 @@ class ReportGroupAmount {
       }
     }
 
-    final double computedTotal = ledgerList.fold(
+    final double computedTotal = ledgerList.fold<double>(
       0.0,
-      (sum, l) => sum + l.amount.abs(),
+      (double sum, l) => sum + l.amount.abs(),
     );
 
     return ReportGroupAmount(
@@ -328,32 +331,50 @@ class ProfitLossReport {
 }
 
 class BalanceSheetReport {
+  final List<ReportGroupAmount> assetGroups;
+  final List<ReportGroupAmount> liabilityGroups;
   final List<FinancialReportRow> assetRows;
   final List<FinancialReportRow> liabilityRows;
   final List<FinancialReportRow> equityRows;
   final double totalAssets;
   final double totalLiabilities;
   final double totalEquity;
+  final double difference;
+  final String asOnDate;
 
   BalanceSheetReport({
+    required this.assetGroups,
+    required this.liabilityGroups,
     required this.assetRows,
     required this.liabilityRows,
     required this.equityRows,
     required this.totalAssets,
     required this.totalLiabilities,
     required this.totalEquity,
+    required this.difference,
+    required this.asOnDate,
   });
 
   factory BalanceSheetReport.fromJson(Map<String, dynamic> json) {
+    final astGroups = <ReportGroupAmount>[];
+    final liabGroups = <ReportGroupAmount>[];
     final astList = <FinancialReportRow>[];
     final liabList = <FinancialReportRow>[];
     final eqList = <FinancialReportRow>[];
+
+    final totalsObj = json['totals'] is Map<String, dynamic>
+        ? json['totals'] as Map<String, dynamic>
+        : json;
 
     final astData = (json['assets'] ?? []) as List;
     for (final item in astData) {
       if (item is Map<String, dynamic>) {
         try {
-          astList.add(FinancialReportRow.fromJson(item));
+          if (item.containsKey('ledgers') || item.containsKey('accounts')) {
+            astGroups.add(ReportGroupAmount.fromJson(item));
+          } else {
+            astList.add(FinancialReportRow.fromJson(item));
+          }
         } catch (_) {}
       }
     }
@@ -362,7 +383,11 @@ class BalanceSheetReport {
     for (final item in liabData) {
       if (item is Map<String, dynamic>) {
         try {
-          liabList.add(FinancialReportRow.fromJson(item));
+          if (item.containsKey('ledgers') || item.containsKey('accounts')) {
+            liabGroups.add(ReportGroupAmount.fromJson(item));
+          } else {
+            liabList.add(FinancialReportRow.fromJson(item));
+          }
         } catch (_) {}
       }
     }
@@ -376,37 +401,39 @@ class BalanceSheetReport {
       }
     }
 
-    final double computedAssets = astList.fold<double>(
-      0.0,
-      (double sum, r) => sum + r.amount,
-    );
-    final double computedLiab = liabList.fold<double>(
-      0.0,
-      (double sum, r) => sum + r.amount,
-    );
-    final double computedEquity = eqList.fold<double>(
-      0.0,
-      (double sum, r) => sum + r.amount,
-    );
+    final double computedAssets = astGroups.isNotEmpty
+        ? astGroups.fold<double>(0.0, (double sum, g) => sum + g.total)
+        : astList.fold<double>(0.0, (double sum, r) => sum + r.amount);
+
+    final double computedLiab = liabGroups.isNotEmpty
+        ? liabGroups.fold<double>(0.0, (double sum, g) => sum + g.total)
+        : liabList.fold<double>(0.0, (double sum, r) => sum + r.amount);
 
     final double totAst =
-        (json['totalAssets'] as num?)?.toDouble() ?? computedAssets;
+        (totalsObj['totalAssets'] as num?)?.toDouble() ?? computedAssets;
     final double totLiab =
-        (json['totalLiabilities'] as num?)?.toDouble() ?? computedLiab;
-    final double totEq =
-        (json['totalEquity'] as num?)?.toDouble() ?? computedEquity;
+        (totalsObj['totalLiabilities'] as num?)?.toDouble() ?? computedLiab;
+    final double totEq = (totalsObj['totalEquity'] as num?)?.toDouble() ?? 0.0;
+    final double diff =
+        (totalsObj['difference'] as num?)?.toDouble() ??
+        (totAst - totLiab).abs();
 
     return BalanceSheetReport(
+      assetGroups: astGroups,
+      liabilityGroups: liabGroups,
       assetRows: astList,
       liabilityRows: liabList,
       equityRows: eqList,
       totalAssets: totAst,
       totalLiabilities: totLiab,
       totalEquity: totEq,
+      difference: diff,
+      asOnDate:
+          json['asOnDate']?.toString() ?? json['asOfDate']?.toString() ?? '',
     );
   }
 
   List<FinancialReportRow> get assetAccounts => assetRows;
   List<FinancialReportRow> get liabilityAccounts => liabilityRows;
-  bool get isBalanced => (totalAssets - totalLiabilities).abs() < 0.009;
+  bool get isBalanced => difference < 0.009;
 }
