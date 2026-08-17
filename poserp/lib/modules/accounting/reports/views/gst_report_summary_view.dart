@@ -509,6 +509,42 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   );
                 }
 
+                if (currentKind == 'gstr1' && rawData != null) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (rawData is Map<String, dynamic> &&
+                            rawData['note'] != null)
+                          _buildNoticeCard(rawData['note'].toString(), isDark),
+                        _buildGstr1SummaryGrid(rawData, isDark),
+                        const SizedBox(height: 16),
+                        _buildGenericGstDataView(currentKind, rawData, isDark),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                }
+
+                if (currentKind == 'gstr3b' && rawData != null) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (rawData is Map<String, dynamic> &&
+                            rawData['note'] != null)
+                          _buildNoticeCard(rawData['note'].toString(), isDark),
+                        _buildGstr3bSummaryGrid(rawData, isDark),
+                        const SizedBox(height: 16),
+                        _buildGenericGstDataView(currentKind, rawData, isDark),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                }
+
                 if (currentKind == 'exceptions' && rawData != null) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -796,6 +832,201 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               AppColors.success,
               isDark,
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNoticeCard(String note, bool isDark) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.info.withAlpha(20),
+        borderRadius: AppRadius.md,
+        border: Border.all(color: AppColors.info.withAlpha(60)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.info,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              note,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.info,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGstr1SummaryGrid(dynamic rawData, bool isDark) {
+    int b2bCount = 0;
+    int b2cCount = 0;
+    int cnCount = 0;
+    double totalTaxable = 0.0;
+
+    if (rawData is Map<String, dynamic>) {
+      if (rawData['b2b'] is List) {
+        b2bCount = (rawData['b2b'] as List).length;
+        for (final item in rawData['b2b']) {
+          if (item is Map) {
+            totalTaxable +=
+                (item['taxableAmount'] as num?)?.toDouble() ??
+                (item['taxableValue'] as num?)?.toDouble() ??
+                0.0;
+          }
+        }
+      }
+      if (rawData['b2c'] is List) {
+        b2cCount = (rawData['b2c'] as List).length;
+        for (final item in rawData['b2c']) {
+          if (item is Map) {
+            totalTaxable +=
+                (item['taxableAmount'] as num?)?.toDouble() ??
+                (item['taxableValue'] as num?)?.toDouble() ??
+                0.0;
+          }
+        }
+      }
+      if (rawData['creditNotes'] is List) {
+        cnCount = (rawData['creditNotes'] as List).length;
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cols = constraints.maxWidth < 600
+            ? 2
+            : (constraints.maxWidth < 900 ? 2 : 4);
+
+        return GridView.count(
+          crossAxisCount: cols,
+          childAspectRatio: cols == 4 ? 2.2 : 1.6,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildMetricCard(
+              'B2B Invoices',
+              '$b2bCount',
+              Icons.business_center_rounded,
+              AppColors.primary,
+              isDark,
+            ),
+            _buildMetricCard(
+              'B2C Transactions',
+              '$b2cCount',
+              Icons.shopping_bag_rounded,
+              AppColors.info,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Credit Notes',
+              '$cnCount',
+              Icons.receipt_long_rounded,
+              AppColors.warning,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Total Taxable Sales',
+              '₹ ${totalTaxable.toStringAsFixed(2)}',
+              Icons.account_balance_wallet_rounded,
+              AppColors.success,
+              isDark,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGstr3bSummaryGrid(dynamic rawData, bool isDark) {
+    double outwardTax = 0.0;
+    double inwardItc = 0.0;
+    double netPayable = 0.0;
+
+    if (rawData is Map<String, dynamic>) {
+      final outward = rawData['outwardSupplies'];
+      if (outward is Map) {
+        outwardTax =
+            (outward['totalTax'] as num?)?.toDouble() ??
+            (outward['taxableAmount'] as num?)?.toDouble() ??
+            0.0;
+      }
+      final inward = rawData['inwardITC'];
+      if (inward is Map) {
+        inwardItc =
+            (inward['totalTax'] as num?)?.toDouble() ??
+            (inward['itcAmount'] as num?)?.toDouble() ??
+            0.0;
+      }
+      final net = rawData['netTaxPayable'];
+      if (net is Map) {
+        netPayable =
+            (net['totalTax'] as num?)?.toDouble() ??
+            (net['payable'] as num?)?.toDouble() ??
+            0.0;
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        final oWidget = _buildMetricCard(
+          'Outward Tax Liability',
+          '₹ ${outwardTax.toStringAsFixed(2)}',
+          Icons.arrow_upward_rounded,
+          AppColors.danger,
+          isDark,
+        );
+        final iWidget = _buildMetricCard(
+          'Eligible Inward ITC',
+          '₹ ${inwardItc.toStringAsFixed(2)}',
+          Icons.arrow_downward_rounded,
+          AppColors.info,
+          isDark,
+        );
+        final nWidget = _buildMetricCard(
+          'Net GSTR-3B Liability',
+          '₹ ${netPayable.toStringAsFixed(2)}',
+          Icons.account_balance_rounded,
+          AppColors.warning,
+          isDark,
+        );
+
+        if (isMobile) {
+          return Column(
+            children: [
+              oWidget,
+              const SizedBox(height: 12),
+              iWidget,
+              const SizedBox(height: 12),
+              nWidget,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: oWidget),
+            const SizedBox(width: 12),
+            Expanded(child: iWidget),
+            const SizedBox(width: 12),
+            Expanded(child: nWidget),
           ],
         );
       },
@@ -1311,7 +1542,31 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
         }
       }
 
-      // 2. Fallback to generic list keys
+      // 2. Check for GSTR-3B section maps (outwardSupplies, inwardITC, netTaxPayable)
+      if (rawData['outwardSupplies'] is Map ||
+          rawData['inwardITC'] is Map ||
+          rawData['netTaxPayable'] is Map) {
+        if (rawData['outwardSupplies'] is Map) {
+          rowList.add({
+            'section': 'Outward Supplies',
+            ...(rawData['outwardSupplies'] as Map).cast<String, dynamic>(),
+          });
+        }
+        if (rawData['inwardITC'] is Map) {
+          rowList.add({
+            'section': 'Inward ITC',
+            ...(rawData['inwardITC'] as Map).cast<String, dynamic>(),
+          });
+        }
+        if (rawData['netTaxPayable'] is Map) {
+          rowList.add({
+            'section': 'Net Tax Payable',
+            ...(rawData['netTaxPayable'] as Map).cast<String, dynamic>(),
+          });
+        }
+      }
+
+      // 3. Fallback to generic list keys
       if (rowList.isEmpty) {
         final rows =
             rawData['rows'] ??
@@ -1362,7 +1617,11 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       }
     }
 
-    final keys = rowList.first.keys.take(14).toList();
+    List<String> keys = rowList.first.keys.take(14).toList();
+    if (keys.contains('section') && keys.first != 'section') {
+      keys.remove('section');
+      keys.insert(0, 'section');
+    }
 
     // Auto-calculate column totals for numeric money keys
     final Map<String, double> totals = {};
@@ -1496,6 +1755,57 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                             final isSeverity =
                                 k.toLowerCase().contains('severity') ||
                                 k.toLowerCase().contains('status');
+                            final isSection =
+                                k.toLowerCase() == 'section' ||
+                                k.toLowerCase() == 'type';
+
+                            if (isSection && val != null) {
+                              final strVal = val.toString().toUpperCase();
+                              Color chipColor = AppColors.primary;
+                              if (strVal.contains('B2B')) {
+                                chipColor = AppColors.primary;
+                              } else if (strVal.contains('B2C')) {
+                                chipColor = AppColors.info;
+                              } else if (strVal.contains('CREDIT')) {
+                                chipColor = AppColors.warning;
+                              } else if (strVal.contains('OUTWARD')) {
+                                chipColor = AppColors.danger;
+                              } else if (strVal.contains('INWARD')) {
+                                chipColor = AppColors.success;
+                              }
+
+                              return SizedBox(
+                                width: 140,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: chipColor.withAlpha(25),
+                                        borderRadius: AppRadius.sm,
+                                        border: Border.all(
+                                          color: chipColor.withAlpha(60),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        strVal,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: chipColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
 
                             if (isSeverity && val != null) {
                               final strVal = val.toString().toUpperCase();
