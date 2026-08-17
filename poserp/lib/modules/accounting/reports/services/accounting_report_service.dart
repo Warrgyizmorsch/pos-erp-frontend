@@ -222,6 +222,30 @@ class AccountingReportService {
     return PartyOutstandingReport.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<LedgerSummaryReport> getLedgerSummary({
+    String? startDate,
+    String? endDate,
+  }) async {
+    final Map<String, dynamic> queryParams = {};
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['startDate'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['endDate'] = endDate;
+    }
+
+    final response = await _apiClient.get(
+      ApiEndpoints.accountingReportLedgerSummary,
+      queryParameters: queryParams,
+    );
+
+    final Map<String, dynamic> body = response.data is Map<String, dynamic>
+        ? response.data
+        : {};
+    final data = body['data'] ?? body;
+    return LedgerSummaryReport.fromJson(data as Map<String, dynamic>);
+  }
+
   Future<GstReportSummary> getGstSummary({
     String? startDate,
     String? endDate,

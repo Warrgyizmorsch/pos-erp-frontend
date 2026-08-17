@@ -118,6 +118,21 @@ class AccountingReportRepository {
     }
   }
 
+  Future<LedgerSummaryReport> fetchLedgerSummary({
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      return await _service.getLedgerSummary(
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Ledger Summary report.');
+    }
+  }
+
   Future<GstReportSummary> fetchGstSummary({
     String? startDate,
     String? endDate,

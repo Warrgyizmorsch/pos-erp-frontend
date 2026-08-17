@@ -286,6 +286,84 @@ class PartyOutstandingReport {
   }
 }
 
+class LedgerSummaryRow {
+  final String ledgerId;
+  final String ledgerName;
+  final String code;
+  final String groupName;
+  final String ledgerType;
+  final double openingBalance;
+  final String openingBalanceType;
+  final double periodDebit;
+  final double periodCredit;
+  final double closingBalance;
+  final String closingBalanceType;
+
+  LedgerSummaryRow({
+    required this.ledgerId,
+    required this.ledgerName,
+    required this.code,
+    required this.groupName,
+    required this.ledgerType,
+    required this.openingBalance,
+    required this.openingBalanceType,
+    required this.periodDebit,
+    required this.periodCredit,
+    required this.closingBalance,
+    required this.closingBalanceType,
+  });
+
+  factory LedgerSummaryRow.fromJson(Map<String, dynamic> json) {
+    return LedgerSummaryRow(
+      ledgerId: json['ledgerId']?.toString() ?? '',
+      ledgerName:
+          json['ledgerName']?.toString() ??
+          json['name']?.toString() ??
+          'Ledger',
+      code: json['code']?.toString() ?? '',
+      groupName:
+          json['groupName']?.toString() ??
+          json['group']?.toString() ??
+          'General Group',
+      ledgerType:
+          json['ledgerType']?.toString() ??
+          json['nature']?.toString() ??
+          'GENERAL',
+      openingBalance: (json['openingBalance'] as num?)?.toDouble() ?? 0.0,
+      openingBalanceType: json['openingBalanceType']?.toString() ?? 'DEBIT',
+      periodDebit:
+          (json['periodDebit'] as num?)?.toDouble() ??
+          (json['debit'] as num?)?.toDouble() ??
+          0.0,
+      periodCredit:
+          (json['periodCredit'] as num?)?.toDouble() ??
+          (json['credit'] as num?)?.toDouble() ??
+          0.0,
+      closingBalance: (json['closingBalance'] as num?)?.toDouble() ?? 0.0,
+      closingBalanceType: json['closingBalanceType']?.toString() ?? 'DEBIT',
+    );
+  }
+}
+
+class LedgerSummaryReport {
+  final List<LedgerSummaryRow> rows;
+
+  LedgerSummaryReport({required this.rows});
+
+  factory LedgerSummaryReport.fromJson(Map<String, dynamic> json) {
+    final rowList = <LedgerSummaryRow>[];
+    final rawRows = (json['rows'] ?? json['data'] ?? []) as List;
+    for (final item in rawRows) {
+      if (item is Map<String, dynamic>) {
+        try {
+          rowList.add(LedgerSummaryRow.fromJson(item));
+        } catch (_) {}
+      }
+    }
+    return LedgerSummaryReport(rows: rowList);
+  }
+}
+
 class TrialBalanceRow {
   final String accountCode;
   final String accountName;

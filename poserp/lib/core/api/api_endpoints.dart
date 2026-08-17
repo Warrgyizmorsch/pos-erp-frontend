@@ -86,6 +86,8 @@ class ApiEndpoints {
   static const String accountingReportReceivables =
       '/accounting/reports/receivables';
   static const String accountingReportPayables = '/accounting/reports/payables';
+  static const String accountingReportLedgerSummary =
+      '/accounting/reports/ledger-summary';
   static const String accountingGstSummary = '/accounting/gst/summary';
   static const String accountingSettings = '/accounting/settings';
   static const String accountingSettingsValidate =
