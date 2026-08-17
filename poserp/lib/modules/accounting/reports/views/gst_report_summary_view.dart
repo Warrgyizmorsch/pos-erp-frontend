@@ -689,30 +689,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
   }
 
   Widget _buildDesktopGstTable(GstReportSummary gst, bool isDark) {
-    final cgstPayable = gst.outputCgst - gst.inputCgst;
-    final sgstPayable = gst.outputSgst - gst.inputSgst;
-    final igstPayable = gst.outputIgst - gst.inputIgst;
-
-    final rows = [
-      {
-        'taxHead': 'CGST (Central Tax)',
-        'output': gst.outputCgst,
-        'input': gst.inputCgst,
-        'payable': cgstPayable,
-      },
-      {
-        'taxHead': 'SGST (State Tax)',
-        'output': gst.outputSgst,
-        'input': gst.inputSgst,
-        'payable': sgstPayable,
-      },
-      {
-        'taxHead': 'IGST (Integrated Tax)',
-        'output': gst.outputIgst,
-        'input': gst.inputIgst,
-        'payable': igstPayable,
-      },
-    ];
+    final rows = gst.breakdownRows;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -748,7 +725,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'OUTPUT GST (SALES)',
+                      'OUTPUT TAX',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 11,
@@ -760,7 +737,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'INPUT GST (PURCHASES)',
+                      'INPUT TAX',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 11,
@@ -772,7 +749,19 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      'NET PAYABLE / (ITC)',
+                      'PAYABLE',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'EXCESS ITC',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 11,
@@ -796,23 +785,24 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               ),
               itemBuilder: (context, index) {
                 final r = rows[index];
-                final outVal = r['output'] as double;
-                final inVal = r['input'] as double;
-                final payVal = r['payable'] as double;
+                final isTotalRow = r.head.contains('TOTAL');
 
                 return Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  color: isTotalRow
+                      ? (isDark ? AppColors.inputDark : Colors.grey[100])
+                      : null,
                   child: Row(
                     children: [
                       Expanded(
                         flex: 3,
                         child: Text(
-                          r['taxHead'] as String,
-                          style: const TextStyle(
-                            fontSize: 13,
+                          r.head,
+                          style: TextStyle(
+                            fontSize: isTotalRow ? 12 : 13,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -820,10 +810,13 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${outVal.toStringAsFixed(2)}',
+                          '₹${r.output.toStringAsFixed(2)}',
                           textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontSize: 13,
+                          style: TextStyle(
+                            fontSize: isTotalRow ? 12 : 13,
+                            fontWeight: isTotalRow
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontFamily: 'monospace',
                             color: AppColors.danger,
                           ),
@@ -832,10 +825,13 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${inVal.toStringAsFixed(2)}',
+                          '₹${r.input.toStringAsFixed(2)}',
                           textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontSize: 13,
+                          style: TextStyle(
+                            fontSize: isTotalRow ? 12 : 13,
+                            fontWeight: isTotalRow
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontFamily: 'monospace',
                             color: AppColors.info,
                           ),
@@ -844,15 +840,26 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '₹${payVal.abs().toStringAsFixed(2)} ${payVal >= 0 ? "Payable" : "ITC"}',
+                          '₹${r.payable.toStringAsFixed(2)}',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: isTotalRow ? 12 : 13,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'monospace',
-                            color: payVal >= 0
-                                ? AppColors.warning
-                                : AppColors.success,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          '₹${r.excessITC.toStringAsFixed(2)}',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: isTotalRow ? 12 : 13,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            color: AppColors.success,
                           ),
                         ),
                       ),
@@ -860,73 +867,6 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   ),
                 );
               },
-            ),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.inputDark : Colors.grey[100],
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Expanded(
-                    flex: 3,
-                    child: Text(
-                      'TOTAL TAX SUMMARY',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '₹${gst.totalOutputTax.toStringAsFixed(2)}',
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                        color: AppColors.danger,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '₹${gst.totalInputTax.toStringAsFixed(2)}',
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                        color: AppColors.info,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '₹${gst.netTaxPayable.toStringAsFixed(2)}',
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                        color: AppColors.warning,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

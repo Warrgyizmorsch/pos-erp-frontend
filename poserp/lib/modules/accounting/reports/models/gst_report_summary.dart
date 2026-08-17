@@ -1,3 +1,19 @@
+class GstReportHeadBreakdown {
+  final String head;
+  final double output;
+  final double input;
+  final double payable;
+  final double excessITC;
+
+  GstReportHeadBreakdown({
+    required this.head,
+    required this.output,
+    required this.input,
+    required this.payable,
+    required this.excessITC,
+  });
+}
+
 class GstReportSummary {
   final double outputCgst;
   final double outputSgst;
@@ -6,6 +22,7 @@ class GstReportSummary {
   final double inputSgst;
   final double inputIgst;
   final double netTaxPayable;
+  final Map<String, dynamic> rawJson;
 
   GstReportSummary({
     required this.outputCgst,
@@ -15,10 +32,71 @@ class GstReportSummary {
     required this.inputSgst,
     required this.inputIgst,
     required this.netTaxPayable,
+    required this.rawJson,
   });
 
   double get totalOutputTax => outputCgst + outputSgst + outputIgst;
   double get totalInputTax => inputCgst + inputSgst + inputIgst;
+
+  List<GstReportHeadBreakdown> get breakdownRows {
+    final List<String> heads = rawJson['heads'] is List
+        ? (rawJson['heads'] as List).map((e) => e.toString()).toList()
+        : ['cgst', 'sgst', 'igst'];
+
+    final Map<String, dynamic> outputMap =
+        rawJson['output'] is Map<String, dynamic>
+        ? rawJson['output'] as Map<String, dynamic>
+        : {};
+    final Map<String, dynamic> inputMap =
+        rawJson['input'] is Map<String, dynamic>
+        ? rawJson['input'] as Map<String, dynamic>
+        : {};
+    final Map<String, dynamic> payableMap =
+        rawJson['payable'] is Map<String, dynamic>
+        ? rawJson['payable'] as Map<String, dynamic>
+        : {};
+    final Map<String, dynamic> excessItcMap =
+        rawJson['excessITC'] is Map<String, dynamic>
+        ? rawJson['excessITC'] as Map<String, dynamic>
+        : {};
+
+    return heads.map((key) {
+      final outVal =
+          (outputMap[key] as num?)?.toDouble() ??
+          (key == 'cgst'
+              ? outputCgst
+              : (key == 'sgst'
+                    ? outputSgst
+                    : (key == 'igst' ? outputIgst : 0.0)));
+      final inVal =
+          (inputMap[key] as num?)?.toDouble() ??
+          (key == 'cgst'
+              ? inputCgst
+              : (key == 'sgst'
+                    ? inputSgst
+                    : (key == 'igst' ? inputIgst : 0.0)));
+      final payVal =
+          (payableMap[key] as num?)?.toDouble() ??
+          (outVal > inVal ? outVal - inVal : 0.0);
+      final excVal =
+          (excessItcMap[key] as num?)?.toDouble() ??
+          (inVal > outVal ? inVal - outVal : 0.0);
+
+      String label = key.toUpperCase();
+      if (key == 'cgst') label = 'CGST (Central Tax)';
+      if (key == 'sgst') label = 'SGST (State Tax)';
+      if (key == 'igst') label = 'IGST (Integrated Tax)';
+      if (key == 'total') label = 'TOTAL TAX SUMMARY';
+
+      return GstReportHeadBreakdown(
+        head: label,
+        output: outVal,
+        input: inVal,
+        payable: payVal,
+        excessITC: excVal,
+      );
+    }).toList();
+  }
 
   factory GstReportSummary.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic> output =
@@ -83,6 +161,7 @@ class GstReportSummary {
       inputSgst: inS,
       inputIgst: inI,
       netTaxPayable: netP,
+      rawJson: json,
     );
   }
 }

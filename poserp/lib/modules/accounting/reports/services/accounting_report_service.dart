@@ -305,6 +305,7 @@ class AccountingReportService {
           inputSgst: 0,
           inputIgst: 0,
           netTaxPayable: 0,
+          rawJson: const {},
         );
       }
     }
