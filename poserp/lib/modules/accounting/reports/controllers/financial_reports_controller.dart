@@ -64,8 +64,12 @@ class FinancialReportsController extends GetxController {
       selectedTabIndex.value = 4;
     } else if (route.contains('bank-book')) {
       selectedTabIndex.value = 5;
-    } else if (route.contains('gst')) {
+    } else if (route.contains('/accounting/gst')) {
       selectedTabIndex.value = 3;
+      final parts = route.split('/');
+      if (parts.length > 3 && parts.last.isNotEmpty) {
+        selectedGstKind.value = parts.last;
+      }
     } else if (route.contains('trial-balance')) {
       selectedTabIndex.value = 0;
     }

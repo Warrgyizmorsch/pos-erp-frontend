@@ -27,6 +27,7 @@ import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
 import '../../modules/accounting/reports/views/group_summary_report_view.dart';
 import '../../modules/accounting/reports/views/gst_report_summary_view.dart';
+import '../../modules/accounting/reports/views/gst_reports_index_view.dart';
 import '../../modules/accounting/reports/views/ledger_summary_report_view.dart';
 import '../../modules/accounting/reports/views/payables_report_view.dart';
 import '../../modules/accounting/reports/views/profit_loss_report_view.dart';
@@ -420,6 +421,66 @@ class AppPages {
     ),
     GetPage(
       name: Routes.gstReports,
+      page: () => const GstReportsIndexView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstSummary,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstOutput,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstInput,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstPayable,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstHsnSummary,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstR1,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstR3b,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstLedger,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstPartyWise,
+      page: () => const GstReportSummaryView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.gstExceptions,
       page: () => const GstReportSummaryView(),
       binding: AccountingReportBinding(),
       middlewares: [RoleMiddleware(PermissionService.accountingRoles)],

@@ -50,6 +50,16 @@ abstract class Routes {
   static const ledgerSummaryReport = '/accounting/reports/ledger-summary';
   static const groupSummaryReport = '/accounting/reports/group-summary';
   static const gstReports = '/accounting/gst';
+  static const gstSummary = '/accounting/gst/summary';
+  static const gstOutput = '/accounting/gst/output';
+  static const gstInput = '/accounting/gst/input';
+  static const gstPayable = '/accounting/gst/payable';
+  static const gstHsnSummary = '/accounting/gst/hsn-summary';
+  static const gstR1 = '/accounting/gst/gstr1';
+  static const gstR3b = '/accounting/gst/gstr3b';
+  static const gstLedger = '/accounting/gst/ledger';
+  static const gstPartyWise = '/accounting/gst/party-wise';
+  static const gstExceptions = '/accounting/gst/exceptions';
   static const accountingSettings = '/accounting/settings';
   static const accountingHealth = '/accounting/health';
   static const accountingReconciliation = '/accounting/reconciliation';

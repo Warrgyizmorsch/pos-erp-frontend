@@ -14,12 +14,14 @@ class GstReportItemMeta {
   final String label;
   final String description;
   final IconData icon;
+  final Color color;
 
   const GstReportItemMeta({
     required this.key,
     required this.label,
     required this.description,
     required this.icon,
+    required this.color,
   });
 }
 
@@ -29,60 +31,70 @@ const List<GstReportItemMeta> gstKindsList = [
     label: 'GST Summary',
     description: 'Output GST, input GST, returns, and net payable.',
     icon: Icons.pie_chart_rounded,
+    color: AppColors.primary,
   ),
   GstReportItemMeta(
     key: 'output',
     label: 'Output GST',
     description: 'GST collected on sales invoices.',
     icon: Icons.arrow_upward_rounded,
+    color: AppColors.danger,
   ),
   GstReportItemMeta(
     key: 'input',
     label: 'Input GST (ITC)',
     description: 'GST paid on purchase bills and available ITC.',
     icon: Icons.arrow_downward_rounded,
+    color: AppColors.info,
   ),
   GstReportItemMeta(
     key: 'payable',
     label: 'GST Payable / ITC',
     description: 'GST liability and excess ITC by tax head.',
     icon: Icons.account_balance_rounded,
+    color: AppColors.warning,
   ),
   GstReportItemMeta(
     key: 'hsn-summary',
     label: 'HSN Summary',
-    description: 'HSN-wise quantity, taxable value, and tax.',
+    description: 'HSN-wise quantity, taxable value, and tax breakdown.',
     icon: Icons.format_list_bulleted_rounded,
+    color: Colors.teal,
   ),
   GstReportItemMeta(
     key: 'gstr1',
     label: 'GSTR-1 Style',
     description: 'Internal sales breakup for B2B, B2C, credit notes, and HSN.',
     icon: Icons.menu_book_rounded,
+    color: Colors.indigo,
   ),
   GstReportItemMeta(
     key: 'gstr3b',
     label: 'GSTR-3B Summary',
     description: 'Internal monthly GST summary for review.',
     icon: Icons.book_rounded,
+    color: Colors.purple,
   ),
   GstReportItemMeta(
     key: 'ledger',
     label: 'GST Ledger',
     description: 'Voucher entry movement for GST ledgers.',
     icon: Icons.receipt_long_rounded,
+    color: Colors.deepOrange,
   ),
   GstReportItemMeta(
     key: 'party-wise',
     label: 'GST Party-wise',
     description: 'GST grouped by customers and suppliers.',
     icon: Icons.groups_rounded,
+    color: Colors.blueGrey,
   ),
   GstReportItemMeta(
     key: 'exceptions',
     label: 'GST Exceptions',
     description: 'Missing HSN, GSTIN, state, and tax mismatch issues.',
     icon: Icons.warning_amber_rounded,
+    color: Colors.redAccent,
   ),
 ];
 
@@ -107,15 +119,112 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Date Range Filter & GST Kind Selector Toolbar
+            // 1. Interactive Header & Sub-Section Selector Toolbar
             AppCard(
               margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Horizontal Scrollable GST Sub-Section Tabs
+                  // Active Report Header Banner
+                  Obx(() {
+                    final currentKey = controller.selectedGstKind.value;
+                    final activeMeta = gstKindsList.firstWhere(
+                      (m) => m.key == currentKey,
+                      orElse: () => gstKindsList.first,
+                    );
+
+                    return Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: activeMeta.color.withAlpha(25),
+                            borderRadius: AppRadius.lg,
+                          ),
+                          child: Icon(
+                            activeMeta.icon,
+                            color: activeMeta.color,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                activeMeta.label,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                activeMeta.description,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Dropdown Selector Button
+                        PopupMenuButton<String>(
+                          tooltip: 'Switch GST Report Type',
+                          initialValue: currentKey,
+                          onSelected: (key) =>
+                              controller.selectedGstKind.value = key,
+                          itemBuilder: (context) => gstKindsList.map((item) {
+                            return PopupMenuItem<String>(
+                              value: item.key,
+                              child: Row(
+                                children: [
+                                  Icon(item.icon, size: 18, color: item.color),
+                                  const SizedBox(width: 10),
+                                  Text(item.label),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.borderDark
+                                    : AppColors.borderLight,
+                              ),
+                              borderRadius: AppRadius.md,
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.swap_horiz_rounded, size: 16),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Switch',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                  const SizedBox(height: 14),
+
+                  // Horizontal Scrollable GST Sub-Section Choice Chips
                   SizedBox(
-                    height: 38,
+                    height: 36,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: gstKindsList.length,
@@ -138,7 +247,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                             label: Text(
                               item.label,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -150,7 +259,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                               ),
                             ),
                             selected: isSelected,
-                            selectedColor: AppColors.primary,
+                            selectedColor: item.color,
                             backgroundColor: isDark
                                 ? AppColors.inputDark
                                 : Colors.grey[200],
@@ -164,9 +273,9 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // Date inputs
+                  // Date Filter Inputs & Preset Quick Buttons
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isMobile = constraints.maxWidth < 600;
@@ -264,14 +373,43 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                             const SizedBox(height: 8),
                             endInput,
                             const SizedBox(height: 8),
-                            AppButton(
-                              text: 'Apply Filter',
-                              icon: const Icon(
-                                Icons.filter_alt_rounded,
-                                size: 14,
-                              ),
-                              onPressed: () =>
-                                  controller.loadCurrentTabReport(),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'This Month',
+                                    variant: AppButtonVariant.outline,
+                                    height: 36,
+                                    onPressed: () {
+                                      final now = DateTime.now();
+                                      final first = DateTime(
+                                        now.year,
+                                        now.month,
+                                        1,
+                                      );
+                                      controller.startDate.value = first
+                                          .toIso8601String()
+                                          .split('T')[0];
+                                      controller.endDate.value = now
+                                          .toIso8601String()
+                                          .split('T')[0];
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: AppButton(
+                                    text: 'Apply Filter',
+                                    icon: const Icon(
+                                      Icons.filter_alt_rounded,
+                                      size: 14,
+                                    ),
+                                    height: 36,
+                                    onPressed: () =>
+                                        controller.loadCurrentTabReport(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         );
@@ -283,6 +421,21 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                           const SizedBox(width: 12),
                           Expanded(child: endInput),
                           const SizedBox(width: 12),
+                          AppButton(
+                            text: 'This Month',
+                            variant: AppButtonVariant.outline,
+                            onPressed: () {
+                              final now = DateTime.now();
+                              final first = DateTime(now.year, now.month, 1);
+                              controller.startDate.value = first
+                                  .toIso8601String()
+                                  .split('T')[0];
+                              controller.endDate.value = now
+                                  .toIso8601String()
+                                  .split('T')[0];
+                            },
+                          ),
+                          const SizedBox(width: 8),
                           AppButton(
                             text: 'Apply Filter',
                             icon: const Icon(
@@ -299,7 +452,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               ),
             ),
 
-            // 2. Report Body
+            // 2. Report Content Body
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
@@ -320,6 +473,20 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                         const SizedBox(height: 20),
                         // Tax Head Breakdown Table
                         _buildDesktopGstTable(gstSummary, isDark),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                }
+
+                if (currentKind == 'exceptions' && rawData != null) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildExceptionsSeverityGrid(rawData, isDark),
+                        const SizedBox(height: 16),
+                        _buildGenericGstDataView(currentKind, rawData, isDark),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -400,6 +567,69 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               AppColors.success,
               isDark,
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildExceptionsSeverityGrid(dynamic rawData, bool isDark) {
+    int high = 0;
+    int medium = 0;
+    int low = 0;
+
+    if (rawData is Map<String, dynamic> && rawData['counts'] is Map) {
+      final counts = rawData['counts'] as Map;
+      high = (counts['high'] as num?)?.toInt() ?? 0;
+      medium = (counts['medium'] as num?)?.toInt() ?? 0;
+      low = (counts['low'] as num?)?.toInt() ?? 0;
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        final hWidget = _buildMetricCard(
+          'High Severity Issues',
+          '$high',
+          Icons.error_outline_rounded,
+          AppColors.danger,
+          isDark,
+        );
+        final mWidget = _buildMetricCard(
+          'Medium Severity Issues',
+          '$medium',
+          Icons.warning_amber_rounded,
+          AppColors.warning,
+          isDark,
+        );
+        final lWidget = _buildMetricCard(
+          'Low Severity Issues',
+          '$low',
+          Icons.info_outline_rounded,
+          AppColors.info,
+          isDark,
+        );
+
+        if (isMobile) {
+          return Column(
+            children: [
+              hWidget,
+              const SizedBox(height: 8),
+              mWidget,
+              const SizedBox(height: 8),
+              lWidget,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: hWidget),
+            const SizedBox(width: 12),
+            Expanded(child: mWidget),
+            const SizedBox(width: 12),
+            Expanded(child: lWidget),
           ],
         );
       },
@@ -816,6 +1046,42 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                           k.toLowerCase().contains('sgst') ||
                           k.toLowerCase().contains('igst') ||
                           k.toLowerCase().contains('payable');
+                      final isSeverity = k.toLowerCase().contains('severity');
+
+                      if (isSeverity && val != null) {
+                        final strVal = val.toString().toUpperCase();
+                        Color sevColor = AppColors.info;
+                        if (strVal.contains('HIGH') || strVal.contains('ERR')) {
+                          sevColor = AppColors.danger;
+                        } else if (strVal.contains('MED') ||
+                            strVal.contains('WARN')) {
+                          sevColor = AppColors.warning;
+                        }
+
+                        return Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: sevColor.withAlpha(25),
+                                borderRadius: AppRadius.sm,
+                              ),
+                              child: Text(
+                                strVal,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: sevColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
 
                       String textVal = '-';
                       if (val is num) {
