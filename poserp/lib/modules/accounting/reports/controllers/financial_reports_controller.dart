@@ -24,6 +24,7 @@ class FinancialReportsController extends GetxController {
   final Rxn<PartyOutstandingReport> receivables = Rxn<PartyOutstandingReport>();
   final Rxn<PartyOutstandingReport> payables = Rxn<PartyOutstandingReport>();
   final Rxn<LedgerSummaryReport> ledgerSummary = Rxn<LedgerSummaryReport>();
+  final Rxn<GroupSummaryReport> groupSummary = Rxn<GroupSummaryReport>();
   final Rxn<GstReportSummary> gstSummary = Rxn<GstReportSummary>();
   final Rxn<AccountingReportDashboardModel> dashboardMetrics =
       Rxn<AccountingReportDashboardModel>();
@@ -47,6 +48,8 @@ class FinancialReportsController extends GetxController {
       selectedTabIndex.value = 1;
     } else if (route.contains('balance-sheet')) {
       selectedTabIndex.value = 2;
+    } else if (route.contains('group-summary')) {
+      selectedTabIndex.value = 9;
     } else if (route.contains('ledger-summary')) {
       selectedTabIndex.value = 8;
     } else if (route.contains('receivables')) {
@@ -81,6 +84,9 @@ class FinancialReportsController extends GetxController {
       } else if (route.contains('balance-sheet') ||
           selectedTabIndex.value == 2) {
         await loadBalanceSheet();
+      } else if (route.contains('group-summary') ||
+          selectedTabIndex.value == 9) {
+        await loadGroupSummary();
       } else if (route.contains('ledger-summary') ||
           selectedTabIndex.value == 8) {
         await loadLedgerSummary();
@@ -124,6 +130,20 @@ class FinancialReportsController extends GetxController {
         asOfDate: endDate.value.isNotEmpty ? endDate.value : asOnDate.value,
       );
       balanceSheet.value = bs;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadGroupSummary() async {
+    try {
+      isLoading.value = true;
+      final gs = await _repository.fetchGroupSummary(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      groupSummary.value = gs;
     } catch (_) {
     } finally {
       isLoading.value = false;

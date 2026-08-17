@@ -133,6 +133,21 @@ class AccountingReportRepository {
     }
   }
 
+  Future<GroupSummaryReport> fetchGroupSummary({
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      return await _service.getGroupSummary(
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Group Summary report.');
+    }
+  }
+
   Future<GstReportSummary> fetchGstSummary({
     String? startDate,
     String? endDate,

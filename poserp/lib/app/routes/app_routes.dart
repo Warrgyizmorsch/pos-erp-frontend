@@ -48,6 +48,7 @@ abstract class Routes {
   static const receivablesReport = '/accounting/reports/receivables';
   static const payablesReport = '/accounting/reports/payables';
   static const ledgerSummaryReport = '/accounting/reports/ledger-summary';
+  static const groupSummaryReport = '/accounting/reports/group-summary';
   static const gstReports = '/accounting/gst';
   static const accountingSettings = '/accounting/settings';
   static const accountingHealth = '/accounting/health';

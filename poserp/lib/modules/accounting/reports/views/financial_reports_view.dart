@@ -249,7 +249,7 @@ class FinancialReportsView extends GetView<FinancialReportsController> {
                       icon: Icons.format_list_bulleted_rounded,
                       color: Colors.purple,
                       badge: 'Master',
-                      route: Routes.ledgers,
+                      route: Routes.ledgerSummaryReport,
                     ),
                     _ReportItem(
                       title: 'Group Summary',
@@ -258,7 +258,7 @@ class FinancialReportsView extends GetView<FinancialReportsController> {
                       icon: Icons.account_tree_rounded,
                       color: Colors.blueGrey,
                       badge: 'Hierarchy',
-                      route: Routes.chartOfAccounts,
+                      route: Routes.groupSummaryReport,
                     ),
                   ];
 

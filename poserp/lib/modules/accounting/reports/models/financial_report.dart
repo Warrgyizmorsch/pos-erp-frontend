@@ -364,6 +364,74 @@ class LedgerSummaryReport {
   }
 }
 
+class GroupSummaryRow {
+  final String groupId;
+  final String groupName;
+  final String groupCode;
+  final String nature;
+  final double openingDebit;
+  final double openingCredit;
+  final double periodDebit;
+  final double periodCredit;
+  final double closingDebit;
+  final double closingCredit;
+
+  GroupSummaryRow({
+    required this.groupId,
+    required this.groupName,
+    required this.groupCode,
+    required this.nature,
+    required this.openingDebit,
+    required this.openingCredit,
+    required this.periodDebit,
+    required this.periodCredit,
+    required this.closingDebit,
+    required this.closingCredit,
+  });
+
+  factory GroupSummaryRow.fromJson(Map<String, dynamic> json) {
+    return GroupSummaryRow(
+      groupId: json['groupId']?.toString() ?? '',
+      groupName:
+          json['groupName']?.toString() ?? json['name']?.toString() ?? 'Group',
+      groupCode:
+          json['groupCode']?.toString() ?? json['code']?.toString() ?? '',
+      nature: json['nature']?.toString() ?? json['type']?.toString() ?? 'ASSET',
+      openingDebit: (json['openingDebit'] as num?)?.toDouble() ?? 0.0,
+      openingCredit: (json['openingCredit'] as num?)?.toDouble() ?? 0.0,
+      periodDebit:
+          (json['periodDebit'] as num?)?.toDouble() ??
+          (json['debit'] as num?)?.toDouble() ??
+          0.0,
+      periodCredit:
+          (json['periodCredit'] as num?)?.toDouble() ??
+          (json['credit'] as num?)?.toDouble() ??
+          0.0,
+      closingDebit: (json['closingDebit'] as num?)?.toDouble() ?? 0.0,
+      closingCredit: (json['closingCredit'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class GroupSummaryReport {
+  final List<GroupSummaryRow> rows;
+
+  GroupSummaryReport({required this.rows});
+
+  factory GroupSummaryReport.fromJson(Map<String, dynamic> json) {
+    final rowList = <GroupSummaryRow>[];
+    final rawRows = (json['rows'] ?? json['data'] ?? []) as List;
+    for (final item in rawRows) {
+      if (item is Map<String, dynamic>) {
+        try {
+          rowList.add(GroupSummaryRow.fromJson(item));
+        } catch (_) {}
+      }
+    }
+    return GroupSummaryReport(rows: rowList);
+  }
+}
+
 class TrialBalanceRow {
   final String accountCode;
   final String accountName;

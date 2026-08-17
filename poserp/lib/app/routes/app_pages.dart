@@ -25,6 +25,7 @@ import '../../modules/accounting/reports/views/bank_book_report_view.dart';
 import '../../modules/accounting/reports/views/cash_book_report_view.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
+import '../../modules/accounting/reports/views/group_summary_report_view.dart';
 import '../../modules/accounting/reports/views/ledger_summary_report_view.dart';
 import '../../modules/accounting/reports/views/payables_report_view.dart';
 import '../../modules/accounting/reports/views/profit_loss_report_view.dart';
@@ -407,6 +408,12 @@ class AppPages {
     GetPage(
       name: Routes.ledgerSummaryReport,
       page: () => const LedgerSummaryReportView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.groupSummaryReport,
+      page: () => const GroupSummaryReportView(),
       binding: AccountingReportBinding(),
       middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),
