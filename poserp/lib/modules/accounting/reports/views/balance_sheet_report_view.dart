@@ -118,6 +118,11 @@ class BalanceSheetReportView extends GetView<FinancialReportsController> {
 
                 final bs = controller.balanceSheet.value;
                 if (bs == null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!controller.isLoading.value) {
+                      controller.loadBalanceSheet();
+                    }
+                  });
                   return const EmptyState(
                     icon: Icons.account_balance_rounded,
                     title: 'No Balance Sheet Data',

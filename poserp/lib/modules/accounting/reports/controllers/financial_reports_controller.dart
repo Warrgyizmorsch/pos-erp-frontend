@@ -26,6 +26,7 @@ class FinancialReportsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _autoDetectRouteTab();
     loadDashboardMetrics();
     loadCurrentTabReport();
 
@@ -35,45 +36,97 @@ class FinancialReportsController extends GetxController {
     ever(asOnDate, (_) => loadCurrentTabReport());
   }
 
+  void _autoDetectRouteTab() {
+    final route = Get.currentRoute;
+    if (route.contains('profit-loss')) {
+      selectedTabIndex.value = 1;
+    } else if (route.contains('balance-sheet')) {
+      selectedTabIndex.value = 2;
+    } else if (route.contains('gst')) {
+      selectedTabIndex.value = 3;
+    } else if (route.contains('trial-balance')) {
+      selectedTabIndex.value = 0;
+    }
+  }
+
   Future<void> loadDashboardMetrics() async {
     try {
-      isLoading.value = true;
       final res = await _repository.fetchReportDashboard();
       dashboardMetrics.value = res;
+    } catch (_) {}
+  }
+
+  Future<void> loadCurrentTabReport() async {
+    try {
+      isLoading.value = true;
+      final route = Get.currentRoute;
+
+      if (route.contains('profit-loss') || selectedTabIndex.value == 1) {
+        await loadProfitLoss();
+      } else if (route.contains('balance-sheet') ||
+          selectedTabIndex.value == 2) {
+        await loadBalanceSheet();
+      } else if (route.contains('gst') || selectedTabIndex.value == 3) {
+        await loadGstSummary();
+      } else {
+        await loadTrialBalance();
+      }
     } catch (_) {
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> loadCurrentTabReport() async {
+  Future<void> loadProfitLoss() async {
     try {
       isLoading.value = true;
-      if (selectedTabIndex.value == 0) {
-        final tb = await _repository.fetchTrialBalance(
-          startDate: startDate.value,
-          endDate: endDate.value,
-          asOnDate: asOnDate.value,
-        );
-        trialBalance.value = tb;
-      } else if (selectedTabIndex.value == 1) {
-        final pl = await _repository.fetchProfitLoss(
-          startDate: startDate.value,
-          endDate: endDate.value,
-        );
-        profitLoss.value = pl;
-      } else if (selectedTabIndex.value == 2) {
-        final bs = await _repository.fetchBalanceSheet(
-          asOfDate: endDate.value.isNotEmpty ? endDate.value : asOnDate.value,
-        );
-        balanceSheet.value = bs;
-      } else if (selectedTabIndex.value == 3) {
-        final gst = await _repository.fetchGstSummary(
-          startDate: startDate.value,
-          endDate: endDate.value,
-        );
-        gstSummary.value = gst;
-      }
+      final pl = await _repository.fetchProfitLoss(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      profitLoss.value = pl;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadBalanceSheet() async {
+    try {
+      isLoading.value = true;
+      final bs = await _repository.fetchBalanceSheet(
+        asOfDate: endDate.value.isNotEmpty ? endDate.value : asOnDate.value,
+      );
+      balanceSheet.value = bs;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadTrialBalance() async {
+    try {
+      isLoading.value = true;
+      final tb = await _repository.fetchTrialBalance(
+        startDate: startDate.value,
+        endDate: endDate.value,
+        asOnDate: asOnDate.value,
+      );
+      trialBalance.value = tb;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadGstSummary() async {
+    try {
+      isLoading.value = true;
+      final gst = await _repository.fetchGstSummary(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      gstSummary.value = gst;
     } catch (_) {
     } finally {
       isLoading.value = false;

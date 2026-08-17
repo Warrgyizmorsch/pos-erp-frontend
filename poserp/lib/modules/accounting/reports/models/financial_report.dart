@@ -164,7 +164,83 @@ class TrialBalanceReport {
   }
 }
 
+class ReportLedgerAmount {
+  final String? ledgerId;
+  final String ledgerName;
+  final String code;
+  final double amount;
+
+  ReportLedgerAmount({
+    this.ledgerId,
+    required this.ledgerName,
+    required this.code,
+    required this.amount,
+  });
+
+  factory ReportLedgerAmount.fromJson(Map<String, dynamic> json) {
+    return ReportLedgerAmount(
+      ledgerId: json['ledgerId']?.toString(),
+      ledgerName:
+          json['ledgerName']?.toString() ??
+          json['name']?.toString() ??
+          json['ledger']?.toString() ??
+          'Ledger',
+      code: json['code']?.toString() ?? '',
+      amount:
+          (json['amount'] as num?)?.toDouble() ??
+          (json['balance'] as num?)?.toDouble() ??
+          0.0,
+    );
+  }
+}
+
+class ReportGroupAmount {
+  final String? groupId;
+  final String groupName;
+  final double total;
+  final List<ReportLedgerAmount> ledgers;
+
+  ReportGroupAmount({
+    this.groupId,
+    required this.groupName,
+    required this.total,
+    required this.ledgers,
+  });
+
+  factory ReportGroupAmount.fromJson(Map<String, dynamic> json) {
+    final ledgerList = <ReportLedgerAmount>[];
+    final rawLedgers = (json['ledgers'] ?? json['accounts'] ?? []) as List;
+    for (final item in rawLedgers) {
+      if (item is Map<String, dynamic>) {
+        try {
+          ledgerList.add(ReportLedgerAmount.fromJson(item));
+        } catch (_) {}
+      }
+    }
+
+    final double computedTotal = ledgerList.fold(
+      0.0,
+      (sum, l) => sum + l.amount.abs(),
+    );
+
+    return ReportGroupAmount(
+      groupId: json['groupId']?.toString(),
+      groupName:
+          json['groupName']?.toString() ??
+          json['name']?.toString() ??
+          'Account Group',
+      total:
+          (json['total'] as num?)?.toDouble() ??
+          (json['amount'] as num?)?.toDouble() ??
+          computedTotal,
+      ledgers: ledgerList,
+    );
+  }
+}
+
 class ProfitLossReport {
+  final List<ReportGroupAmount> incomeGroups;
+  final List<ReportGroupAmount> expenseGroups;
   final List<FinancialReportRow> incomeRows;
   final List<FinancialReportRow> expenseRows;
   final double totalIncome;
@@ -172,6 +248,8 @@ class ProfitLossReport {
   final double netProfit;
 
   ProfitLossReport({
+    required this.incomeGroups,
+    required this.expenseGroups,
     required this.incomeRows,
     required this.expenseRows,
     required this.totalIncome,
@@ -180,14 +258,24 @@ class ProfitLossReport {
   });
 
   factory ProfitLossReport.fromJson(Map<String, dynamic> json) {
+    final incGroups = <ReportGroupAmount>[];
+    final expGroups = <ReportGroupAmount>[];
     final incList = <FinancialReportRow>[];
     final expList = <FinancialReportRow>[];
+
+    final totalsObj = json['totals'] is Map<String, dynamic>
+        ? json['totals'] as Map<String, dynamic>
+        : json;
 
     final incData = (json['income'] ?? json['revenue'] ?? []) as List;
     for (final item in incData) {
       if (item is Map<String, dynamic>) {
         try {
-          incList.add(FinancialReportRow.fromJson(item));
+          if (item.containsKey('ledgers') || item.containsKey('accounts')) {
+            incGroups.add(ReportGroupAmount.fromJson(item));
+          } else {
+            incList.add(FinancialReportRow.fromJson(item));
+          }
         } catch (_) {}
       }
     }
@@ -196,28 +284,35 @@ class ProfitLossReport {
     for (final item in expData) {
       if (item is Map<String, dynamic>) {
         try {
-          expList.add(FinancialReportRow.fromJson(item));
+          if (item.containsKey('ledgers') || item.containsKey('accounts')) {
+            expGroups.add(ReportGroupAmount.fromJson(item));
+          } else {
+            expList.add(FinancialReportRow.fromJson(item));
+          }
         } catch (_) {}
       }
     }
 
-    final double computedIncome = incList.fold<double>(
-      0.0,
-      (double sum, r) => sum + r.amount,
-    );
-    final double computedExpense = expList.fold<double>(
-      0.0,
-      (double sum, r) => sum + r.amount,
-    );
+    final double computedIncome = incGroups.isNotEmpty
+        ? incGroups.fold<double>(0.0, (sum, g) => sum + g.total)
+        : incList.fold<double>(0.0, (sum, r) => sum + r.amount);
+
+    final double computedExpense = expGroups.isNotEmpty
+        ? expGroups.fold<double>(0.0, (sum, g) => sum + g.total)
+        : expList.fold<double>(0.0, (sum, r) => sum + r.amount);
 
     final double totInc =
-        (json['totalIncome'] as num?)?.toDouble() ?? computedIncome;
+        (totalsObj['totalIncome'] as num?)?.toDouble() ?? computedIncome;
     final double totExp =
-        (json['totalExpense'] as num?)?.toDouble() ?? computedExpense;
+        (totalsObj['totalExpenses'] as num?)?.toDouble() ??
+        (totalsObj['totalExpense'] as num?)?.toDouble() ??
+        computedExpense;
     final double netP =
-        (json['netProfit'] as num?)?.toDouble() ?? (totInc - totExp);
+        (totalsObj['netProfit'] as num?)?.toDouble() ?? (totInc - totExp);
 
     return ProfitLossReport(
+      incomeGroups: incGroups,
+      expenseGroups: expGroups,
       incomeRows: incList,
       expenseRows: expList,
       totalIncome: totInc,
