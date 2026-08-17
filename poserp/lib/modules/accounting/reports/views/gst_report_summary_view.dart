@@ -495,6 +495,20 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   );
                 }
 
+                if (currentKind == 'hsn-summary' && rawData != null) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildHsnSummaryGrid(rawData, isDark),
+                        const SizedBox(height: 16),
+                        _buildGenericGstDataView(currentKind, rawData, isDark),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                }
+
                 if (currentKind == 'exceptions' && rawData != null) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -664,6 +678,122 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               '₹${totalAmount.toDouble().toStringAsFixed(2)}',
               Icons.account_balance_wallet_rounded,
               AppColors.warning,
+              isDark,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHsnSummaryGrid(dynamic rawData, bool isDark) {
+    int hsnCount = 0;
+    num totalQty = 0;
+    double taxable = 0.0;
+    double totalTax = 0.0;
+
+    if (rawData is Map<String, dynamic>) {
+      final rows = rawData['rows'] ?? rawData['data'] ?? rawData['entries'];
+      if (rows is List) {
+        hsnCount = rows.length;
+        for (final item in rows) {
+          if (item is Map<String, dynamic>) {
+            totalQty +=
+                (item['totalQuantity'] as num?) ??
+                (item['qty'] as num?) ??
+                (item['quantity'] as num?) ??
+                0;
+            taxable +=
+                (item['taxableAmount'] as num?)?.toDouble() ??
+                (item['taxableValue'] as num?)?.toDouble() ??
+                0.0;
+            totalTax +=
+                (item['totalTax'] as num?)?.toDouble() ??
+                (item['taxAmount'] as num?)?.toDouble() ??
+                0.0;
+          }
+        }
+      }
+      final summary = rawData['summary'] ?? rawData['totals'];
+      if (summary is Map<String, dynamic>) {
+        hsnCount =
+            (summary['totalHsnCodes'] as num?)?.toInt() ??
+            (summary['hsnCount'] as num?)?.toInt() ??
+            hsnCount;
+        totalQty =
+            (summary['totalQuantity'] as num?) ??
+            (summary['totalQty'] as num?) ??
+            totalQty;
+        taxable =
+            (summary['taxableAmount'] as num?)?.toDouble() ??
+            (summary['taxableValue'] as num?)?.toDouble() ??
+            taxable;
+        totalTax =
+            (summary['totalTax'] as num?)?.toDouble() ??
+            (summary['taxAmount'] as num?)?.toDouble() ??
+            totalTax;
+      }
+    } else if (rawData is List) {
+      hsnCount = rawData.length;
+      for (final item in rawData) {
+        if (item is Map<String, dynamic>) {
+          totalQty +=
+              (item['totalQuantity'] as num?) ??
+              (item['qty'] as num?) ??
+              (item['quantity'] as num?) ??
+              0;
+          taxable +=
+              (item['taxableAmount'] as num?)?.toDouble() ??
+              (item['taxableValue'] as num?)?.toDouble() ??
+              0.0;
+          totalTax +=
+              (item['totalTax'] as num?)?.toDouble() ??
+              (item['taxAmount'] as num?)?.toDouble() ??
+              0.0;
+        }
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cols = constraints.maxWidth < 600
+            ? 2
+            : (constraints.maxWidth < 900 ? 2 : 4);
+
+        return GridView.count(
+          crossAxisCount: cols,
+          childAspectRatio: cols == 4 ? 2.2 : 1.6,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildMetricCard(
+              'Total HSN Codes',
+              '$hsnCount',
+              Icons.inventory_2_rounded,
+              AppColors.primary,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Total Quantity Sold',
+              '$totalQty',
+              Icons.format_list_numbered_rounded,
+              AppColors.info,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Total Taxable Value',
+              '₹${taxable.toStringAsFixed(2)}',
+              Icons.monetization_on_rounded,
+              AppColors.warning,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Total GST Collected',
+              '₹${totalTax.toStringAsFixed(2)}',
+              Icons.receipt_rounded,
+              AppColors.success,
               isDark,
             ),
           ],
@@ -1134,15 +1264,70 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
         }
       }
     } else if (rawData is Map<String, dynamic>) {
-      final rows = rawData['rows'] ?? rawData['data'] ?? rawData['entries'];
-      if (rows is List) {
-        for (final item in rows) {
+      // 1. Check for dedicated HSN / GSTR sub-lists
+      if (rawData['hsn'] is List) {
+        for (final item in rawData['hsn']) {
+          if (item is Map<String, dynamic>) rowList.add(item);
+        }
+      }
+      if (rawData['hsnSummary'] is List) {
+        for (final item in rawData['hsnSummary']) {
+          if (item is Map<String, dynamic>) rowList.add(item);
+        }
+      }
+      if (rawData['outward'] is List) {
+        for (final item in rawData['outward']) {
           if (item is Map<String, dynamic>) {
-            rowList.add(item);
+            rowList.add({'type': 'Outward', ...item});
           }
         }
-      } else {
-        rowList.add(rawData);
+      }
+      if (rawData['inward'] is List) {
+        for (final item in rawData['inward']) {
+          if (item is Map<String, dynamic>) {
+            rowList.add({'type': 'Inward', ...item});
+          }
+        }
+      }
+      if (rawData['b2b'] is List) {
+        for (final item in rawData['b2b']) {
+          if (item is Map<String, dynamic>) {
+            rowList.add({'section': 'B2B', ...item});
+          }
+        }
+      }
+      if (rawData['b2c'] is List) {
+        for (final item in rawData['b2c']) {
+          if (item is Map<String, dynamic>) {
+            rowList.add({'section': 'B2C', ...item});
+          }
+        }
+      }
+      if (rawData['creditNotes'] is List) {
+        for (final item in rawData['creditNotes']) {
+          if (item is Map<String, dynamic>) {
+            rowList.add({'section': 'Credit Note', ...item});
+          }
+        }
+      }
+
+      // 2. Fallback to generic list keys
+      if (rowList.isEmpty) {
+        final rows =
+            rawData['rows'] ??
+            rawData['data'] ??
+            rawData['entries'] ??
+            rawData['items'] ??
+            rawData['records'];
+        if (rows is List) {
+          for (final item in rows) {
+            if (item is Map<String, dynamic>) {
+              rowList.add(item);
+            }
+          }
+        } else if (rawData.isNotEmpty && !rawData.containsKey('summary')) {
+          rowList.add(rawData);
+        }
       }
     }
 
@@ -1155,7 +1340,29 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       );
     }
 
-    final keys = rowList.first.keys.take(10).toList();
+    // Ensure totalValue column exists for HSN / tax breakdown rows if missing
+    for (int i = 0; i < rowList.length; i++) {
+      final r = Map<String, dynamic>.from(rowList[i]);
+      if (!r.containsKey('totalValue') &&
+          !r.containsKey('totalAmount') &&
+          !r.containsKey('grossAmount')) {
+        final taxable =
+            (r['taxableAmount'] as num?)?.toDouble() ??
+            (r['taxableValue'] as num?)?.toDouble() ??
+            (r['taxable'] as num?)?.toDouble() ??
+            0.0;
+        final tax =
+            (r['totalTax'] as num?)?.toDouble() ??
+            (r['taxAmount'] as num?)?.toDouble() ??
+            0.0;
+        if (taxable > 0 || tax > 0) {
+          r['totalValue'] = taxable + tax;
+          rowList[i] = r;
+        }
+      }
+    }
+
+    final keys = rowList.first.keys.take(14).toList();
 
     // Auto-calculate column totals for numeric money keys
     final Map<String, double> totals = {};
@@ -1227,14 +1434,19 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                           .trim();
 
                       return SizedBox(
-                        width: isMoney ? 130 : 160,
-                        child: Text(
-                          formattedKey,
-                          textAlign: isMoney ? TextAlign.right : TextAlign.left,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                        width: isMoney ? 150 : 180,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: Text(
+                            formattedKey,
+                            textAlign: isMoney
+                                ? TextAlign.right
+                                : TextAlign.left,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       );
@@ -1302,28 +1514,31 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                               }
 
                               return SizedBox(
-                                width: isMoney ? 130 : 160,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: sevColor.withAlpha(25),
-                                      borderRadius: AppRadius.sm,
-                                      border: Border.all(
-                                        color: sevColor.withAlpha(60),
-                                        width: 0.8,
+                                width: isMoney ? 150 : 180,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
                                       ),
-                                    ),
-                                    child: Text(
-                                      strVal,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: sevColor,
+                                      decoration: BoxDecoration(
+                                        color: sevColor.withAlpha(25),
+                                        borderRadius: AppRadius.sm,
+                                        border: Border.all(
+                                          color: sevColor.withAlpha(60),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        strVal,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: sevColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1334,28 +1549,31 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                             String textVal = '-';
                             if (val is num) {
                               textVal = isMoney
-                                  ? '₹${val.toDouble().toStringAsFixed(2)}'
+                                  ? '₹ ${val.toDouble().toStringAsFixed(2)}'
                                   : val.toString();
                             } else if (val != null) {
                               textVal = val.toString();
                             }
 
                             return SizedBox(
-                              width: isMoney ? 130 : 160,
-                              child: Text(
-                                textVal,
-                                textAlign: isMoney
-                                    ? TextAlign.right
-                                    : TextAlign.left,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isMoney
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontFamily: isMoney ? 'monospace' : null,
-                                  color: isMoney && (val is num) && val < 0
-                                      ? AppColors.danger
-                                      : null,
+                              width: isMoney ? 150 : 180,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: Text(
+                                  textVal,
+                                  textAlign: isMoney
+                                      ? TextAlign.right
+                                      : TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isMoney
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontFamily: isMoney ? 'monospace' : null,
+                                    color: isMoney && (val is num) && val < 0
+                                        ? AppColors.danger
+                                        : null,
+                                  ),
                                 ),
                               ),
                             );
@@ -1391,20 +1609,23 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                         final isMoney = totals.containsKey(k);
 
                         return SizedBox(
-                          width: isMoney ? 130 : 160,
-                          child: Text(
-                            index == 0
-                                ? 'TOTAL'
-                                : (isMoney
-                                      ? '₹${totals[k]!.toStringAsFixed(2)}'
-                                      : ''),
-                            textAlign: isMoney
-                                ? TextAlign.right
-                                : TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
+                          width: isMoney ? 150 : 180,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Text(
+                              index == 0
+                                  ? 'TOTAL'
+                                  : (isMoney
+                                        ? '₹ ${totals[k]!.toStringAsFixed(2)}'
+                                        : ''),
+                              textAlign: isMoney
+                                  ? TextAlign.right
+                                  : TextAlign.left,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
                             ),
                           ),
                         );
