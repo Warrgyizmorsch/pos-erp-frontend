@@ -21,6 +21,7 @@ import '../../modules/accounting/reconciliation/bindings/accounting_reconciliati
 import '../../modules/accounting/reconciliation/views/accounting_reconciliation_view.dart';
 import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
 import '../../modules/accounting/reports/views/balance_sheet_report_view.dart';
+import '../../modules/accounting/reports/views/cash_book_report_view.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
 import '../../modules/accounting/reports/views/profit_loss_report_view.dart';
@@ -377,7 +378,7 @@ class AppPages {
     ),
     GetPage(
       name: Routes.cashBookReport,
-      page: () => const DayBookView(),
+      page: () => const CashBookReportView(),
       binding: AccountingReportBinding(),
       middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),

@@ -30,6 +30,154 @@ class AccountingReportDashboardModel {
   }
 }
 
+class BookReportEntry {
+  final String voucherId;
+  final String voucherNo;
+  final String voucherTypeCode;
+  final String date;
+  final String particulars;
+  final String referenceNo;
+  final double debit;
+  final double credit;
+  final double balance;
+  final String balanceType;
+  final String ledgerName;
+
+  BookReportEntry({
+    required this.voucherId,
+    required this.voucherNo,
+    required this.voucherTypeCode,
+    required this.date,
+    required this.particulars,
+    required this.referenceNo,
+    required this.debit,
+    required this.credit,
+    required this.balance,
+    required this.balanceType,
+    required this.ledgerName,
+  });
+
+  factory BookReportEntry.fromJson(Map<String, dynamic> json) {
+    return BookReportEntry(
+      voucherId: json['voucherId']?.toString() ?? '',
+      voucherNo:
+          json['voucherNo']?.toString() ??
+          json['voucherNumber']?.toString() ??
+          '',
+      voucherTypeCode:
+          json['voucherTypeCode']?.toString() ??
+          json['voucherType']?.toString() ??
+          '',
+      date: json['date']?.toString() ?? '',
+      particulars:
+          json['particulars']?.toString() ??
+          json['narration']?.toString() ??
+          '',
+      referenceNo:
+          json['referenceNo']?.toString() ??
+          json['reference']?.toString() ??
+          '',
+      debit:
+          (json['debit'] as num?)?.toDouble() ??
+          (json['receipt'] as num?)?.toDouble() ??
+          0.0,
+      credit:
+          (json['credit'] as num?)?.toDouble() ??
+          (json['payment'] as num?)?.toDouble() ??
+          0.0,
+      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
+      balanceType: json['balanceType']?.toString() ?? 'DEBIT',
+      ledgerName: json['ledgerName']?.toString() ?? '',
+    );
+  }
+}
+
+class BookReportTotals {
+  final double totalReceipts;
+  final double totalPayments;
+  final double totalDeposits;
+  final double totalWithdrawals;
+  final double closingBalance;
+  final String closingBalanceType;
+
+  BookReportTotals({
+    required this.totalReceipts,
+    required this.totalPayments,
+    required this.totalDeposits,
+    required this.totalWithdrawals,
+    required this.closingBalance,
+    required this.closingBalanceType,
+  });
+
+  factory BookReportTotals.fromJson(Map<String, dynamic> json) {
+    return BookReportTotals(
+      totalReceipts:
+          (json['totalReceipts'] as num?)?.toDouble() ??
+          (json['totalDebit'] as num?)?.toDouble() ??
+          0.0,
+      totalPayments:
+          (json['totalPayments'] as num?)?.toDouble() ??
+          (json['totalCredit'] as num?)?.toDouble() ??
+          0.0,
+      totalDeposits: (json['totalDeposits'] as num?)?.toDouble() ?? 0.0,
+      totalWithdrawals: (json['totalWithdrawals'] as num?)?.toDouble() ?? 0.0,
+      closingBalance: (json['closingBalance'] as num?)?.toDouble() ?? 0.0,
+      closingBalanceType: json['closingBalanceType']?.toString() ?? 'DEBIT',
+    );
+  }
+}
+
+class BookReport {
+  final double openingBalance;
+  final String openingBalanceType;
+  final String startDate;
+  final String endDate;
+  final BookReportTotals totals;
+  final List<BookReportEntry> entries;
+
+  BookReport({
+    required this.openingBalance,
+    required this.openingBalanceType,
+    required this.startDate,
+    required this.endDate,
+    required this.totals,
+    required this.entries,
+  });
+
+  factory BookReport.fromJson(Map<String, dynamic> json) {
+    final entryList = <BookReportEntry>[];
+    final rawEntries =
+        (json['entries'] ?? json['rows'] ?? json['transactions'] ?? []) as List;
+    for (final item in rawEntries) {
+      if (item is Map<String, dynamic>) {
+        try {
+          entryList.add(BookReportEntry.fromJson(item));
+        } catch (_) {}
+      }
+    }
+
+    final period = json['period'] is Map<String, dynamic>
+        ? json['period'] as Map<String, dynamic>
+        : {};
+    final totalsObj = json['totals'] is Map<String, dynamic>
+        ? json['totals'] as Map<String, dynamic>
+        : json;
+
+    return BookReport(
+      openingBalance: (json['openingBalance'] as num?)?.toDouble() ?? 0.0,
+      openingBalanceType: json['openingBalanceType']?.toString() ?? 'DEBIT',
+      startDate:
+          period['startDate']?.toString() ??
+          json['startDate']?.toString() ??
+          '',
+      endDate:
+          period['endDate']?.toString() ?? json['endDate']?.toString() ?? '',
+      totals: BookReportTotals.fromJson(totalsObj),
+      entries: entryList,
+    );
+  }
+}
+
 class TrialBalanceRow {
   final String accountCode;
   final String accountName;

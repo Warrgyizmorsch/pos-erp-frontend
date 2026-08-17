@@ -79,6 +79,10 @@ class ApiEndpoints {
       '/accounting/reports/profit-loss';
   static const String accountingReportBalanceSheet =
       '/accounting/reports/balance-sheet';
+  static const String accountingReportCashBook =
+      '/accounting/reports/cash-book';
+  static const String accountingReportBankBook =
+      '/accounting/reports/bank-book';
   static const String accountingGstSummary = '/accounting/gst/summary';
   static const String accountingSettings = '/accounting/settings';
   static const String accountingSettingsValidate =

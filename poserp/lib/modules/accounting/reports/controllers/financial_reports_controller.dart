@@ -19,6 +19,8 @@ class FinancialReportsController extends GetxController {
   final Rxn<TrialBalanceReport> trialBalance = Rxn<TrialBalanceReport>();
   final Rxn<ProfitLossReport> profitLoss = Rxn<ProfitLossReport>();
   final Rxn<BalanceSheetReport> balanceSheet = Rxn<BalanceSheetReport>();
+  final Rxn<BookReport> cashBook = Rxn<BookReport>();
+  final Rxn<BookReport> bankBook = Rxn<BookReport>();
   final Rxn<GstReportSummary> gstSummary = Rxn<GstReportSummary>();
   final Rxn<AccountingReportDashboardModel> dashboardMetrics =
       Rxn<AccountingReportDashboardModel>();
@@ -42,6 +44,10 @@ class FinancialReportsController extends GetxController {
       selectedTabIndex.value = 1;
     } else if (route.contains('balance-sheet')) {
       selectedTabIndex.value = 2;
+    } else if (route.contains('cash-book')) {
+      selectedTabIndex.value = 4;
+    } else if (route.contains('bank-book')) {
+      selectedTabIndex.value = 5;
     } else if (route.contains('gst')) {
       selectedTabIndex.value = 3;
     } else if (route.contains('trial-balance')) {
@@ -66,6 +72,10 @@ class FinancialReportsController extends GetxController {
       } else if (route.contains('balance-sheet') ||
           selectedTabIndex.value == 2) {
         await loadBalanceSheet();
+      } else if (route.contains('cash-book') || selectedTabIndex.value == 4) {
+        await loadCashBook();
+      } else if (route.contains('bank-book') || selectedTabIndex.value == 5) {
+        await loadBankBook();
       } else if (route.contains('gst') || selectedTabIndex.value == 3) {
         await loadGstSummary();
       } else {
@@ -98,6 +108,34 @@ class FinancialReportsController extends GetxController {
         asOfDate: endDate.value.isNotEmpty ? endDate.value : asOnDate.value,
       );
       balanceSheet.value = bs;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadCashBook() async {
+    try {
+      isLoading.value = true;
+      final cb = await _repository.fetchCashBook(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      cashBook.value = cb;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadBankBook() async {
+    try {
+      isLoading.value = true;
+      final bb = await _repository.fetchBankBook(
+        startDate: startDate.value,
+        endDate: endDate.value,
+      );
+      bankBook.value = bb;
     } catch (_) {
     } finally {
       isLoading.value = false;

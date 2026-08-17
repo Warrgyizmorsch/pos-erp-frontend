@@ -73,6 +73,24 @@ class AccountingReportRepository {
     }
   }
 
+  Future<BookReport> fetchCashBook({String? startDate, String? endDate}) async {
+    try {
+      return await _service.getCashBook(startDate: startDate, endDate: endDate);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Cash Book report.');
+    }
+  }
+
+  Future<BookReport> fetchBankBook({String? startDate, String? endDate}) async {
+    try {
+      return await _service.getBankBook(startDate: startDate, endDate: endDate);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch Bank Book report.');
+    }
+  }
+
   Future<GstReportSummary> fetchGstSummary({
     String? startDate,
     String? endDate,

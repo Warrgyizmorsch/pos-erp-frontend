@@ -132,6 +132,48 @@ class AccountingReportService {
     return BalanceSheetReport.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<BookReport> getCashBook({String? startDate, String? endDate}) async {
+    final Map<String, dynamic> queryParams = {};
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['startDate'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['endDate'] = endDate;
+    }
+
+    final response = await _apiClient.get(
+      ApiEndpoints.accountingReportCashBook,
+      queryParameters: queryParams,
+    );
+
+    final Map<String, dynamic> body = response.data is Map<String, dynamic>
+        ? response.data
+        : {};
+    final data = body['data'] ?? body;
+    return BookReport.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<BookReport> getBankBook({String? startDate, String? endDate}) async {
+    final Map<String, dynamic> queryParams = {};
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['startDate'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['endDate'] = endDate;
+    }
+
+    final response = await _apiClient.get(
+      ApiEndpoints.accountingReportBankBook,
+      queryParameters: queryParams,
+    );
+
+    final Map<String, dynamic> body = response.data is Map<String, dynamic>
+        ? response.data
+        : {};
+    final data = body['data'] ?? body;
+    return BookReport.fromJson(data as Map<String, dynamic>);
+  }
+
   Future<GstReportSummary> getGstSummary({
     String? startDate,
     String? endDate,
