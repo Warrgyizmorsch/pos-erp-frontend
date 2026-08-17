@@ -479,6 +479,22 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                   );
                 }
 
+                if ((currentKind == 'output' || currentKind == 'input') &&
+                    rawData != null) {
+                  final isOutput = currentKind == 'output';
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildRegisterSummaryGrid(rawData, isOutput, isDark),
+                        const SizedBox(height: 16),
+                        _buildGenericGstDataView(currentKind, rawData, isDark),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  );
+                }
+
                 if (currentKind == 'exceptions' && rawData != null) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -565,6 +581,89 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
               '₹${gst.totalInputTax.toStringAsFixed(2)}',
               Icons.verified_user_rounded,
               AppColors.success,
+              isDark,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRegisterSummaryGrid(
+    dynamic rawData,
+    bool isOutput,
+    bool isDark,
+  ) {
+    num count = 0;
+    num taxable = 0.0;
+    num totalTax = 0.0;
+    num totalAmount = 0.0;
+
+    if (rawData is Map<String, dynamic>) {
+      final summary = rawData['summary'] ?? rawData['totals'] ?? rawData;
+      if (summary is Map<String, dynamic>) {
+        count =
+            (summary['totalInvoices'] as num?) ??
+            (summary['totalBills'] as num?) ??
+            (summary['count'] as num?) ??
+            (rawData['rows'] is List ? (rawData['rows'] as List).length : 0);
+        taxable =
+            (summary['taxableAmount'] as num?)?.toDouble() ??
+            (summary['taxableValue'] as num?)?.toDouble() ??
+            0.0;
+        totalTax =
+            (summary['totalTax'] as num?)?.toDouble() ??
+            (summary['taxAmount'] as num?)?.toDouble() ??
+            0.0;
+        totalAmount =
+            (summary['totalAmount'] as num?)?.toDouble() ??
+            (summary['grossAmount'] as num?)?.toDouble() ??
+            0.0;
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cols = constraints.maxWidth < 600
+            ? 2
+            : (constraints.maxWidth < 900 ? 2 : 4);
+
+        return GridView.count(
+          crossAxisCount: cols,
+          childAspectRatio: cols == 4 ? 2.2 : 1.6,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildMetricCard(
+              isOutput ? 'Total Sales Invoices' : 'Total Purchase Bills',
+              '$count',
+              Icons.receipt_rounded,
+              AppColors.primary,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Taxable Value',
+              '₹${taxable.toDouble().toStringAsFixed(2)}',
+              Icons.monetization_on_rounded,
+              AppColors.info,
+              isDark,
+            ),
+            _buildMetricCard(
+              isOutput ? 'Total Output Tax Collected' : 'Total Input Tax Paid',
+              '₹${totalTax.toDouble().toStringAsFixed(2)}',
+              isOutput
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+              isOutput ? AppColors.danger : AppColors.success,
+              isDark,
+            ),
+            _buildMetricCard(
+              'Gross Invoice Amount',
+              '₹${totalAmount.toDouble().toStringAsFixed(2)}',
+              Icons.account_balance_wallet_rounded,
+              AppColors.warning,
               isDark,
             ),
           ],
@@ -905,79 +1004,63 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       );
     }
 
-    final keys = rowList.first.keys.take(8).toList();
+    final keys = rowList.first.keys.take(10).toList();
+
+    // Auto-calculate column totals for numeric money keys
+    final Map<String, double> totals = {};
+    for (final k in keys) {
+      final isMoney =
+          k.toLowerCase().contains('tax') ||
+          k.toLowerCase().contains('amount') ||
+          k.toLowerCase().contains('value') ||
+          k.toLowerCase().contains('cgst') ||
+          k.toLowerCase().contains('sgst') ||
+          k.toLowerCase().contains('igst') ||
+          k.toLowerCase().contains('payable');
+
+      if (isMoney) {
+        double sum = 0.0;
+        for (final r in rowList) {
+          final v = r[k];
+          if (v is num) {
+            sum += v.toDouble();
+          }
+        }
+        totals[k] = sum;
+      }
+    }
+
+    final hasTotals = totals.values.any((val) => val.abs() > 0.001);
 
     return AppCard(
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: AppRadius.lg,
-        child: Column(
-          children: [
-            // Table Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.inputDark : Colors.grey[100],
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: keys.map((k) {
-                  final isMoney =
-                      k.toLowerCase().contains('tax') ||
-                      k.toLowerCase().contains('amount') ||
-                      k.toLowerCase().contains('value') ||
-                      k.toLowerCase().contains('cgst') ||
-                      k.toLowerCase().contains('sgst') ||
-                      k.toLowerCase().contains('igst') ||
-                      k.toLowerCase().contains('payable');
-
-                  final formattedKey = k
-                      .replaceAll(RegExp(r'([A-Z])'), ' \$1')
-                      .toUpperCase()
-                      .trim();
-
-                  return Expanded(
-                    child: Text(
-                      formattedKey,
-                      textAlign: isMoney ? TextAlign.right : TextAlign.left,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            // Rows
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rowList.length,
-              separatorBuilder: (_, index) => Divider(
-                height: 1,
-                color: isDark
-                    ? AppColors.borderDark.withAlpha(50)
-                    : Colors.grey[200],
-              ),
-              itemBuilder: (context, rIndex) {
-                final row = rowList[rIndex];
-                return Container(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 700),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Table Header
+                Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 10,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.inputDark : Colors.grey[100],
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                    ),
                   ),
                   child: Row(
                     children: keys.map((k) {
-                      final val = row[k];
                       final isMoney =
                           k.toLowerCase().contains('tax') ||
                           k.toLowerCase().contains('amount') ||
@@ -986,71 +1069,200 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                           k.toLowerCase().contains('sgst') ||
                           k.toLowerCase().contains('igst') ||
                           k.toLowerCase().contains('payable');
-                      final isSeverity = k.toLowerCase().contains('severity');
 
-                      if (isSeverity && val != null) {
-                        final strVal = val.toString().toUpperCase();
-                        Color sevColor = AppColors.info;
-                        if (strVal.contains('HIGH') || strVal.contains('ERR')) {
-                          sevColor = AppColors.danger;
-                        } else if (strVal.contains('MED') ||
-                            strVal.contains('WARN')) {
-                          sevColor = AppColors.warning;
-                        }
+                      final formattedKey = k
+                          .replaceAll(RegExp(r'([A-Z])'), ' \$1')
+                          .toUpperCase()
+                          .trim();
 
-                        return Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: sevColor.withAlpha(25),
-                                borderRadius: AppRadius.sm,
-                              ),
-                              child: Text(
-                                strVal,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: sevColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      String textVal = '-';
-                      if (val is num) {
-                        textVal = isMoney
-                            ? '₹${val.toDouble().toStringAsFixed(2)}'
-                            : val.toString();
-                      } else if (val != null) {
-                        textVal = val.toString();
-                      }
-
-                      return Expanded(
+                      return SizedBox(
+                        width: isMoney ? 130 : 160,
                         child: Text(
-                          textVal,
+                          formattedKey,
                           textAlign: isMoney ? TextAlign.right : TextAlign.left,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isMoney
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontFamily: isMoney ? 'monospace' : null,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
                           ),
                         ),
                       );
                     }).toList(),
                   ),
-                );
-              },
+                ),
+
+                // 2. Interactive Zebra-Striped Rows
+                Column(
+                  children: List.generate(rowList.length, (rIndex) {
+                    final row = rowList[rIndex];
+                    final isOdd = rIndex % 2 == 1;
+
+                    return InkWell(
+                      onTap: () {},
+                      hoverColor: AppColors.primary.withAlpha(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isOdd
+                              ? (isDark
+                                    ? AppColors.inputDark.withAlpha(40)
+                                    : Colors.grey[50])
+                              : Colors.transparent,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isDark
+                                  ? AppColors.borderDark.withAlpha(30)
+                                  : Colors.grey[200]!,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: keys.map((k) {
+                            final val = row[k];
+                            final isMoney =
+                                k.toLowerCase().contains('tax') ||
+                                k.toLowerCase().contains('amount') ||
+                                k.toLowerCase().contains('value') ||
+                                k.toLowerCase().contains('cgst') ||
+                                k.toLowerCase().contains('sgst') ||
+                                k.toLowerCase().contains('igst') ||
+                                k.toLowerCase().contains('payable');
+                            final isSeverity =
+                                k.toLowerCase().contains('severity') ||
+                                k.toLowerCase().contains('status');
+
+                            if (isSeverity && val != null) {
+                              final strVal = val.toString().toUpperCase();
+                              Color sevColor = AppColors.info;
+                              if (strVal.contains('HIGH') ||
+                                  strVal.contains('ERR') ||
+                                  strVal.contains('DUE')) {
+                                sevColor = AppColors.danger;
+                              } else if (strVal.contains('MED') ||
+                                  strVal.contains('WARN')) {
+                                sevColor = AppColors.warning;
+                              } else if (strVal.contains('LOW') ||
+                                  strVal.contains('PAID') ||
+                                  strVal.contains('CLEAR')) {
+                                sevColor = AppColors.success;
+                              }
+
+                              return SizedBox(
+                                width: isMoney ? 130 : 160,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: sevColor.withAlpha(25),
+                                      borderRadius: AppRadius.sm,
+                                      border: Border.all(
+                                        color: sevColor.withAlpha(60),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      strVal,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: sevColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            String textVal = '-';
+                            if (val is num) {
+                              textVal = isMoney
+                                  ? '₹${val.toDouble().toStringAsFixed(2)}'
+                                  : val.toString();
+                            } else if (val != null) {
+                              textVal = val.toString();
+                            }
+
+                            return SizedBox(
+                              width: isMoney ? 130 : 160,
+                              child: Text(
+                                textVal,
+                                textAlign: isMoney
+                                    ? TextAlign.right
+                                    : TextAlign.left,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isMoney
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontFamily: isMoney ? 'monospace' : null,
+                                  color: isMoney && (val is num) && val < 0
+                                      ? AppColors.danger
+                                      : null,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+
+                // 3. Highlighted Totals Summary Footer Row
+                if (hasTotals)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.inputDark : Colors.grey[150],
+                      border: Border(
+                        top: BorderSide(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: keys.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final k = entry.value;
+                        final isMoney = totals.containsKey(k);
+
+                        return SizedBox(
+                          width: isMoney ? 130 : 160,
+                          child: Text(
+                            index == 0
+                                ? 'TOTAL'
+                                : (isMoney
+                                      ? '₹${totals[k]!.toStringAsFixed(2)}'
+                                      : ''),
+                            textAlign: isMoney
+                                ? TextAlign.right
+                                : TextAlign.left,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
