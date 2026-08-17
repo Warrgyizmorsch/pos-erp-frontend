@@ -16,6 +16,8 @@ class FinancialReportsController extends GetxController {
   final RxString asOnDate = DateTime.now().toIso8601String().split('T')[0].obs;
   final RxString tbSelectedGroup = 'ALL'.obs;
 
+  final RxString selectedGstKind = 'summary'.obs;
+
   final Rxn<TrialBalanceReport> trialBalance = Rxn<TrialBalanceReport>();
   final Rxn<ProfitLossReport> profitLoss = Rxn<ProfitLossReport>();
   final Rxn<BalanceSheetReport> balanceSheet = Rxn<BalanceSheetReport>();
@@ -26,6 +28,7 @@ class FinancialReportsController extends GetxController {
   final Rxn<LedgerSummaryReport> ledgerSummary = Rxn<LedgerSummaryReport>();
   final Rxn<GroupSummaryReport> groupSummary = Rxn<GroupSummaryReport>();
   final Rxn<GstReportSummary> gstSummary = Rxn<GstReportSummary>();
+  final Rxn<dynamic> gstReportData = Rxn<dynamic>();
   final Rxn<AccountingReportDashboardModel> dashboardMetrics =
       Rxn<AccountingReportDashboardModel>();
 
@@ -37,6 +40,7 @@ class FinancialReportsController extends GetxController {
     loadCurrentTabReport();
 
     ever(selectedTabIndex, (_) => loadCurrentTabReport());
+    ever(selectedGstKind, (_) => loadGstReport());
     ever(startDate, (_) => loadCurrentTabReport());
     ever(endDate, (_) => loadCurrentTabReport());
     ever(asOnDate, (_) => loadCurrentTabReport());
@@ -99,7 +103,7 @@ class FinancialReportsController extends GetxController {
       } else if (route.contains('bank-book') || selectedTabIndex.value == 5) {
         await loadBankBook();
       } else if (route.contains('gst') || selectedTabIndex.value == 3) {
-        await loadGstSummary();
+        await loadGstReport();
       } else {
         await loadTrialBalance();
       }
@@ -236,13 +240,26 @@ class FinancialReportsController extends GetxController {
   }
 
   Future<void> loadGstSummary() async {
+    await loadGstReport();
+  }
+
+  Future<void> loadGstReport() async {
     try {
       isLoading.value = true;
-      final gst = await _repository.fetchGstSummary(
+      final kind = selectedGstKind.value;
+      if (kind == 'summary') {
+        final gst = await _repository.fetchGstSummary(
+          startDate: startDate.value,
+          endDate: endDate.value,
+        );
+        gstSummary.value = gst;
+      }
+      final data = await _repository.fetchGstReport(
+        kind,
         startDate: startDate.value,
         endDate: endDate.value,
       );
-      gstSummary.value = gst;
+      gstReportData.value = data;
     } catch (_) {
     } finally {
       isLoading.value = false;

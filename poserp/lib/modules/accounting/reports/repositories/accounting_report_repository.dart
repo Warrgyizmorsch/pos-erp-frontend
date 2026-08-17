@@ -163,6 +163,23 @@ class AccountingReportRepository {
     }
   }
 
+  Future<dynamic> fetchGstReport(
+    String kind, {
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      return await _service.getGstReport(
+        kind,
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch GST report for $kind.');
+    }
+  }
+
   Future<AccountingReportDashboardModel> fetchReportDashboard() async {
     try {
       return await _service.getReportDashboard();

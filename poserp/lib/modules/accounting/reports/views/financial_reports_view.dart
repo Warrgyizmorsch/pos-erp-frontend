@@ -260,6 +260,15 @@ class FinancialReportsView extends GetView<FinancialReportsController> {
                       badge: 'Hierarchy',
                       route: Routes.groupSummaryReport,
                     ),
+                    _ReportItem(
+                      title: 'GST & Tax Reports',
+                      description:
+                          'Output GST, input GST, GSTR-1, GSTR-3B, HSN summary, and tax exception reports.',
+                      icon: Icons.receipt_rounded,
+                      color: Colors.redAccent,
+                      badge: 'Taxation',
+                      route: Routes.gstReports,
+                    ),
                   ];
 
                   return GridView.builder(

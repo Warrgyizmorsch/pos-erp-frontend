@@ -316,6 +316,51 @@ class AccountingReportService {
     return GstReportSummary.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<dynamic> getGstReport(
+    String kind, {
+    String? startDate,
+    String? endDate,
+  }) async {
+    String endpoint = ApiEndpoints.accountingGstSummary;
+    if (kind == 'output') {
+      endpoint = ApiEndpoints.accountingGstOutput;
+    } else if (kind == 'input') {
+      endpoint = ApiEndpoints.accountingGstInput;
+    } else if (kind == 'payable') {
+      endpoint = ApiEndpoints.accountingGstPayable;
+    } else if (kind == 'hsn-summary') {
+      endpoint = ApiEndpoints.accountingGstHsnSummary;
+    } else if (kind == 'gstr1') {
+      endpoint = ApiEndpoints.accountingGstR1;
+    } else if (kind == 'gstr3b') {
+      endpoint = ApiEndpoints.accountingGstR3b;
+    } else if (kind == 'ledger') {
+      endpoint = ApiEndpoints.accountingGstLedger;
+    } else if (kind == 'party-wise') {
+      endpoint = ApiEndpoints.accountingGstPartyWise;
+    } else if (kind == 'exceptions') {
+      endpoint = ApiEndpoints.accountingGstExceptions;
+    }
+
+    final Map<String, dynamic> queryParams = {};
+    if (startDate != null && startDate.isNotEmpty) {
+      queryParams['startDate'] = startDate;
+    }
+    if (endDate != null && endDate.isNotEmpty) {
+      queryParams['endDate'] = endDate;
+    }
+
+    final response = await _apiClient.get(
+      endpoint,
+      queryParameters: queryParams,
+    );
+
+    final Map<String, dynamic> body = response.data is Map<String, dynamic>
+        ? response.data
+        : {};
+    return body['data'] ?? body;
+  }
+
   Future<AccountingReportDashboardModel> getReportDashboard() async {
     try {
       final response = await _apiClient.get(

@@ -247,6 +247,124 @@ class AccountingDashboardView extends GetView<AccountingDashboardController> {
                   icon: const Icon(Icons.add_rounded, size: 16),
                   onPressed: () => Get.toNamed('/accounting/journal/create'),
                 ),
+                PopupMenuButton<String>(
+                  tooltip: 'More Accounting Modules',
+                  onSelected: (route) => Get.toNamed(route),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: '/accounting/gst',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.receipt_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(width: 8),
+                          Text('GST & Tax Reports'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: '/accounting/reports',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.pie_chart_outline_rounded,
+                            size: 18,
+                            color: Colors.blue,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Financial Reports'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: '/accounting/trial-balance',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.scale_rounded,
+                            size: 18,
+                            color: Colors.green,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Trial Balance'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: '/accounting/day-book',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book_outlined,
+                            size: 18,
+                            color: Colors.orange,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Day Book'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: '/accounting/reconciliation',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.fact_check_outlined,
+                            size: 18,
+                            color: Colors.teal,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Bank Reconciliation'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: '/accounting/settings',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.settings_outlined,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Accounting Settings'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                      borderRadius: AppRadius.md,
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.more_vert_rounded, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'More',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
@@ -634,6 +752,16 @@ class AccountingDashboardView extends GetView<AccountingDashboardController> {
         'label': 'Trial Balance',
         'href': '/accounting/trial-balance',
         'icon': Icons.bar_chart_rounded,
+      },
+      {
+        'label': 'GST Reports',
+        'href': '/accounting/gst',
+        'icon': Icons.receipt_rounded,
+      },
+      {
+        'label': 'Financial Reports',
+        'href': '/accounting/reports',
+        'icon': Icons.pie_chart_outline_rounded,
       },
       {
         'label': 'Settings',

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app/app.dart';
@@ -12,10 +10,6 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
   Get.put<StorageService>(storageService, permanent: true);
-  final storage = Get.find<StorageService>();
-
-  final token = storage.getToken();
-  log(token.toString());
 
   runApp(const PosErpApp());
 }

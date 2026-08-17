@@ -91,6 +91,15 @@ class ApiEndpoints {
   static const String accountingReportGroupSummary =
       '/accounting/reports/group-summary';
   static const String accountingGstSummary = '/accounting/gst/summary';
+  static const String accountingGstOutput = '/accounting/gst/output';
+  static const String accountingGstInput = '/accounting/gst/input';
+  static const String accountingGstPayable = '/accounting/gst/payable';
+  static const String accountingGstHsnSummary = '/accounting/gst/hsn-summary';
+  static const String accountingGstR1 = '/accounting/gst/gstr1';
+  static const String accountingGstR3b = '/accounting/gst/gstr3b';
+  static const String accountingGstLedger = '/accounting/gst/ledger';
+  static const String accountingGstPartyWise = '/accounting/gst/party-wise';
+  static const String accountingGstExceptions = '/accounting/gst/exceptions';
   static const String accountingSettings = '/accounting/settings';
   static const String accountingSettingsValidate =
       '/accounting/settings/validate';
