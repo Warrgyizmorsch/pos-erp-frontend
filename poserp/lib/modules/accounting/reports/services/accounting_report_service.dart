@@ -177,4 +177,29 @@ class AccountingReportService {
     final data = body['data'] ?? body;
     return GstReportSummary.fromJson(data as Map<String, dynamic>);
   }
+
+  Future<AccountingReportDashboardModel> getReportDashboard() async {
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.accountingReportDashboard,
+      );
+      final Map<String, dynamic> body = response.data is Map<String, dynamic>
+          ? response.data
+          : {};
+      final data = body['data'] ?? body;
+      return AccountingReportDashboardModel.fromJson(
+        data as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return AccountingReportDashboardModel(
+        totalIncome: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        receivables: 0,
+        payables: 0,
+        cashBalance: 0,
+        bankBalance: 0,
+      );
+    }
+  }
 }

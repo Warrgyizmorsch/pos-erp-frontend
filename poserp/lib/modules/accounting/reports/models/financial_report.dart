@@ -1,3 +1,35 @@
+class AccountingReportDashboardModel {
+  final double totalIncome;
+  final double totalExpenses;
+  final double netProfit;
+  final double receivables;
+  final double payables;
+  final double cashBalance;
+  final double bankBalance;
+
+  AccountingReportDashboardModel({
+    required this.totalIncome,
+    required this.totalExpenses,
+    required this.netProfit,
+    required this.receivables,
+    required this.payables,
+    required this.cashBalance,
+    required this.bankBalance,
+  });
+
+  factory AccountingReportDashboardModel.fromJson(Map<String, dynamic> json) {
+    return AccountingReportDashboardModel(
+      totalIncome: (json['totalIncome'] as num?)?.toDouble() ?? 0.0,
+      totalExpenses: (json['totalExpenses'] as num?)?.toDouble() ?? 0.0,
+      netProfit: (json['netProfit'] as num?)?.toDouble() ?? 0.0,
+      receivables: (json['receivables'] as num?)?.toDouble() ?? 0.0,
+      payables: (json['payables'] as num?)?.toDouble() ?? 0.0,
+      cashBalance: (json['cashBalance'] as num?)?.toDouble() ?? 0.0,
+      bankBalance: (json['bankBalance'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
 class TrialBalanceRow {
   final String accountCode;
   final String accountName;
@@ -193,6 +225,11 @@ class ProfitLossReport {
       netProfit: netP,
     );
   }
+
+  List<FinancialReportRow> get incomeAccounts => incomeRows;
+  List<FinancialReportRow> get expenseAccounts => expenseRows;
+  double get totalExpenses => totalExpense;
+  double get netLoss => netProfit < 0 ? netProfit.abs() : 0.0;
 }
 
 class BalanceSheetReport {
@@ -273,4 +310,8 @@ class BalanceSheetReport {
       totalEquity: totEq,
     );
   }
+
+  List<FinancialReportRow> get assetAccounts => assetRows;
+  List<FinancialReportRow> get liabilityAccounts => liabilityRows;
+  bool get isBalanced => (totalAssets - totalLiabilities).abs() < 0.009;
 }

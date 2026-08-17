@@ -20,8 +20,10 @@ import '../../modules/accounting/ledgers/views/ledger_statement_view.dart';
 import '../../modules/accounting/reconciliation/bindings/accounting_reconciliation_binding.dart';
 import '../../modules/accounting/reconciliation/views/accounting_reconciliation_view.dart';
 import '../../modules/accounting/reports/bindings/accounting_report_binding.dart';
+import '../../modules/accounting/reports/views/balance_sheet_report_view.dart';
 import '../../modules/accounting/reports/views/day_book_view.dart';
 import '../../modules/accounting/reports/views/financial_reports_view.dart';
+import '../../modules/accounting/reports/views/profit_loss_report_view.dart';
 import '../../modules/accounting/reports/views/trial_balance_view.dart';
 import '../../modules/accounting/settings/bindings/accounting_settings_binding.dart';
 import '../../modules/accounting/settings/views/accounting_settings_view.dart';
@@ -358,6 +360,30 @@ class AppPages {
     GetPage(
       name: Routes.financialReports,
       page: () => const FinancialReportsView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.profitLossReport,
+      page: () => const ProfitLossReportView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.balanceSheetReport,
+      page: () => const BalanceSheetReportView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.cashBookReport,
+      page: () => const DayBookView(),
+      binding: AccountingReportBinding(),
+      middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
+    ),
+    GetPage(
+      name: Routes.bankBookReport,
+      page: () => const DayBookView(),
       binding: AccountingReportBinding(),
       middlewares: [RoleMiddleware(PermissionService.accountingRoles)],
     ),

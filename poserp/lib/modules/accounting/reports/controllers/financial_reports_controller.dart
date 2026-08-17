@@ -20,16 +20,30 @@ class FinancialReportsController extends GetxController {
   final Rxn<ProfitLossReport> profitLoss = Rxn<ProfitLossReport>();
   final Rxn<BalanceSheetReport> balanceSheet = Rxn<BalanceSheetReport>();
   final Rxn<GstReportSummary> gstSummary = Rxn<GstReportSummary>();
+  final Rxn<AccountingReportDashboardModel> dashboardMetrics =
+      Rxn<AccountingReportDashboardModel>();
 
   @override
   void onInit() {
     super.onInit();
+    loadDashboardMetrics();
     loadCurrentTabReport();
 
     ever(selectedTabIndex, (_) => loadCurrentTabReport());
     ever(startDate, (_) => loadCurrentTabReport());
     ever(endDate, (_) => loadCurrentTabReport());
     ever(asOnDate, (_) => loadCurrentTabReport());
+  }
+
+  Future<void> loadDashboardMetrics() async {
+    try {
+      isLoading.value = true;
+      final res = await _repository.fetchReportDashboard();
+      dashboardMetrics.value = res;
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> loadCurrentTabReport() async {

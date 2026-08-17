@@ -63,6 +63,8 @@ class ApiEndpoints {
   static const String accountingChartOfAccounts =
       '/accounting/chart-of-accounts';
   static const String accountingDashboard = '/accounting/dashboard';
+  static const String accountingReportDashboard =
+      '/accounting/reports/dashboard';
   static const String accountingLedgers = '/accounting/ledgers';
   static const String accountingVouchers = '/accounting/vouchers';
   static const String accountingVoucherTypes = '/accounting/voucher-types';

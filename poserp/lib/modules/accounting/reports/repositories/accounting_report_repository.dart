@@ -87,4 +87,20 @@ class AccountingReportRepository {
       throw AppException(message: 'Failed to fetch GST Summary report.');
     }
   }
+
+  Future<AccountingReportDashboardModel> fetchReportDashboard() async {
+    try {
+      return await _service.getReportDashboard();
+    } catch (_) {
+      return AccountingReportDashboardModel(
+        totalIncome: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        receivables: 0,
+        payables: 0,
+        cashBalance: 0,
+        bankBalance: 0,
+      );
+    }
+  }
 }

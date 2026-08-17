@@ -13,6 +13,7 @@ void main() async {
   await storageService.init();
   Get.put<StorageService>(storageService, permanent: true);
   final storage = Get.find<StorageService>();
+
   final token = storage.getToken();
   log(token.toString());
 

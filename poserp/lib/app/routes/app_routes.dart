@@ -41,6 +41,12 @@ abstract class Routes {
   static const dayBook = '/accounting/day-book';
   static const trialBalance = '/accounting/trial-balance';
   static const financialReports = '/accounting/reports';
+  static const profitLossReport = '/accounting/reports/profit-loss';
+  static const balanceSheetReport = '/accounting/reports/balance-sheet';
+  static const cashBookReport = '/accounting/reports/cash-book';
+  static const bankBookReport = '/accounting/reports/bank-book';
+  static const receivablesReport = '/accounting/reports/receivables';
+  static const payablesReport = '/accounting/reports/payables';
   static const gstReports = '/accounting/gst';
   static const accountingSettings = '/accounting/settings';
   static const accountingHealth = '/accounting/health';

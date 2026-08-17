@@ -16,6 +16,16 @@ class TrialBalanceView extends GetView<FinancialReportsController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Basic Trial Balance'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => controller.loadCurrentTabReport(),
+            tooltip: 'Refresh Trial Balance',
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
