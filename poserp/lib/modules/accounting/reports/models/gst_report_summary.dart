@@ -22,10 +22,21 @@ class GstReportSummary {
 
   factory GstReportSummary.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic> output =
-        json['outputTax'] is Map<String, dynamic> ? json['outputTax'] : json;
-    final Map<String, dynamic> input = json['inputTax'] is Map<String, dynamic>
-        ? json['inputTax']
-        : json;
+        json['outputGST'] is Map<String, dynamic>
+        ? json['outputGST'] as Map<String, dynamic>
+        : (json['outputTax'] is Map<String, dynamic>
+              ? json['outputTax'] as Map<String, dynamic>
+              : (json['output'] is Map<String, dynamic>
+                    ? json['output'] as Map<String, dynamic>
+                    : json));
+
+    final Map<String, dynamic> input = json['inputGST'] is Map<String, dynamic>
+        ? json['inputGST'] as Map<String, dynamic>
+        : (json['inputTax'] is Map<String, dynamic>
+              ? json['inputTax'] as Map<String, dynamic>
+              : (json['input'] is Map<String, dynamic>
+                    ? json['input'] as Map<String, dynamic>
+                    : json));
 
     final outC =
         (output['cgst'] as num?)?.toDouble() ??
@@ -53,7 +64,14 @@ class GstReportSummary {
         (json['inputIgst'] as num?)?.toDouble() ??
         0.0;
 
+    final Map<String, dynamic>? netGstMap =
+        json['netGST'] is Map<String, dynamic>
+        ? json['netGST'] as Map<String, dynamic>
+        : null;
+
     final netP =
+        (netGstMap?['totalPayable'] as num?)?.toDouble() ??
+        (netGstMap?['netTaxPayable'] as num?)?.toDouble() ??
         (json['netTaxPayable'] as num?)?.toDouble() ??
         ((outC + outS + outI) - (inC + inS + inI));
 
