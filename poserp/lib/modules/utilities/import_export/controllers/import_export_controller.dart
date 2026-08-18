@@ -12,9 +12,19 @@ class ImportExportController extends GetxController {
   final RxBool isImporting = false.obs;
   final RxBool isExporting = false.obs;
 
-  final RxList<Map<String, dynamic>> parsedRows = <Map<String, dynamic>>[].obs;
+  final TextEditingController barcodeController = TextEditingController();
+  final TextEditingController libraryQueryController = TextEditingController();
+
   final RxString scannedBarcode = ''.obs;
   final Rxn<Map<String, dynamic>> scannedResult = Rxn<Map<String, dynamic>>();
+  final RxBool isSearchingBarcode = false.obs;
+
+  final RxString selectedFileName = ''.obs;
+  final RxBool isImportingExcel = false.obs;
+
+  final RxBool isSearchingLibrary = false.obs;
+
+  final RxList<Map<String, dynamic>> parsedRows = <Map<String, dynamic>>[].obs;
 
   final RxList<Map<String, dynamic>> libraryItems = <Map<String, dynamic>>[
     {
@@ -48,6 +58,60 @@ class ImportExportController extends GetxController {
   ].obs;
 
   final RxList<String> selectedLibraryBarcodes = <String>[].obs;
+
+  @override
+  void onClose() {
+    barcodeController.dispose();
+    libraryQueryController.dispose();
+    super.onClose();
+  }
+
+  void lookupBarcode() {
+    final code = barcodeController.text.trim();
+    if (code.isEmpty) return;
+    scannedBarcode.value = code;
+    searchBarcode();
+  }
+
+  void searchBarcode() {
+    if (scannedBarcode.value.isEmpty) return;
+    isSearchingBarcode.value = true;
+    final match = libraryItems.firstWhereOrNull(
+      (item) => item['barcode'] == scannedBarcode.value.trim(),
+    );
+    if (match != null) {
+      scannedResult.value = match;
+    } else {
+      scannedResult.value = {
+        'name': 'Scanned Item (${scannedBarcode.value})',
+        'barcode': scannedBarcode.value,
+        'category': 'General',
+        'price': 99.0,
+        'taxRate': 18.0,
+      };
+    }
+    isSearchingBarcode.value = false;
+  }
+
+  void pickExcelFile() {
+    selectedFileName.value = 'product_catalog_import.xlsx';
+    parseSampleExcel();
+  }
+
+  Future<void> importExcel() async {
+    isImportingExcel.value = true;
+    await importParsedItems();
+    isImportingExcel.value = false;
+  }
+
+  void searchLibrary() {
+    final query = libraryQueryController.text.trim().toLowerCase();
+    if (query.isEmpty) return;
+    isSearchingLibrary.value = true;
+    Future.delayed(const Duration(milliseconds: 300), () {
+      isSearchingLibrary.value = false;
+    });
+  }
 
   void parseSampleExcel() {
     parsedRows.assignAll([
@@ -97,7 +161,6 @@ class ImportExportController extends GetxController {
         ApiEndpoints.importProducts,
         data: {'products': payload},
       );
-      Get.back(); // close preview dialog
       Get.snackbar(
         'Import Successful',
         'Imported ${payload.length} products to database.',
@@ -105,6 +168,7 @@ class ImportExportController extends GetxController {
         backgroundColor: Colors.green.withAlpha(40),
       );
       parsedRows.clear();
+      selectedFileName.value = '';
     } catch (_) {
       Get.snackbar(
         'Import Completed',
@@ -112,28 +176,10 @@ class ImportExportController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withAlpha(40),
       );
-      Get.back();
       parsedRows.clear();
+      selectedFileName.value = '';
     } finally {
       isImporting.value = false;
-    }
-  }
-
-  void searchBarcode() {
-    if (scannedBarcode.value.isEmpty) return;
-    final match = libraryItems.firstWhereOrNull(
-      (item) => item['barcode'] == scannedBarcode.value.trim(),
-    );
-    if (match != null) {
-      scannedResult.value = match;
-    } else {
-      scannedResult.value = {
-        'name': 'Scanned Item (${scannedBarcode.value})',
-        'barcode': scannedBarcode.value,
-        'category': 'General',
-        'price': 99.0,
-        'taxRate': 18.0,
-      };
     }
   }
 
@@ -147,7 +193,6 @@ class ImportExportController extends GetxController {
           'products': [scannedResult.value],
         },
       );
-      Get.back();
       Get.snackbar(
         'Item Imported',
         'Successfully imported ${scannedResult.value!['name']}',
@@ -155,7 +200,6 @@ class ImportExportController extends GetxController {
         backgroundColor: Colors.green.withAlpha(40),
       );
     } catch (_) {
-      Get.back();
       Get.snackbar(
         'Item Imported',
         'Successfully imported ${scannedResult.value!['name']}',
@@ -178,7 +222,6 @@ class ImportExportController extends GetxController {
         ApiEndpoints.importProducts,
         data: {'products': selected},
       );
-      Get.back();
       Get.snackbar(
         'Library Import Successful',
         'Imported ${selected.length} items from standard library.',
@@ -186,7 +229,6 @@ class ImportExportController extends GetxController {
         backgroundColor: Colors.green.withAlpha(40),
       );
     } catch (_) {
-      Get.back();
       Get.snackbar(
         'Library Import Successful',
         'Imported ${selectedLibraryBarcodes.length} items from standard library.',
