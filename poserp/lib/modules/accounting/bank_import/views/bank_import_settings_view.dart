@@ -294,23 +294,28 @@ class BankImportSettingsView extends GetView<BankImportSettingsController> {
                                 const SizedBox(height: 18),
 
                                 // Confidence Slider
-                                Text(
-                                  'Confidence Match Threshold (${(controller.confidenceThreshold.value * 100).toInt()}%)',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                                Obx(
+                                  () => Text(
+                                    'Confidence Match Threshold (${controller.confidenceThreshold.value.toInt()}%)',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Slider(
-                                  value: controller.confidenceThreshold.value,
-                                  min: 0.50,
-                                  max: 1.00,
-                                  divisions: 10,
-                                  activeColor: AppColors.primary,
-                                  onChanged: (val) =>
-                                      controller.confidenceThreshold.value =
-                                          val,
+                                Obx(
+                                  () => Slider(
+                                    value: controller.confidenceThreshold.value
+                                        .clamp(50.0, 100.0),
+                                    min: 50.0,
+                                    max: 100.0,
+                                    divisions: 50,
+                                    activeColor: AppColors.primary,
+                                    onChanged: (val) =>
+                                        controller.confidenceThreshold.value =
+                                            val,
+                                  ),
                                 ),
                                 Text(
                                   'Rules below threshold are shown as low confidence suggestions.',

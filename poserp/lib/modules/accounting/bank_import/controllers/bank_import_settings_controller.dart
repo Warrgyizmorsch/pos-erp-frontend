@@ -20,7 +20,7 @@ class BankImportSettingsController extends GetxController {
   final RxString defaultExpenseLedgerId = ''.obs;
   final RxString defaultIncomeLedgerId = ''.obs;
   final RxBool autoPostHighConfidence = false.obs;
-  final RxDouble confidenceThreshold = 0.90.obs;
+  final RxDouble confidenceThreshold = 90.0.obs;
 
   final RxList<Map<String, String>> bankMappings = <Map<String, String>>[].obs;
   final RxList<AccountingLedger> allLedgers = <AccountingLedger>[].obs;
@@ -43,7 +43,10 @@ class BankImportSettingsController extends GetxController {
       defaultExpenseLedgerId.value = res.defaultExpenseLedgerId ?? '';
       defaultIncomeLedgerId.value = res.defaultIncomeLedgerId ?? '';
       autoPostHighConfidence.value = res.autoPostHighConfidence;
-      confidenceThreshold.value = res.confidenceThreshold;
+
+      double val = res.confidenceThreshold;
+      if (val <= 1.0) val = val * 100.0;
+      confidenceThreshold.value = val.clamp(50.0, 100.0);
     } catch (e) {
       Get.log('Failed to load bank import settings dynamically: $e');
     } finally {
