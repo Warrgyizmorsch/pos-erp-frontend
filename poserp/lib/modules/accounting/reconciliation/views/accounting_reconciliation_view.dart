@@ -548,9 +548,14 @@ class AccountingReconciliationView
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Row
-                      Row(
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
-                          Expanded(
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 320),
                             child: Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
                               spacing: 8,
