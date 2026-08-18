@@ -187,18 +187,94 @@ class ReportsView extends GetView<ReportsController> {
 
               // 2. Main Tab-Specific Analytics Content
               Obx(() {
-                if (controller.isLoading.value &&
-                    controller.reportData.value == null) {
+                if (controller.isLoading.value) {
                   return const Padding(
-                    padding: EdgeInsets.all(32.0),
+                    padding: EdgeInsets.all(48.0),
                     child: LoadingIndicator(
-                      message: 'Generating analytics report...',
+                      message: 'Fetching live analytics from API backend...',
+                    ),
+                  );
+                }
+
+                if (controller.errorMessage.value != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: AppCard(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.cloud_off_rounded,
+                              size: 48,
+                              color: AppColors.danger,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Unable to Connect to API Backend',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              controller.errorMessage.value!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            AppButton(
+                              text: 'Retry API Connection',
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              onPressed: () => controller.loadReport(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 }
 
                 if (controller.reportData.value == null) {
-                  return const Center(child: Text('No report data available'));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: AppCard(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.inbox_rounded,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'No Analytics Data Available',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'The backend API returned an empty response for this period.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
                 }
 
                 final rep = controller.reportData.value!;
@@ -500,7 +576,17 @@ class ReportsView extends GetView<ReportsController> {
                     ),
                     DataColumn(
                       label: Text(
-                        'SKU',
+                        'BARCODE / SKU',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'CATEGORY',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -511,7 +597,7 @@ class ReportsView extends GetView<ReportsController> {
                     DataColumn(
                       numeric: true,
                       label: Text(
-                        'CURRENT STOCK',
+                        'STOCK',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -522,7 +608,7 @@ class ReportsView extends GetView<ReportsController> {
                     DataColumn(
                       numeric: true,
                       label: Text(
-                        'UNIT COST',
+                        'INVENTORY VALUE',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -541,104 +627,123 @@ class ReportsView extends GetView<ReportsController> {
                       ),
                     ),
                   ],
-                  rows: [
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text(
-                            'Basmati Rice 5kg',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const DataCell(
-                          Text('RICE-005', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text('4 units', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹350.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withAlpha(30),
-                              borderRadius: AppRadius.sm,
-                            ),
-                            child: const Text(
-                              'Low Stock',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text(
-                            'Refined Oil 1L',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const DataCell(
-                          Text('OIL-001', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text('0 units', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹120.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withAlpha(30),
-                              borderRadius: AppRadius.sm,
-                            ),
-                            child: const Text(
-                              'Out of Stock',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  rows:
+                      (rep.reportRows.isNotEmpty
+                              ? rep.reportRows
+                              : rep.topProducts)
+                          .map((p) {
+                            final name =
+                                (p['productName'] ?? p['name'] ?? 'Item')
+                                    .toString();
+                            final barcode =
+                                (p['barcode'] ?? p['sku'] ?? 'ITEM-001')
+                                    .toString();
+                            final category = (p['category'] ?? 'General')
+                                .toString();
+                            final stock =
+                                p['currentStock'] ??
+                                p['stock'] ??
+                                p['quantity'] ??
+                                0;
+                            final val =
+                                (p['inventoryValue'] ??
+                                        p['value'] ??
+                                        p['sales'] ??
+                                        0.0)
+                                    as num;
+                            final status =
+                                (p['status'] ??
+                                        (stock == 0
+                                            ? 'Out of Stock'
+                                            : stock <= 5
+                                            ? 'Low Stock'
+                                            : 'In Stock'))
+                                    .toString();
+                            final isOut =
+                                status == 'Out of Stock' || stock == 0;
+                            final isLow =
+                                status == 'Low Stock' ||
+                                (stock > 0 && stock <= 10);
+
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    barcode,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    category,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    '$stock units',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    '₹${val.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'monospace',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          (isOut
+                                                  ? Colors.red
+                                                  : isLow
+                                                  ? Colors.amber
+                                                  : Colors.green)
+                                              .withAlpha(30),
+                                      borderRadius: AppRadius.sm,
+                                    ),
+                                    child: Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isOut
+                                            ? Colors.red
+                                            : isLow
+                                            ? Colors.amber
+                                            : Colors.green,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          })
+                          .toList(),
                 ),
               ),
             ),
@@ -772,106 +877,84 @@ class ReportsView extends GetView<ReportsController> {
                       ),
                     ),
                   ],
-                  rows: [
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text(
-                            'PUR-2026-001',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const DataCell(
-                          Text(
-                            'Anand Wholesale Traders',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹45,000.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withAlpha(30),
-                              borderRadius: AppRadius.sm,
-                            ),
-                            child: const Text(
-                              'Paid',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                  rows: rep.reportRows.isNotEmpty
+                      ? rep.reportRows.map((r) {
+                          final isPaid = (r['status'] ?? 'Paid') == 'Paid';
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  (r['invoiceNumber'] ??
+                                          r['billNumber'] ??
+                                          'PUR-2026-001')
+                                      .toString(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text(
-                            'PUR-2026-002',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const DataCell(
-                          Text(
-                            'Metro Consumer Dist',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹20,000.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withAlpha(30),
-                              borderRadius: AppRadius.sm,
-                            ),
-                            child: const Text(
-                              'Pending',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber,
+                              DataCell(
+                                Text(
+                                  (r['supplierName'] ??
+                                          r['customerName'] ??
+                                          'Anand Wholesale')
+                                      .toString(),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
                               ),
-                            ),
+                              DataCell(
+                                Text(
+                                  '₹${r['totalAmount'] ?? r['revenue'] ?? 0.0}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (isPaid ? Colors.green : Colors.amber)
+                                            .withAlpha(30),
+                                    borderRadius: AppRadius.sm,
+                                  ),
+                                  child: Text(
+                                    isPaid ? 'Paid' : 'Pending',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isPaid
+                                          ? Colors.green
+                                          : Colors.amber,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList()
+                      : [
+                          const DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  'No purchase bills',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
                 ),
               ),
             ),
@@ -990,62 +1073,71 @@ class ReportsView extends GetView<ReportsController> {
                       ),
                     ),
                   ],
-                  rows: [
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text('2026-08-01', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text(
-                            'Sales Billing Receipts',
-                            style: TextStyle(fontSize: 12),
+                  rows: rep.reportRows.isNotEmpty
+                      ? rep.reportRows.map((r) {
+                          final cashIn =
+                              (r['revenue'] ?? r['totalAmount'] ?? 0.0) as num;
+                          final cashOut =
+                              (r['expenses'] ?? r['discount'] ?? 0.0) as num;
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  (r['date'] ?? '-').toString(),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  (r['category'] ??
+                                          r['customerName'] ??
+                                          'Operating Receipts')
+                                      .toString(),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '₹${cashIn.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '₹${cashOut.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: cashOut > 0
+                                        ? Colors.red
+                                        : Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList()
+                      : [
+                          const DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  'No cashflow entries',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
+                            ],
                           ),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹62,500.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                        const DataCell(
-                          Text('₹0.00', style: TextStyle(fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                    DataRow(
-                      cells: [
-                        const DataCell(
-                          Text('2026-08-01', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text(
-                            'Vendor Disbursement',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        const DataCell(
-                          Text('₹0.00', style: TextStyle(fontSize: 12)),
-                        ),
-                        const DataCell(
-                          Text(
-                            '₹25,000.00',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
                 ),
               ),
             ),
@@ -1138,7 +1230,17 @@ class ReportsView extends GetView<ReportsController> {
                   columns: const [
                     DataColumn(
                       label: Text(
-                        'PERIOD',
+                        'INVOICE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'CUSTOMER',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -1149,7 +1251,7 @@ class ReportsView extends GetView<ReportsController> {
                     DataColumn(
                       numeric: true,
                       label: Text(
-                        'ORDERS',
+                        'PRODUCTS',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -1160,7 +1262,18 @@ class ReportsView extends GetView<ReportsController> {
                     DataColumn(
                       numeric: true,
                       label: Text(
-                        'REVENUE',
+                        'AMOUNT',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      numeric: true,
+                      label: Text(
+                        'DISCOUNT',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -1182,7 +1295,17 @@ class ReportsView extends GetView<ReportsController> {
                     DataColumn(
                       numeric: true,
                       label: Text(
-                        'PROFIT',
+                        'REVENUE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'DATE',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -1196,25 +1319,43 @@ class ReportsView extends GetView<ReportsController> {
                       cells: [
                         DataCell(
                           Text(
-                            r['date'].toString(),
+                            (r['invoiceNumber'] ?? 'INV-2026-001').toString(),
                             style: const TextStyle(
                               fontSize: 12,
+                              fontWeight: FontWeight.bold,
                               fontFamily: 'monospace',
                             ),
                           ),
                         ),
                         DataCell(
                           Text(
-                            r['orders'].toString(),
+                            (r['customerName'] ?? 'Walk-in Customer')
+                                .toString(),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
                         DataCell(
                           Text(
-                            '₹${r['revenue']}',
+                            '${r['productsCount'] ?? 1} items',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            '₹${r['totalAmount'] ?? r['revenue'] ?? 0.0}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            '₹${r['discount'] ?? 0.0}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber,
                               fontFamily: 'monospace',
                             ),
                           ),
@@ -1230,11 +1371,20 @@ class ReportsView extends GetView<ReportsController> {
                         ),
                         DataCell(
                           Text(
-                            '₹${r['profit']}',
+                            '₹${r['revenue'] ?? 0.0}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: AppColors.success,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            (r['date'] ?? '-').toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
                               fontFamily: 'monospace',
                             ),
                           ),

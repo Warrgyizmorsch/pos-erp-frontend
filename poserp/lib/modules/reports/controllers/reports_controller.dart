@@ -14,6 +14,7 @@ class ReportsController extends GetxController {
       'monthly'.obs; // 'daily', 'weekly', 'monthly', 'yearly', 'custom'
   final Rxn<DateTimeRange> customDateRange = Rxn<DateTimeRange>();
   final Rxn<AnalyticsReport> reportData = Rxn<AnalyticsReport>();
+  final Rxn<String> errorMessage = Rxn<String>();
   final RxBool isLoading = true.obs;
   final RxBool isExporting = false.obs;
 
@@ -30,6 +31,8 @@ class ReportsController extends GetxController {
   Future<void> loadReport() async {
     try {
       isLoading.value = true;
+      errorMessage.value = null;
+
       final range = customDateRange.value;
       final startDate = range != null
           ? range.start.toIso8601String().split('T')[0]
@@ -45,85 +48,12 @@ class ReportsController extends GetxController {
         endDate: endDate,
       );
       reportData.value = res;
-    } catch (_) {
-      reportData.value = AnalyticsReport(
-        // Sales Metrics
-        totalSales: reportType.value == 'purchases' ? 210000.0 : 540000.0,
-        totalRevenue: reportType.value == 'purchases' ? 185000.0 : 450000.0,
-        grossProfit: 270000.0,
-        netProfit: 170000.0,
-        averageOrderValue: 1406.25,
-        totalDiscounts: 12500.0,
-        totalTax: 27000.0,
-        purchaseCost: 270000.0,
-        totalExpenses: 100000.0,
-        totalOrders: 384,
-
-        // Inventory Metrics
-        totalProducts: 248,
-        inventoryValue: 1250000.0,
-        inventoryCost: 890000.0,
-        potentialProfit: 360000.0,
-        lowStockProducts: 14,
-        outOfStockProducts: 3,
-
-        // Purchase Metrics
-        totalPurchases: 142,
-        totalPurchaseAmount: 485000.0,
-        supplierCount: 18,
-        averagePurchaseValue: 3415.50,
-        pendingPayments: 65000.0,
-
-        // Cashflow Metrics
-        totalCashIn: 540000.0,
-        totalCashOut: 370000.0,
-        netCashFlow: 170000.0,
-
-        topProducts: [
-          {'name': 'Basmati Rice 5kg', 'quantity': 140, 'sales': 63000.0},
-          {'name': 'Dairy Milk 50g', 'quantity': 350, 'sales': 14000.0},
-          {'name': 'Refined Oil 1L', 'quantity': 90, 'sales': 13050.0},
-          {'name': 'Atta 10kg Bag', 'quantity': 85, 'sales': 32300.0},
-          {'name': 'Sugar 1kg Pack', 'quantity': 210, 'sales': 9450.0},
-        ],
-        reportRows: [
-          {
-            'date': '2026-08-01',
-            'orders': 45,
-            'revenue': 62500.0,
-            'tax': 3125.0,
-            'profit': 18500.0,
-          },
-          {
-            'date': '2026-08-02',
-            'orders': 52,
-            'revenue': 74000.0,
-            'tax': 3700.0,
-            'profit': 22000.0,
-          },
-          {
-            'date': '2026-08-03',
-            'orders': 38,
-            'revenue': 51000.0,
-            'tax': 2550.0,
-            'profit': 15000.0,
-          },
-          {
-            'date': '2026-08-04',
-            'orders': 61,
-            'revenue': 89000.0,
-            'tax': 4450.0,
-            'profit': 28000.0,
-          },
-          {
-            'date': '2026-08-05',
-            'orders': 49,
-            'revenue': 68500.0,
-            'tax': 3425.0,
-            'profit': 21000.0,
-          },
-        ],
-      );
+    } catch (e) {
+      reportData.value = null;
+      errorMessage.value =
+          e.toString().replaceAll('Exception:', '').trim().isNotEmpty
+          ? e.toString().replaceAll('Exception:', '').trim()
+          : 'Failed to fetch analytics report from API backend.';
     } finally {
       isLoading.value = false;
     }
