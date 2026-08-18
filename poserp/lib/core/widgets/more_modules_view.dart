@@ -176,6 +176,47 @@ class MoreModulesView extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
+              // Inventory & Product Catalog Group
+              if (PermissionService.hasRole(
+                userRole,
+                PermissionService.inventoryRoles,
+              )) ...[
+                _buildSectionHeader(
+                  context: context,
+                  title: 'Inventory & Product Catalog',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.info,
+                ),
+                _buildGridSection([
+                  _ModuleItem(
+                    icon: Icons.inventory_rounded,
+                    label: 'Products Catalog',
+                    route: '/products',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.category_rounded,
+                    label: 'Categories',
+                    route: '/categories',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.alt_route_rounded,
+                    label: 'Subcategories',
+                    route: '/subcategories',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.warehouse_rounded,
+                    label: 'Inventory & Stock Movements',
+                    route: '/inventory',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.playlist_add_check_rounded,
+                    label: 'Opening Stock Manager',
+                    route: '/opening-stock',
+                  ),
+                ]),
+                const SizedBox(height: 16),
+              ],
+
               // Shift & Utility Tools Group
               _buildSectionHeader(
                 context: context,
