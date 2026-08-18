@@ -199,9 +199,14 @@ class AccountingReconciliationView
       children: [
         AppCard(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
             children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
                 child: Row(
                   children: [
                     _buildStatusPill(
@@ -222,7 +227,6 @@ class AccountingReconciliationView
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               Obx(() {
                 final isFixing = controller.isFixing.value;
                 return AppButton(
@@ -459,9 +463,14 @@ class AccountingReconciliationView
       children: [
         AppCard(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
             children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -480,7 +489,6 @@ class AccountingReconciliationView
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -769,9 +777,14 @@ class AccountingReconciliationView
       children: [
         AppCard(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
             children: [
-              Expanded(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -790,7 +803,6 @@ class AccountingReconciliationView
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               Obx(() {
                 final isFixing = controller.isFixing.value;
                 return AppButton(
