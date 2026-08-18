@@ -776,9 +776,9 @@ class ReportsView extends GetView<ReportsController> {
         _buildMetricsGrid([
           AppStatCard(
             title: 'Total Purchases',
-            value: '${rep.totalPurchases} Bills',
+            value: '${rep.totalPurchases}',
             icon: Icons.shopping_bag_outlined,
-            color: AppColors.primary,
+            color: Colors.orange,
           ),
           AppStatCard(
             title: 'Purchase Amount',
@@ -787,16 +787,16 @@ class ReportsView extends GetView<ReportsController> {
             color: AppColors.success,
           ),
           AppStatCard(
-            title: 'Active Suppliers',
+            title: 'Suppliers',
             value: '${rep.supplierCount}',
             icon: Icons.business_outlined,
-            color: AppColors.info,
+            color: Colors.orange,
           ),
           AppStatCard(
-            title: 'Avg Purchase Value',
+            title: 'Avg Purchase',
             value: '₹${rep.averagePurchaseValue.toStringAsFixed(2)}',
             icon: Icons.trending_up_rounded,
-            color: Colors.purple,
+            color: Colors.blueGrey,
           ),
         ]),
         const SizedBox(height: 12),
@@ -809,15 +809,15 @@ class ReportsView extends GetView<ReportsController> {
             color: Colors.amber[800]!,
           ),
           AppStatCard(
-            title: 'Procurement Items',
-            value: '${rep.totalProducts} Items',
+            title: 'Products Purchased',
+            value: '${rep.totalProducts}',
             icon: Icons.inventory_2_outlined,
             color: Colors.cyan,
           ),
         ]),
         const SizedBox(height: 20),
 
-        // Recent Purchase Transactions Table
+        // Recent Purchase Transactions Table (Matches Next.js PurchaseAnalyticsDashboard.tsx)
         AppCard(
           padding: EdgeInsets.zero,
           child: ClipRRect(
@@ -837,7 +837,7 @@ class ReportsView extends GetView<ReportsController> {
                   columns: const [
                     DataColumn(
                       label: Text(
-                        'PURCHASE BILL #',
+                        'PO NUMBER',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -847,7 +847,18 @@ class ReportsView extends GetView<ReportsController> {
                     ),
                     DataColumn(
                       label: Text(
-                        'SUPPLIER NAME',
+                        'SUPPLIER',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      numeric: true,
+                      label: Text(
+                        'PRODUCTS',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -867,8 +878,29 @@ class ReportsView extends GetView<ReportsController> {
                       ),
                     ),
                     DataColumn(
+                      numeric: true,
                       label: Text(
-                        'STATUS',
+                        'TAX',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'PAYMENT',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'DATE',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -879,37 +911,69 @@ class ReportsView extends GetView<ReportsController> {
                   ],
                   rows: rep.reportRows.isNotEmpty
                       ? rep.reportRows.map((r) {
-                          final isPaid = (r['status'] ?? 'Paid') == 'Paid';
+                          final poNo =
+                              (r['purchaseInvoice'] ??
+                                      r['poNumber'] ??
+                                      r['invoiceNumber'] ??
+                                      r['billNumber'] ??
+                                      'PO-2026-001')
+                                  .toString();
+                          final supplier =
+                              (r['supplierName'] ??
+                                      r['customerName'] ??
+                                      'Wholesale Supplier')
+                                  .toString();
+                          final products =
+                              r['productCount'] ?? r['productsCount'] ?? 1;
+                          final amount =
+                              r['purchaseAmount'] ?? r['totalAmount'] ?? 0.0;
+                          final tax = r['tax'] ?? 0.0;
+                          final status =
+                              (r['paymentStatus'] ?? r['status'] ?? 'Paid')
+                                  .toString();
+                          final date = (r['date'] ?? '-').toString();
+                          final isPaid = status.toLowerCase() == 'paid';
+
                           return DataRow(
                             cells: [
                               DataCell(
                                 Text(
-                                  (r['invoiceNumber'] ??
-                                          r['billNumber'] ??
-                                          'PUR-2026-001')
-                                      .toString(),
+                                  poNo,
                                   style: const TextStyle(
                                     fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  supplier,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '$products items',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  '₹${amount.toString()}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               DataCell(
                                 Text(
-                                  (r['supplierName'] ??
-                                          r['customerName'] ??
-                                          'Anand Wholesale')
-                                      .toString(),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              DataCell(
-                                Text(
-                                  '₹${r['totalAmount'] ?? r['revenue'] ?? 0.0}',
+                                  '₹${tax.toString()}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontFamily: 'monospace',
-                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -926,7 +990,7 @@ class ReportsView extends GetView<ReportsController> {
                                     borderRadius: AppRadius.sm,
                                   ),
                                   child: Text(
-                                    isPaid ? 'Paid' : 'Pending',
+                                    status,
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -934,6 +998,15 @@ class ReportsView extends GetView<ReportsController> {
                                           ? Colors.green
                                           : Colors.amber,
                                     ),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  date,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
                                   ),
                                 ),
                               ),
@@ -945,10 +1018,13 @@ class ReportsView extends GetView<ReportsController> {
                             cells: [
                               DataCell(
                                 Text(
-                                  'No purchase bills',
+                                  'No purchase records found',
                                   style: TextStyle(fontSize: 12),
                                 ),
                               ),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
+                              DataCell(Text('-')),
                               DataCell(Text('-')),
                               DataCell(Text('-')),
                               DataCell(Text('-')),
