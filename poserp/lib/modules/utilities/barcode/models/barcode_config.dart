@@ -1,47 +1,63 @@
-class BarcodeConfig {
-  final String productName;
-  final String barcodeValue;
-  final double price;
-  final String businessName;
-  final int copies;
-  final bool showPrice;
-  final bool showBusinessName;
-  final bool showProductName;
-  final String labelSize; // e.g., '50mm x 25mm'
+class BarcodeRow {
+  final String id;
+  String? productId;
+  String productName;
+  String productCode;
+  String barcode;
+  double price;
+  int printQty;
 
-  BarcodeConfig({
-    required this.productName,
-    required this.barcodeValue,
-    required this.price,
-    required this.businessName,
-    this.copies = 10,
+  BarcodeRow({
+    required this.id,
+    this.productId,
+    this.productName = '',
+    this.productCode = '',
+    this.barcode = '',
+    this.price = 0.0,
+    this.printQty = 1,
+  });
+}
+
+class BarcodeDisplaySettings {
+  final String labelSize; // '50x25', '40x20', '38x25'
+  final int layoutColumns; // 1 or 2
+  final String printerType; // 'label', 'a4_30', 'a4_24'
+  final bool showHeader; // Business Name
+  final bool showItemName;
+  final bool showPrice;
+  final bool showBarcodeNumber;
+  final bool showExtraLines; // SKU
+
+  BarcodeDisplaySettings({
+    this.labelSize = '50x25',
+    this.layoutColumns = 2,
+    this.printerType = 'label',
+    this.showHeader = true,
+    this.showItemName = true,
     this.showPrice = true,
-    this.showBusinessName = true,
-    this.showProductName = true,
-    this.labelSize = '50mm x 25mm',
+    this.showBarcodeNumber = true,
+    this.showExtraLines = true,
   });
 
-  BarcodeConfig copyWith({
-    String? productName,
-    String? barcodeValue,
-    double? price,
-    String? businessName,
-    int? copies,
-    bool? showPrice,
-    bool? showBusinessName,
-    bool? showProductName,
+  BarcodeDisplaySettings copyWith({
     String? labelSize,
+    int? layoutColumns,
+    String? printerType,
+    bool? showHeader,
+    bool? showItemName,
+    bool? showPrice,
+    bool? showBarcodeNumber,
+    bool? showExtraLines,
   }) {
-    return BarcodeConfig(
-      productName: productName ?? this.productName,
-      barcodeValue: barcodeValue ?? this.barcodeValue,
-      price: price ?? this.price,
-      businessName: businessName ?? this.businessName,
-      copies: copies ?? this.copies,
-      showPrice: showPrice ?? this.showPrice,
-      showBusinessName: showBusinessName ?? this.showBusinessName,
-      showProductName: showProductName ?? this.showProductName,
+    return BarcodeDisplaySettings(
       labelSize: labelSize ?? this.labelSize,
+      layoutColumns: layoutColumns ?? this.layoutColumns,
+      printerType: printerType ?? this.printerType,
+      showHeader: showHeader ?? this.showHeader,
+      showItemName: showItemName ?? this.showItemName,
+      showPrice: showPrice ?? this.showPrice,
+      showBarcodeNumber: showBarcodeNumber ?? this.showBarcodeNumber,
+      showExtraLines: showExtraLines ?? this.showExtraLines,
     );
   }
 }

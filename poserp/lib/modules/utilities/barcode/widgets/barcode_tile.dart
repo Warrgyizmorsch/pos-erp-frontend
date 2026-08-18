@@ -4,14 +4,38 @@ import '../../../../core/constants/app_radius.dart';
 import '../models/barcode_config.dart';
 
 class BarcodeTile extends StatelessWidget {
-  final BarcodeConfig cfg;
+  final BarcodeRow item;
+  final BarcodeDisplaySettings settings;
+  final String businessName;
 
-  const BarcodeTile({super.key, required this.cfg});
+  const BarcodeTile({
+    super.key,
+    required this.item,
+    required this.settings,
+    required this.businessName,
+  });
 
   @override
   Widget build(BuildContext context) {
+    double tileWidth = 160;
+    switch (settings.labelSize) {
+      case '40x20':
+        tileWidth = 135;
+        break;
+      case '38x25':
+        tileWidth = 130;
+        break;
+      case '50x25':
+      default:
+        tileWidth = 160;
+        break;
+    }
+
+    final code = item.barcode.isNotEmpty ? item.barcode : item.productCode;
+    final barcodeString = code.isNotEmpty ? code : '8901234567890';
+
     return Container(
-      width: 180,
+      width: tileWidth,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -24,9 +48,10 @@ class BarcodeTile extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (cfg.showBusinessName)
+          // Business Name Header
+          if (settings.showHeader)
             Text(
-              cfg.businessName,
+              businessName.toUpperCase(),
               style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
@@ -35,9 +60,11 @@ class BarcodeTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          if (cfg.showProductName)
+
+          // Item Name
+          if (settings.showItemName)
             Text(
-              cfg.productName,
+              item.productName.isNotEmpty ? item.productName : 'Product Name',
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -46,20 +73,29 @@ class BarcodeTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+
+          // Extra Line (SKU)
+          if (settings.showExtraLines && item.productCode.isNotEmpty)
+            Text(
+              'SKU: ${item.productCode}',
+              style: TextStyle(fontSize: 8, color: Colors.grey[700]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           const SizedBox(height: 4),
 
-          // Simulated Barcode Lines
+          // Code128 Vector Barcode Lines
           Container(
-            height: 36,
+            height: 32,
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: List.generate(
-                cfg.barcodeValue.length * 2,
+                barcodeString.length * 2,
                 (idx) => Container(
-                  width: (idx % 3 == 0) ? 2.5 : 1.2,
+                  width: (idx % 3 == 0) ? 2.2 : 1.1,
                   color: (idx % 5 == 0) ? Colors.transparent : Colors.black,
                 ),
               ),
@@ -67,20 +103,23 @@ class BarcodeTile extends StatelessWidget {
           ),
           const SizedBox(height: 2),
 
-          Text(
-            cfg.barcodeValue,
-            style: const TextStyle(
-              fontSize: 9,
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+          // Barcode Number
+          if (settings.showBarcodeNumber)
+            Text(
+              barcodeString,
+              style: const TextStyle(
+                fontSize: 9,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
-          ),
 
-          if (cfg.showPrice) ...[
+          // Price / MRP
+          if (settings.showPrice) ...[
             const SizedBox(height: 2),
             Text(
-              'MRP: ₹${cfg.price.toStringAsFixed(2)}',
+              'MRP: ₹${item.price.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
