@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_list_card.dart';
 import '../../../../core/widgets/app_pagination.dart';
@@ -13,12 +14,16 @@ import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/customer_controller.dart';
 import '../models/customer.dart';
 import '../widgets/customer_dialog.dart';
+import 'customer_detail_view.dart';
 
 class CustomerListView extends GetView<CustomerController> {
   const CustomerListView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final horizontalScrollController = ScrollController();
+
     return Scaffold(
       appBar: AppTopBar(
         title: 'Customers',
@@ -40,7 +45,7 @@ class CustomerListView extends GetView<CustomerController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search Input
+              // Search Input Toolbar
               AppCard(
                 padding: const EdgeInsets.all(12),
                 child: AppSearchField(
@@ -50,7 +55,7 @@ class CustomerListView extends GetView<CustomerController> {
               ),
               const SizedBox(height: 16),
 
-              // Main Customers List
+              // Main Customers Responsive Table / List View
               Obx(() {
                 if (controller.isLoading.value) {
                   return const Padding(
@@ -74,84 +79,343 @@ class CustomerListView extends GetView<CustomerController> {
 
                 return Column(
                   children: [
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.customers.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final customer = controller.customers[index];
-                        final balance = customer.walletBalance;
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 700;
 
-                        AppStatusChipType statusType = AppStatusChipType.info;
-                        String statusLabel = 'CLEAR';
+                        if (isDesktop) {
+                          return AppCard(
+                            padding: EdgeInsets.zero,
+                            child: ClipRRect(
+                              borderRadius: AppRadius.lg,
+                              child: Scrollbar(
+                                controller: horizontalScrollController,
+                                thumbVisibility: true,
+                                trackVisibility: true,
+                                child: SingleChildScrollView(
+                                  controller: horizontalScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    headingRowColor: WidgetStateProperty.all(
+                                      isDark
+                                          ? AppColors.inputDark
+                                          : Colors.grey[100],
+                                    ),
+                                    columnSpacing: 24,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(
+                                          'CUSTOMER',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'PHONE',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'EMAIL',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'PURCHASES',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'TOTAL SPENT',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'BALANCE',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'ACTIONS',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: controller.customers.map((c) {
+                                      final balance = c.walletBalance;
 
-                        if (balance > 0) {
-                          statusType = AppStatusChipType.success;
-                          statusLabel =
-                              'RECEIVABLE (₹${balance.toStringAsFixed(2)})';
-                        } else if (balance < 0) {
-                          statusType = AppStatusChipType.danger;
-                          statusLabel =
-                              'ADVANCE (₹${balance.abs().toStringAsFixed(2)})';
+                                      return DataRow(
+                                        onSelectChanged: (_) =>
+                                            CustomerDetailView.show(context, c),
+                                        cells: [
+                                          // Customer Avatar & Name
+                                          DataCell(
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 16,
+                                                  backgroundColor: AppColors
+                                                      .primary
+                                                      .withAlpha(25),
+                                                  child: Text(
+                                                    c.name.isNotEmpty
+                                                        ? c.name[0]
+                                                              .toUpperCase()
+                                                        : 'C',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  c.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // Phone
+                                          DataCell(
+                                            Text(
+                                              c.phone,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Email
+                                          DataCell(
+                                            Text(
+                                              (c.email != null &&
+                                                      c.email!.isNotEmpty)
+                                                  ? c.email!
+                                                  : '—',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Purchases Badge
+                                          DataCell(
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? AppColors.inputDark
+                                                    : Colors.grey[200],
+                                                borderRadius: AppRadius.full,
+                                              ),
+                                              child: Text(
+                                                '${c.totalPurchases}',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Total Spent
+                                          DataCell(
+                                            Text(
+                                              '₹${c.totalSpent.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Balance
+                                          DataCell(
+                                            Text(
+                                              '₹${balance.abs().toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: balance > 0
+                                                    ? Colors.green
+                                                    : (balance < 0
+                                                          ? Colors.red
+                                                          : Colors.grey),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Actions (Edit & Delete Buttons)
+                                          DataCell(
+                                            Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 18,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                  onPressed: () =>
+                                                      CustomerDialog.show(
+                                                        context,
+                                                        customer: c,
+                                                      ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 18,
+                                                    color: AppColors.danger,
+                                                  ),
+                                                  onPressed: () =>
+                                                      _showDeleteConfirm(
+                                                        context,
+                                                        c,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
                         }
 
-                        return AppListCard(
-                          title: customer.name,
-                          subtitle:
-                              'Phone: ${customer.phone} • Orders: ${customer.totalPurchases}',
-                          trailingText:
-                              '₹${customer.totalSpent.toStringAsFixed(2)}',
-                          statusText: statusLabel,
-                          statusType: statusType,
-                          leadIcon: Icons.person_rounded,
-                          onTap: () =>
-                              CustomerDialog.show(context, customer: customer),
-                          popupMenu: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert_rounded, size: 20),
-                            padding: EdgeInsets.zero,
-                            onSelected: (val) {
-                              if (val == 'edit') {
-                                CustomerDialog.show(
-                                  context,
-                                  customer: customer,
-                                );
-                              } else if (val == 'delete') {
-                                _showDeleteConfirm(context, customer);
-                              }
-                            },
-                            itemBuilder: (ctx) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: AppColors.primary,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Edit Customer'),
-                                  ],
+                        // Mobile View: AppListCards
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: controller.customers.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final customer = controller.customers[index];
+                            final balance = customer.walletBalance;
+
+                            AppStatusChipType statusType =
+                                AppStatusChipType.info;
+                            String statusLabel = 'CLEAR';
+
+                            if (balance > 0) {
+                              statusType = AppStatusChipType.success;
+                              statusLabel =
+                                  'RECEIVABLE (₹${balance.toStringAsFixed(2)})';
+                            } else if (balance < 0) {
+                              statusType = AppStatusChipType.danger;
+                              statusLabel =
+                                  'ADVANCE (₹${balance.abs().toStringAsFixed(2)})';
+                            }
+
+                            return AppListCard(
+                              title: customer.name,
+                              subtitle:
+                                  'Phone: ${customer.phone} • Orders: ${customer.totalPurchases}',
+                              trailingText:
+                                  '₹${customer.totalSpent.toStringAsFixed(2)}',
+                              statusText: statusLabel,
+                              statusType: statusType,
+                              leadIcon: Icons.person_rounded,
+                              onTap: () =>
+                                  CustomerDetailView.show(context, customer),
+                              popupMenu: PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert_rounded,
+                                  size: 20,
                                 ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: AppColors.danger,
+                                padding: EdgeInsets.zero,
+                                onSelected: (val) {
+                                  if (val == 'edit') {
+                                    CustomerDialog.show(
+                                      context,
+                                      customer: customer,
+                                    );
+                                  } else if (val == 'delete') {
+                                    _showDeleteConfirm(context, customer);
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                          color: AppColors.primary,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Edit Customer'),
+                                      ],
                                     ),
-                                    SizedBox(width: 8),
-                                    Text('Delete Customer'),
-                                  ],
-                                ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete_outline,
+                                          size: 18,
+                                          color: AppColors.danger,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Delete Customer'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     ),

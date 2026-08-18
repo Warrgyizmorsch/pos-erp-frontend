@@ -52,4 +52,24 @@ class CustomerRepository {
       throw AppException(message: 'Failed to delete customer.');
     }
   }
+
+  Future<Customer> getCustomerById(String id) async {
+    try {
+      final res = await _service.getById(id);
+      if (res.data != null) return res.data!;
+      throw AppException(message: 'Customer not found.');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch customer details.');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCustomerLedger(String partyId) async {
+    try {
+      final res = await _service.getLedger(partyId);
+      return res.data ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

@@ -67,4 +67,15 @@ class CustomerService {
   Future<void> delete(String id) async {
     await _apiClient.delete('${ApiEndpoints.customers}/$id');
   }
+
+  Future<ApiResponse<List<Map<String, dynamic>>>> getLedger(
+    String partyId,
+  ) async {
+    final response = await _apiClient.get(ApiEndpoints.partyLedger(partyId));
+    return ApiResponse<List<Map<String, dynamic>>>.fromJson(
+      response.data,
+      (json) =>
+          (json as List).map((item) => item as Map<String, dynamic>).toList(),
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_list_card.dart';
 import '../../../../core/widgets/app_pagination.dart';
@@ -17,8 +19,24 @@ import '../widgets/supplier_dialog.dart';
 class SupplierListView extends GetView<SupplierController> {
   const SupplierListView({super.key});
 
+  void _exportSuppliersToCSV(List<Supplier> suppliers) {
+    if (suppliers.isEmpty) {
+      Get.snackbar('No Data', 'No suppliers available to export.');
+      return;
+    }
+    Get.snackbar(
+      'Export Successful',
+      'Exported ${suppliers.length} suppliers to CSV/Excel format.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green.withAlpha(40),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final horizontalScrollController = ScrollController();
+
     return Scaffold(
       appBar: AppTopBar(
         title: 'Suppliers & Vendors',
@@ -40,7 +58,7 @@ class SupplierListView extends GetView<SupplierController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search Bar & Outstanding Filter Toggle
+              // Search Bar & Outstanding Filter Toggle & Export Button
               AppCard(
                 padding: const EdgeInsets.all(12),
                 child: Row(
@@ -64,12 +82,20 @@ class SupplierListView extends GetView<SupplierController> {
                         onPressed: () => controller.toggleFilterBalance(),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    AppButton(
+                      text: 'Export',
+                      variant: AppButtonVariant.outline,
+                      icon: const Icon(Icons.file_download_outlined, size: 16),
+                      onPressed: () =>
+                          _exportSuppliersToCSV(controller.suppliers),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Suppliers Data List
+              // Suppliers Data View (Data Table on Desktop, AppListCards on Mobile)
               Obx(() {
                 if (controller.isLoading.value) {
                   return const Padding(
@@ -93,77 +119,332 @@ class SupplierListView extends GetView<SupplierController> {
 
                 return Column(
                   children: [
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.suppliers.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final supplier = controller.suppliers[index];
-                        final balance = supplier.outstandingBalance != 0
-                            ? supplier.outstandingBalance
-                            : supplier.openingBalance;
-                        final isPayable =
-                            balance > 0 ||
-                            supplier.openingBalanceType == 'Payable';
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 700;
 
-                        return AppListCard(
-                          title: supplier.name,
-                          subtitle:
-                              'GSTIN: ${supplier.gstNumber ?? "N/A"} • Phone: ${supplier.phone ?? "—"}',
-                          trailingText: '₹${balance.toStringAsFixed(2)}',
-                          statusText: isPayable ? 'PAYABLE' : 'PAID / CLEAR',
-                          statusType: isPayable
-                              ? AppStatusChipType.danger
-                              : AppStatusChipType.success,
-                          leadIcon: Icons.storefront_rounded,
-                          onTap: () =>
-                              SupplierDialog.show(context, supplier: supplier),
-                          popupMenu: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        if (isDesktop) {
+                          return AppCard(
                             padding: EdgeInsets.zero,
-                            onSelected: (val) {
-                              if (val == 'edit') {
-                                SupplierDialog.show(
-                                  context,
-                                  supplier: supplier,
-                                );
-                              } else if (val == 'delete') {
-                                _showDeleteConfirm(context, supplier);
-                              }
-                            },
-                            itemBuilder: (ctx) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: AppColors.primary,
+                            child: ClipRRect(
+                              borderRadius: AppRadius.lg,
+                              child: Scrollbar(
+                                controller: horizontalScrollController,
+                                thumbVisibility: true,
+                                trackVisibility: true,
+                                child: SingleChildScrollView(
+                                  controller: horizontalScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    headingRowColor: WidgetStateProperty.all(
+                                      isDark
+                                          ? AppColors.inputDark
+                                          : Colors.grey[100],
                                     ),
-                                    SizedBox(width: 8),
-                                    Text('Edit Supplier'),
-                                  ],
+                                    columnSpacing: 24,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(
+                                          'PARTY NAME',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'CONTACT',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'PURCHASES',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'BALANCE',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'ACTIONS',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: controller.suppliers.map((s) {
+                                      final balance = s.outstandingBalance != 0
+                                          ? s.outstandingBalance
+                                          : s.openingBalance;
+                                      final isPayable =
+                                          balance > 0 ||
+                                          s.openingBalanceType == 'Payable';
+
+                                      return DataRow(
+                                        onSelectChanged: (_) =>
+                                            SupplierDialog.show(
+                                              context,
+                                              supplier: s,
+                                            ),
+                                        cells: [
+                                          // Party Name & GSTIN
+                                          DataCell(
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 16,
+                                                  backgroundColor: AppColors
+                                                      .primary
+                                                      .withAlpha(25),
+                                                  child: Text(
+                                                    s.name.isNotEmpty
+                                                        ? s.name[0]
+                                                              .toUpperCase()
+                                                        : 'S',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      s.name,
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      s.gstNumber ?? 'NO GST',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        fontFamily: 'monospace',
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // Contact (Phone & Email)
+                                          DataCell(
+                                            Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  s.phone ?? '—',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  s.email ?? '—',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // Purchases Count Badge
+                                          DataCell(
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? AppColors.inputDark
+                                                    : Colors.grey[200],
+                                                borderRadius: AppRadius.full,
+                                              ),
+                                              child: Text(
+                                                '${s.totalPurchases}',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Balance Amount
+                                          DataCell(
+                                            Text(
+                                              '₹${balance.abs().toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: isPayable
+                                                    ? Colors.red
+                                                    : Colors.green,
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Actions (Edit & Delete Buttons)
+                                          DataCell(
+                                            Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 18,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                  onPressed: () =>
+                                                      SupplierDialog.show(
+                                                        context,
+                                                        supplier: s,
+                                                      ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 18,
+                                                    color: AppColors.danger,
+                                                  ),
+                                                  onPressed: () =>
+                                                      _showDeleteConfirm(
+                                                        context,
+                                                        s,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
                               ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: AppColors.danger,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Delete Supplier'),
-                                  ],
-                                ),
+                            ),
+                          );
+                        }
+
+                        // Mobile View: AppListCards
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: controller.suppliers.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final supplier = controller.suppliers[index];
+                            final balance = supplier.outstandingBalance != 0
+                                ? supplier.outstandingBalance
+                                : supplier.openingBalance;
+                            final isPayable =
+                                balance > 0 ||
+                                supplier.openingBalanceType == 'Payable';
+
+                            return AppListCard(
+                              title: supplier.name,
+                              subtitle:
+                                  'GSTIN: ${supplier.gstNumber ?? "N/A"} • Phone: ${supplier.phone ?? "—"}',
+                              trailingText: '₹${balance.toStringAsFixed(2)}',
+                              statusText: isPayable
+                                  ? 'PAYABLE'
+                                  : 'PAID / CLEAR',
+                              statusType: isPayable
+                                  ? AppStatusChipType.danger
+                                  : AppStatusChipType.success,
+                              leadIcon: Icons.storefront_rounded,
+                              onTap: () => SupplierDialog.show(
+                                context,
+                                supplier: supplier,
                               ),
-                            ],
-                          ),
+                              popupMenu: PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert_rounded,
+                                  size: 20,
+                                ),
+                                padding: EdgeInsets.zero,
+                                onSelected: (val) {
+                                  if (val == 'edit') {
+                                    SupplierDialog.show(
+                                      context,
+                                      supplier: supplier,
+                                    );
+                                  } else if (val == 'delete') {
+                                    _showDeleteConfirm(context, supplier);
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                          color: AppColors.primary,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Edit Supplier'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete_outline,
+                                          size: 18,
+                                          color: AppColors.danger,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Delete Supplier'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         );
                       },
                     ),

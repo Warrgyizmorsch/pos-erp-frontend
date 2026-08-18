@@ -12,6 +12,8 @@ class CustomerController extends GetxController {
 
   CustomerController(this._repository);
 
+  CustomerRepository get repository => _repository;
+
   final RxList<Customer> customers = <Customer>[].obs;
   final RxBool isLoading = true.obs;
   final RxBool isSubmitting = false.obs;

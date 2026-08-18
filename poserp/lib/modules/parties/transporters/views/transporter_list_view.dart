@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_list_card.dart';
 import '../../../../core/widgets/app_pagination.dart';
@@ -19,6 +20,9 @@ class TransporterListView extends GetView<TransporterController> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final horizontalScrollController = ScrollController();
+
     return Scaffold(
       appBar: AppTopBar(
         title: 'Transporters',
@@ -50,7 +54,7 @@ class TransporterListView extends GetView<TransporterController> {
               ),
               const SizedBox(height: 16),
 
-              // Transporters Data List
+              // Transporters Responsive Table / List View
               Obx(() {
                 if (controller.isLoading.value) {
                   return const Padding(
@@ -74,75 +78,345 @@ class TransporterListView extends GetView<TransporterController> {
 
                 return Column(
                   children: [
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.transporters.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final transporter = controller.transporters[index];
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 700;
 
-                        return AppListCard(
-                          title: transporter.name,
-                          subtitle:
-                              'Vehicle: ${transporter.vehicleNumber ?? "N/A"} • Phone: ${transporter.phone}',
-                          trailingText: transporter.address ?? '',
-                          statusText: transporter.isActive
-                              ? 'ACTIVE'
-                              : 'INACTIVE',
-                          statusType: transporter.isActive
-                              ? AppStatusChipType.success
-                              : AppStatusChipType.warning,
-                          leadIcon: Icons.local_shipping_rounded,
-                          onTap: () => TransporterDialog.show(
-                            context,
-                            transporter: transporter,
-                          ),
-                          popupMenu: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        if (isDesktop) {
+                          return AppCard(
                             padding: EdgeInsets.zero,
-                            onSelected: (val) {
-                              if (val == 'edit') {
-                                TransporterDialog.show(
-                                  context,
-                                  transporter: transporter,
-                                );
-                              } else if (val == 'delete') {
-                                _showDeleteConfirm(context, transporter);
-                              }
-                            },
-                            itemBuilder: (ctx) => [
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: AppColors.primary,
+                            child: ClipRRect(
+                              borderRadius: AppRadius.lg,
+                              child: Scrollbar(
+                                controller: horizontalScrollController,
+                                thumbVisibility: true,
+                                trackVisibility: true,
+                                child: SingleChildScrollView(
+                                  controller: horizontalScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    headingRowColor: WidgetStateProperty.all(
+                                      isDark
+                                          ? AppColors.inputDark
+                                          : Colors.grey[100],
                                     ),
-                                    SizedBox(width: 8),
-                                    Text('Edit Transporter'),
-                                  ],
+                                    columnSpacing: 24,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(
+                                          'SR NO',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'TRANSPORTER',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'PHONE',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'VEHICLE NUMBER',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'ADDRESS',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'STATUS',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'ACTIONS',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: controller.transporters
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                          final i = entry.key;
+                                          final t = entry.value;
+
+                                          return DataRow(
+                                            onSelectChanged: (_) =>
+                                                TransporterDialog.show(
+                                                  context,
+                                                  transporter: t,
+                                                ),
+                                            cells: [
+                                              // Sr No
+                                              DataCell(
+                                                Text(
+                                                  '${i + 1}',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Transporter Name & Icon
+                                              DataCell(
+                                                Row(
+                                                  children: [
+                                                    CircleAvatar(
+                                                      radius: 16,
+                                                      backgroundColor: AppColors
+                                                          .info
+                                                          .withAlpha(25),
+                                                      child: const Icon(
+                                                        Icons.local_shipping,
+                                                        size: 16,
+                                                        color: AppColors.info,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Text(
+                                                      t.name,
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              // Phone
+                                              DataCell(
+                                                Text(
+                                                  t.phone,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Vehicle Number
+                                              DataCell(
+                                                Text(
+                                                  t.vehicleNumber ?? '—',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontFamily: 'monospace',
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Address
+                                              DataCell(
+                                                SizedBox(
+                                                  width: 180,
+                                                  child: Text(
+                                                    t.address ?? '—',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Status Chip
+                                              DataCell(
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: t.isActive
+                                                        ? Colors.green
+                                                              .withAlpha(20)
+                                                        : Colors.grey.withAlpha(
+                                                            20,
+                                                          ),
+                                                    borderRadius:
+                                                        AppRadius.full,
+                                                  ),
+                                                  child: Text(
+                                                    t.isActive
+                                                        ? 'ACTIVE'
+                                                        : 'INACTIVE',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: t.isActive
+                                                          ? Colors.green
+                                                          : Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Actions (Edit & Delete Buttons)
+                                              DataCell(
+                                                Row(
+                                                  children: [
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 18,
+                                                        color:
+                                                            AppColors.primary,
+                                                      ),
+                                                      onPressed: () =>
+                                                          TransporterDialog.show(
+                                                            context,
+                                                            transporter: t,
+                                                          ),
+                                                    ),
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.delete_outline,
+                                                        size: 18,
+                                                        color: AppColors.danger,
+                                                      ),
+                                                      onPressed: () =>
+                                                          _showDeleteConfirm(
+                                                            context,
+                                                            t,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        })
+                                        .toList(),
+                                  ),
                                 ),
                               ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: AppColors.danger,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Delete Transporter'),
-                                  ],
-                                ),
+                            ),
+                          );
+                        }
+
+                        // Mobile View: AppListCards
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: controller.transporters.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final transporter = controller.transporters[index];
+
+                            return AppListCard(
+                              title: transporter.name,
+                              subtitle:
+                                  'Vehicle: ${transporter.vehicleNumber ?? "N/A"} • Phone: ${transporter.phone}',
+                              trailingText: transporter.address ?? '',
+                              statusText: transporter.isActive
+                                  ? 'ACTIVE'
+                                  : 'INACTIVE',
+                              statusType: transporter.isActive
+                                  ? AppStatusChipType.success
+                                  : AppStatusChipType.warning,
+                              leadIcon: Icons.local_shipping_rounded,
+                              onTap: () => TransporterDialog.show(
+                                context,
+                                transporter: transporter,
                               ),
-                            ],
-                          ),
+                              popupMenu: PopupMenuButton<String>(
+                                icon: const Icon(
+                                  Icons.more_vert_rounded,
+                                  size: 20,
+                                ),
+                                padding: EdgeInsets.zero,
+                                onSelected: (val) {
+                                  if (val == 'edit') {
+                                    TransporterDialog.show(
+                                      context,
+                                      transporter: transporter,
+                                    );
+                                  } else if (val == 'delete') {
+                                    _showDeleteConfirm(context, transporter);
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                          color: AppColors.primary,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Edit Transporter'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete_outline,
+                                          size: 18,
+                                          color: AppColors.danger,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Delete Transporter'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         );
                       },
                     ),

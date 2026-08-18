@@ -145,6 +145,37 @@ class MoreModulesView extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
+              // Parties & Contacts Group
+              if (PermissionService.hasRole(
+                userRole,
+                PermissionService.partiesRoles,
+              )) ...[
+                _buildSectionHeader(
+                  context: context,
+                  title: 'Parties & Contacts',
+                  icon: Icons.people_outline,
+                  color: AppColors.primary,
+                ),
+                _buildGridSection([
+                  _ModuleItem(
+                    icon: Icons.person_rounded,
+                    label: 'Customers',
+                    route: '/customers',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.storefront_rounded,
+                    label: 'Suppliers & Vendors',
+                    route: '/suppliers',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.local_shipping_rounded,
+                    label: 'Transporters',
+                    route: '/transporters',
+                  ),
+                ]),
+                const SizedBox(height: 16),
+              ],
+
               // Shift & Utility Tools Group
               _buildSectionHeader(
                 context: context,

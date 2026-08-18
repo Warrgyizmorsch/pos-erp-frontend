@@ -14,6 +14,7 @@ class ApiEndpoints {
   static const String customers = '/customers';
   static const String suppliers = '/suppliers';
   static const String transporters = '/transporters';
+  static String partyLedger(String partyId) => '/ledger/$partyId';
 
   // Inventory & Stock
   static const String inventory = '/inventory';
