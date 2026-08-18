@@ -11,6 +11,8 @@ class AccountingAuditLogController extends GetxController {
   final Rxn<AccountingAuditLog> selectedLog = Rxn<AccountingAuditLog>();
   final RxBool isLoading = true.obs;
 
+  final RxString startDateFilter = ''.obs;
+  final RxString endDateFilter = ''.obs;
   final RxString actionFilter = ''.obs;
   final RxString moduleFilter = ''.obs;
   final RxString userFilter = ''.obs;
@@ -26,6 +28,12 @@ class AccountingAuditLogController extends GetxController {
     try {
       isLoading.value = true;
       final filters = <String, dynamic>{};
+      if (startDateFilter.value.isNotEmpty) {
+        filters['startDate'] = startDateFilter.value;
+      }
+      if (endDateFilter.value.isNotEmpty) {
+        filters['endDate'] = endDateFilter.value;
+      }
       if (actionFilter.value.isNotEmpty) {
         filters['action'] = actionFilter.value;
       }
@@ -41,23 +49,20 @@ class AccountingAuditLogController extends GetxController {
 
       final res = await _repository.fetchLogs(filters);
       logs.assignAll(res);
-    } catch (_) {
-      logs.assignAll([
-        AccountingAuditLog(
-          id: 'log-1',
-          action: 'SETTINGS_UPDATE',
-          module: 'accounting',
-          referenceNo: 'CFG-001',
-          description: 'Updated auto voucher posting policy.',
-          oldData: {'autoVoucherPosting': false},
-          newData: {'autoVoucherPosting': true},
-          ipAddress: '127.0.0.1',
-          userName: 'Finance Admin',
-          createdAt: DateTime.now().toIso8601String(),
-        ),
-      ]);
+    } catch (e) {
+      Get.log('Failed to load accounting audit logs: $e');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void resetFilters() {
+    startDateFilter.value = '';
+    endDateFilter.value = '';
+    actionFilter.value = '';
+    moduleFilter.value = '';
+    userFilter.value = '';
+    searchFilter.value = '';
+    loadLogs();
   }
 }
