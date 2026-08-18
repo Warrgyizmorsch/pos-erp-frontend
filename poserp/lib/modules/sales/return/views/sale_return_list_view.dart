@@ -42,83 +42,84 @@ class SaleReturnListView extends GetView<SaleReturnController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Metrics Summary Row
-              Obx(
-                () => LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final retStr =
-                        '₹${controller.totalReturnedAmount.toStringAsFixed(2)}';
-                    final refStr =
-                        '₹${controller.totalRefundedAmount.toStringAsFixed(2)}';
-                    final credStr =
-                        '₹${controller.totalCreditBalance.toStringAsFixed(2)}';
+              // Obx(
+              //   () =>
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final retStr =
+                      '₹${controller.totalReturnedAmount.toStringAsFixed(2)}';
+                  final refStr =
+                      '₹${controller.totalRefundedAmount.toStringAsFixed(2)}';
+                  final credStr =
+                      '₹${controller.totalCreditBalance.toStringAsFixed(2)}';
 
-                    if (isMobile) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Returned',
-                                value: retStr,
-                                icon: Icons.assignment_return_rounded,
-                              ),
+                  if (isMobile) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Returned',
+                              value: retStr,
+                              icon: Icons.assignment_return_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Refunded',
-                                value: refStr,
-                                icon: Icons.price_check_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Refunded',
+                              value: refStr,
+                              icon: Icons.price_check_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Store Credit',
-                                value: credStr,
-                                icon: Icons.account_balance_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Store Credit',
+                              value: credStr,
+                              icon: Icons.account_balance_rounded,
                             ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Total Returned',
-                            value: retStr,
-                            icon: Icons.assignment_return_rounded,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Total Refunded',
-                            value: refStr,
-                            icon: Icons.price_check_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Store Credit Issued',
-                            value: credStr,
-                            icon: Icons.account_balance_rounded,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  },
-                ),
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Total Returned',
+                          value: retStr,
+                          icon: Icons.assignment_return_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Total Refunded',
+                          value: refStr,
+                          icon: Icons.price_check_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Store Credit Issued',
+                          value: credStr,
+                          icon: Icons.account_balance_rounded,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
+              // ),
               const SizedBox(height: 16),
 
               // Filter Bar

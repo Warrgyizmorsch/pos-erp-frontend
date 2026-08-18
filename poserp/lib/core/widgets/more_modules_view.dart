@@ -217,6 +217,47 @@ class MoreModulesView extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
+              // Sales & POS Billing Group
+              if (PermissionService.hasRole(
+                userRole,
+                PermissionService.salesRoles,
+              )) ...[
+                _buildSectionHeader(
+                  context: context,
+                  title: 'Sales & POS Billing',
+                  icon: Icons.point_of_sale_rounded,
+                  color: AppColors.primary,
+                ),
+                _buildGridSection([
+                  _ModuleItem(
+                    icon: Icons.point_of_sale_rounded,
+                    label: 'POS Billing Terminal',
+                    route: '/pos',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.shopping_cart_checkout_rounded,
+                    label: 'POS Checkout Cart',
+                    route: '/checkout',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Sales Invoices',
+                    route: '/sales',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.payments_rounded,
+                    label: 'Payment-In Collection',
+                    route: '/sales/payment-in',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.assignment_return_rounded,
+                    label: 'Sale Returns (Credit Notes)',
+                    route: '/sales/return',
+                  ),
+                ]),
+                const SizedBox(height: 16),
+              ],
+
               // Shift & Utility Tools Group
               _buildSectionHeader(
                 context: context,
