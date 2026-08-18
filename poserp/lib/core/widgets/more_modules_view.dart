@@ -294,6 +294,32 @@ class MoreModulesView extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
+              // Expenses & Indirect Income Group
+              if (PermissionService.hasRole(
+                userRole,
+                PermissionService.expenseRoles,
+              )) ...[
+                _buildSectionHeader(
+                  context: context,
+                  title: 'Expenses & Indirect Income',
+                  icon: Icons.receipt_long_outlined,
+                  color: AppColors.warning,
+                ),
+                _buildGridSection([
+                  _ModuleItem(
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Expenses Manager',
+                    route: '/expenses',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.trending_up_rounded,
+                    label: 'Other Direct / Indirect Income',
+                    route: '/expenses/income',
+                  ),
+                ]),
+                const SizedBox(height: 16),
+              ],
+
               // Shift & Utility Tools Group
               _buildSectionHeader(
                 context: context,

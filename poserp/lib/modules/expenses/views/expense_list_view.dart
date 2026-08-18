@@ -99,83 +99,83 @@ class ExpenseListView extends GetView<ExpenseController> {
               const SizedBox(height: 16),
 
               // Summary Metrics Panel
-              Obx(
-                () => LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final expStr =
-                        '₹${controller.totalExpenses.toStringAsFixed(2)}';
-                    final incStr =
-                        '₹${controller.totalIncome.toStringAsFixed(2)}';
-                    final netStr =
-                        '₹${controller.netAmount.toStringAsFixed(2)}';
+              // Obx(
+              //   () =>
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final expStr =
+                      '₹${controller.totalExpenses.toStringAsFixed(2)}';
+                  final incStr =
+                      '₹${controller.totalIncome.toStringAsFixed(2)}';
+                  final netStr = '₹${controller.netAmount.toStringAsFixed(2)}';
 
-                    if (isMobile) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Expenses (-)',
-                                value: expStr,
-                                icon: Icons.money_off_rounded,
-                              ),
+                  if (isMobile) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Expenses (-)',
+                              value: expStr,
+                              icon: Icons.money_off_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Other Income (+)',
-                                value: incStr,
-                                icon: Icons.attach_money_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Other Income (+)',
+                              value: incStr,
+                              icon: Icons.attach_money_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Net Position',
-                                value: netStr,
-                                icon: Icons.account_balance_wallet_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Net Position',
+                              value: netStr,
+                              icon: Icons.account_balance_wallet_rounded,
                             ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Total Expenses (-)',
-                            value: expStr,
-                            icon: Icons.money_off_rounded,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Total Other Income (+)',
-                            value: incStr,
-                            icon: Icons.attach_money_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Net Operating Position',
-                            value: netStr,
-                            icon: Icons.account_balance_wallet_rounded,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  },
-                ),
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Total Expenses (-)',
+                          value: expStr,
+                          icon: Icons.money_off_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Total Other Income (+)',
+                          value: incStr,
+                          icon: Icons.attach_money_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Net Operating Position',
+                          value: netStr,
+                          icon: Icons.account_balance_wallet_rounded,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
+              // ),
               const SizedBox(height: 16),
 
               // Filter Bar
