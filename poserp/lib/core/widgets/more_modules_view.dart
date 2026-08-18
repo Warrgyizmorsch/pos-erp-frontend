@@ -76,6 +76,11 @@ class MoreModulesView extends StatelessWidget {
                     route: '/accounting/gst',
                   ),
                   _ModuleItem(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Sales & Business Reports',
+                    route: '/reports',
+                  ),
+                  _ModuleItem(
                     icon: Icons.pie_chart_outline_rounded,
                     label: 'Financial Reports',
                     route: '/accounting/reports',

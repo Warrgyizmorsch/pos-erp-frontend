@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_stat_card.dart';
 import '../../../../core/widgets/app_top_bar.dart';
@@ -14,21 +15,32 @@ class ReportsView extends GetView<ReportsController> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final horizontalScrollController = ScrollController();
 
     return Scaffold(
       appBar: AppTopBar(
-        title: 'Business Intelligence & Reports',
-        subtitle: 'Sales performance, inventory valuation & cashflow',
+        title: 'Analytics & Reports',
+        subtitle: 'Enterprise-level business intelligence dashboard',
         actions: [
           IconButton(
-            icon: const Icon(Icons.file_present_rounded, size: 22),
+            icon: const Icon(Icons.file_present_rounded, size: 20),
             tooltip: 'Export CSV',
             onPressed: () => controller.exportReport('csv'),
           ),
           IconButton(
-            icon: const Icon(Icons.grid_on_rounded, size: 22),
+            icon: const Icon(Icons.grid_on_rounded, size: 20),
             tooltip: 'Export Excel',
             onPressed: () => controller.exportReport('excel'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
+            tooltip: 'Export PDF',
+            onPressed: () => controller.exportReport('pdf'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.print_outlined, size: 20),
+            tooltip: 'Print Report',
+            onPressed: () => controller.printReport(),
           ),
           const SizedBox(width: 8),
         ],
@@ -41,7 +53,7 @@ class ReportsView extends GetView<ReportsController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Filter Toolbar (Horizontal Scrolling Tabs + Period Picker)
+              // 1. Filter Toolbar (Tabs + Period Selector + Date Range Picker)
               AppCard(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -53,25 +65,25 @@ class ReportsView extends GetView<ReportsController> {
                           children: [
                             _buildReportTab(
                               'sales',
-                              'Sales BI',
+                              'Sales Analytics',
                               Icons.point_of_sale_rounded,
                             ),
                             const SizedBox(width: 8),
                             _buildReportTab(
                               'inventory',
-                              'Inventory',
+                              'Inventory Analytics',
                               Icons.inventory_2_outlined,
                             ),
                             const SizedBox(width: 8),
                             _buildReportTab(
                               'purchases',
-                              'Purchase BI',
+                              'Purchase Analytics',
                               Icons.shopping_bag_outlined,
                             ),
                             const SizedBox(width: 8),
                             _buildReportTab(
                               'cashflow',
-                              'Cashflow',
+                              'Cashflow Analytics',
                               Icons.account_balance_outlined,
                             ),
                           ],
@@ -79,57 +91,95 @@ class ReportsView extends GetView<ReportsController> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
                       children: [
-                        const Text(
-                          'Reporting Period:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Obx(
-                          () => DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: controller.period.value,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'daily',
-                                  child: Text(
-                                    'Daily',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'weekly',
-                                  child: Text(
-                                    'Weekly',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'monthly',
-                                  child: Text(
-                                    'Monthly',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'yearly',
-                                  child: Text(
-                                    'Yearly',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (val) {
-                                if (val != null) controller.period.value = val;
-                              },
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Reporting Period: ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
+                            Obx(
+                              () => DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: controller.period.value,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'daily',
+                                      child: Text(
+                                        'Daily',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'weekly',
+                                      child: Text(
+                                        'Weekly',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'monthly',
+                                      child: Text(
+                                        'Monthly',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'yearly',
+                                      child: Text(
+                                        'Yearly',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'custom',
+                                      child: Text(
+                                        'Custom Range',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      controller.period.value = val;
+                                      if (val == 'custom') {
+                                        _selectDateRange(context);
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+
+                        // Custom Date Range Picker Button
+                        Obx(() {
+                          final range = controller.customDateRange.value;
+                          final text = range != null
+                              ? '${range.start.toString().split(" ")[0]} to ${range.end.toString().split(" ")[0]}'
+                              : 'Select Date Range';
+
+                          return AppButton(
+                            text: text,
+                            variant: AppButtonVariant.outline,
+                            icon: const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 14,
+                            ),
+                            onPressed: () => _selectDateRange(context),
+                          );
+                        }),
                       ],
                     ),
                   ],
@@ -137,7 +187,7 @@ class ReportsView extends GetView<ReportsController> {
               ),
               const SizedBox(height: 16),
 
-              // Report Content
+              // 2. Main Analytics Content
               Obx(() {
                 if (controller.isLoading.value &&
                     controller.reportData.value == null) {
@@ -154,104 +204,200 @@ class ReportsView extends GetView<ReportsController> {
                 }
 
                 final rep = controller.reportData.value!;
-                final revStr = '₹${rep.totalRevenue.toStringAsFixed(2)}';
-                final expStr = '₹${rep.totalExpenses.toStringAsFixed(2)}';
-                final prfStr = '₹${rep.netProfit.toStringAsFixed(2)}';
-                final aovStr = '₹${rep.averageOrderValue.toStringAsFixed(2)}';
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Stat Cards Grid (Mobile Horizontal Scroll / Desktop Row)
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isMobile = constraints.maxWidth < 600;
+                    // ROW 1 SUMMARY CARDS (Total Sales, Total Revenue, Gross Profit, Net Profit)
+                    const Text(
+                      'FINANCIAL SUMMARY CARDS',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMetricsGrid([
+                      AppStatCard(
+                        title: 'Total Sales',
+                        value: '₹${rep.totalSales.toStringAsFixed(2)}',
+                        icon: Icons.shopping_cart_outlined,
+                        color: AppColors.primary,
+                      ),
+                      AppStatCard(
+                        title: 'Total Revenue',
+                        value: '₹${rep.totalRevenue.toStringAsFixed(2)}',
+                        icon: Icons.attach_money_rounded,
+                        color: AppColors.success,
+                      ),
+                      AppStatCard(
+                        title: 'Gross Profit',
+                        value: '₹${rep.grossProfit.toStringAsFixed(2)}',
+                        icon: Icons.trending_up_rounded,
+                        color: AppColors.info,
+                      ),
+                      AppStatCard(
+                        title: 'Net Profit',
+                        value: '₹${rep.netProfit.toStringAsFixed(2)}',
+                        icon: Icons.bar_chart_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
 
-                        if (isMobile) {
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 150,
-                                  child: AppStatCard(
-                                    title: 'Total Revenue',
-                                    value: revStr,
-                                    icon: Icons.trending_up_rounded,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                SizedBox(
-                                  width: 150,
-                                  child: AppStatCard(
-                                    title: 'Total Cost',
-                                    value: expStr,
-                                    icon: Icons.money_off_rounded,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                SizedBox(
-                                  width: 150,
-                                  child: AppStatCard(
-                                    title: 'Net Profit',
-                                    value: prfStr,
-                                    icon: Icons.account_balance_wallet_rounded,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                SizedBox(
-                                  width: 150,
-                                  child: AppStatCard(
-                                    title: 'Avg Order Value',
-                                    value: aovStr,
-                                    icon: Icons.shopping_basket_rounded,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
+                    // ROW 2 SECONDARY METRIC CARDS (Avg Order Value, Total Discount, Total Tax, Purchase Cost)
+                    const Text(
+                      'BREAKDOWN & TRANSACTION CARDS',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMetricsGrid([
+                      AppStatCard(
+                        title: 'Avg Order Value',
+                        value: '₹${rep.averageOrderValue.toStringAsFixed(2)}',
+                        icon: Icons.shopping_bag_outlined,
+                        color: Colors.cyan,
+                      ),
+                      AppStatCard(
+                        title: 'Total Discount',
+                        value: '₹${rep.totalDiscounts.toStringAsFixed(2)}',
+                        icon: Icons.card_giftcard_rounded,
+                        color: Colors.amber[700]!,
+                      ),
+                      AppStatCard(
+                        title: 'Total Tax',
+                        value: '₹${rep.totalTax.toStringAsFixed(2)}',
+                        icon: Icons.percent_rounded,
+                        color: AppColors.danger,
+                      ),
+                      AppStatCard(
+                        title: 'Purchase Cost',
+                        value: '₹${rep.purchaseCost.toStringAsFixed(2)}',
+                        icon: Icons.shopping_basket_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ]),
+                    const SizedBox(height: 16),
 
-                        return Row(
+                    // ROW 3 ADDITIONAL METRICS CARDS (Profit Margin %, Total Expenses, Gross Margin %, Total Orders)
+                    const Text(
+                      'KEY PERFORMANCE METRICS',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMetricsGrid([
+                      AppCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: AppStatCard(
-                                title: 'Total Revenue',
-                                value: revStr,
-                                icon: Icons.trending_up_rounded,
+                            const Text(
+                              'Net Profit Margin',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: AppStatCard(
-                                title: 'Total Cost',
-                                value: expStr,
-                                icon: Icons.money_off_rounded,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: AppStatCard(
-                                title: 'Net Profit',
-                                value: prfStr,
-                                icon: Icons.account_balance_wallet_rounded,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: AppStatCard(
-                                title: 'Avg Order Value',
-                                value: aovStr,
-                                icon: Icons.shopping_basket_rounded,
+                            const SizedBox(height: 4),
+                            Text(
+                              '${rep.profitMargin.toStringAsFixed(2)}%',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                        ),
+                      ),
+                      AppCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Expenses',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '₹${rep.totalExpenses.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AppCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gross Profit %',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${rep.grossProfitMargin.toStringAsFixed(2)}%',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.info,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AppCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Orders',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${rep.totalOrders}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 20),
 
-                    // Top Performing Items & Detailed Breakdown Table
+                    // ROW 4 TOP PERFORMING ITEMS & DETAILED BREAKDOWN TABLE
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isMobile = constraints.maxWidth < 800;
@@ -318,101 +464,130 @@ class ReportsView extends GetView<ReportsController> {
                           padding: EdgeInsets.zero,
                           child: ClipRRect(
                             borderRadius: AppRadius.lg,
-                            child: SingleChildScrollView(
-                              child: DataTable(
-                                columnSpacing: 16,
-                                headingRowColor: WidgetStateProperty.all(
-                                  isDark
-                                      ? AppColors.inputDark
-                                      : Colors.grey[100],
+                            child: Scrollbar(
+                              controller: horizontalScrollController,
+                              thumbVisibility: true,
+                              trackVisibility: true,
+                              child: SingleChildScrollView(
+                                controller: horizontalScrollController,
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  columnSpacing: 24,
+                                  headingRowColor: WidgetStateProperty.all(
+                                    isDark
+                                        ? AppColors.inputDark
+                                        : Colors.grey[100],
+                                  ),
+                                  columns: const [
+                                    DataColumn(
+                                      label: Text(
+                                        'PERIOD',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'ORDERS',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'REVENUE',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'TAX',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'PROFIT',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  rows: rep.reportRows.map((r) {
+                                    return DataRow(
+                                      cells: [
+                                        DataCell(
+                                          Text(
+                                            r['date'].toString(),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            r['orders'].toString(),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            '₹${r['revenue']}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            '₹${r['tax'] ?? 0.0}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            '₹${r['profit']}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.success,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
                                 ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      'PERIOD',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    numeric: true,
-                                    label: Text(
-                                      'ORDERS',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    numeric: true,
-                                    label: Text(
-                                      'REVENUE',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    numeric: true,
-                                    label: Text(
-                                      'PROFIT',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                rows: rep.reportRows.map((r) {
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Text(
-                                          r['date'].toString(),
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          r['orders'].toString(),
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          '₹${r['revenue']}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          '₹${r['profit']}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.success,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
                               ),
                             ),
                           ),
@@ -446,6 +621,57 @@ class ReportsView extends GetView<ReportsController> {
         ),
       ),
     );
+  }
+
+  // Responsive Metrics Cards Grid Builder
+  Widget _buildMetricsGrid(List<Widget> cards) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        if (isMobile) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: cards.map((c) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10.0),
+                  child: SizedBox(width: 160, child: c),
+                );
+              }).toList(),
+            ),
+          );
+        }
+
+        return Row(
+          children: cards.map((c) {
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: c,
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange:
+          controller.customDateRange.value ??
+          DateTimeRange(
+            start: DateTime.now().subtract(const Duration(days: 30)),
+            end: DateTime.now(),
+          ),
+    );
+    if (picked != null) {
+      controller.setDateRange(picked);
+    }
   }
 
   Widget _buildReportTab(String key, String title, IconData icon) {
