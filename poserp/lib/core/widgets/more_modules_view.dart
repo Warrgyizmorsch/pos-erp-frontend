@@ -258,6 +258,42 @@ class MoreModulesView extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
+              // Purchases & Vendor Procurement Group
+              if (PermissionService.hasRole(
+                userRole,
+                PermissionService.purchaseRoles,
+              )) ...[
+                _buildSectionHeader(
+                  context: context,
+                  title: 'Purchases & Vendor Procurement',
+                  icon: Icons.shopping_bag_outlined,
+                  color: AppColors.primary,
+                ),
+                _buildGridSection([
+                  _ModuleItem(
+                    icon: Icons.shopping_bag_rounded,
+                    label: 'Purchase Bills List',
+                    route: '/purchases',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.add_shopping_cart_rounded,
+                    label: 'Create Purchase Bill',
+                    route: '/purchases/create',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.upload_outlined,
+                    label: 'Payment-Out Disbursements',
+                    route: '/payment-out',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.assignment_return_outlined,
+                    label: 'Purchase Returns (Debit Notes)',
+                    route: '/purchase-return',
+                  ),
+                ]),
+                const SizedBox(height: 16),
+              ],
+
               // Shift & Utility Tools Group
               _buildSectionHeader(
                 context: context,

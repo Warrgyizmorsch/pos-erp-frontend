@@ -46,83 +46,84 @@ class PurchaseReturnListView extends GetView<PurchaseReturnController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Metrics Summary Row
-                Obx(
-                  () => LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isMobile = constraints.maxWidth < 600;
-                      final retStr =
-                          '₹${controller.listTotalReturns.toStringAsFixed(2)}';
-                      final refStr =
-                          '₹${controller.listTotalRefunded.toStringAsFixed(2)}';
-                      final debStr =
-                          '₹${controller.listTotalDebit.toStringAsFixed(2)}';
+                // Obx(
+                //   () =>
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+                    final retStr =
+                        '₹${controller.listTotalReturns.toStringAsFixed(2)}';
+                    final refStr =
+                        '₹${controller.listTotalRefunded.toStringAsFixed(2)}';
+                    final debStr =
+                        '₹${controller.listTotalDebit.toStringAsFixed(2)}';
 
-                      if (isMobile) {
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 150,
-                                child: AppStatCard(
-                                  title: 'Total Returned',
-                                  value: retStr,
-                                  icon: Icons.assignment_return_rounded,
-                                ),
+                    if (isMobile) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Total Returned',
+                                value: retStr,
+                                icon: Icons.assignment_return_rounded,
                               ),
-                              const SizedBox(width: 10),
-                              SizedBox(
-                                width: 150,
-                                child: AppStatCard(
-                                  title: 'Cash Received',
-                                  value: refStr,
-                                  icon: Icons.price_check_rounded,
-                                ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Cash Received',
+                                value: refStr,
+                                icon: Icons.price_check_rounded,
                               ),
-                              const SizedBox(width: 10),
-                              SizedBox(
-                                width: 150,
-                                child: AppStatCard(
-                                  title: 'Debit Balance',
-                                  value: debStr,
-                                  icon: Icons.account_balance_rounded,
-                                ),
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              width: 150,
+                              child: AppStatCard(
+                                title: 'Debit Balance',
+                                value: debStr,
+                                icon: Icons.account_balance_rounded,
                               ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: AppStatCard(
-                              title: 'Total Returns Amount',
-                              value: retStr,
-                              icon: Icons.assignment_return_rounded,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppStatCard(
-                              title: 'Total Cash Received',
-                              value: refStr,
-                              icon: Icons.price_check_rounded,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppStatCard(
-                              title: 'Supplier Debit Balance',
-                              value: debStr,
-                              icon: Icons.account_balance_rounded,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
-                    },
-                  ),
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Returns Amount',
+                            value: retStr,
+                            icon: Icons.assignment_return_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Total Cash Received',
+                            value: refStr,
+                            icon: Icons.price_check_rounded,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppStatCard(
+                            title: 'Supplier Debit Balance',
+                            value: debStr,
+                            icon: Icons.account_balance_rounded,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
+                // ),
                 const SizedBox(height: 16),
 
                 // Control & Filter Bar
