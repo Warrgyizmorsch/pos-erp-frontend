@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/bank_import_models.dart';
 import '../repositories/bank_import_repository.dart';
+import '../../ledgers/models/accounting_ledger.dart';
+import '../../ledgers/repositories/ledger_repository.dart';
 
 class BankImportSettingsController extends GetxController {
   final BankImportRepository _repository;
+  final LedgerRepository? _ledgerRepository;
 
-  BankImportSettingsController(this._repository);
+  BankImportSettingsController(this._repository, [this._ledgerRepository]);
 
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
@@ -17,7 +20,11 @@ class BankImportSettingsController extends GetxController {
   final RxString defaultExpenseLedgerId = ''.obs;
   final RxString defaultIncomeLedgerId = ''.obs;
   final RxBool autoPostHighConfidence = false.obs;
-  final RxDouble confidenceThreshold = 0.85.obs;
+  final RxDouble confidenceThreshold = 0.90.obs;
+
+  final RxList<Map<String, String>> bankMappings = <Map<String, String>>[].obs;
+  final RxList<AccountingLedger> allLedgers = <AccountingLedger>[].obs;
+  final RxList<AccountingLedger> bankLedgers = <AccountingLedger>[].obs;
 
   @override
   void onInit() {
@@ -28,6 +35,8 @@ class BankImportSettingsController extends GetxController {
   Future<void> loadSettings() async {
     try {
       isLoading.value = true;
+      await loadLedgers();
+
       final res = await _repository.fetchSettings();
       settings.value = res;
       defaultBankLedgerId.value = res.defaultBankLedgerId ?? '';
@@ -35,41 +44,85 @@ class BankImportSettingsController extends GetxController {
       defaultIncomeLedgerId.value = res.defaultIncomeLedgerId ?? '';
       autoPostHighConfidence.value = res.autoPostHighConfidence;
       confidenceThreshold.value = res.confidenceThreshold;
-    } catch (_) {
-      settings.value = BankImportSettings(
-        defaultBankLedgerId: 'ledger-bank',
-        defaultExpenseLedgerId: 'ledger-expense',
-        defaultIncomeLedgerId: 'ledger-income',
-        autoPostHighConfidence: false,
-        confidenceThreshold: 0.85,
-      );
+    } catch (e) {
+      Get.log('Failed to load bank import settings dynamically: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadLedgers() async {
+    try {
+      if (_ledgerRepository != null) {
+        final list = await _ledgerRepository.fetchLedgers(status: 'active');
+        allLedgers.assignAll(list);
+        bankLedgers.assignAll(
+          list.where((l) => l.ledgerType == 'BANK').toList(),
+        );
+      }
+    } catch (e) {
+      Get.log('Failed to load ledgers in settings dynamically: $e');
+    }
+  }
+
+  void handleAddMappingRow() {
+    bankMappings.add({'keyword': '', 'bankLedgerId': ''});
+  }
+
+  void handleRemoveMappingRow(int index) {
+    if (index >= 0 && index < bankMappings.length) {
+      bankMappings.removeAt(index);
+    }
+  }
+
+  void handleMappingChange(int index, String field, String value) {
+    if (index >= 0 && index < bankMappings.length) {
+      final updated = Map<String, String>.from(bankMappings[index]);
+      updated[field] = value;
+      bankMappings[index] = updated;
     }
   }
 
   Future<void> saveSettings() async {
     try {
       isSaving.value = true;
+      final cleanedMappings = bankMappings
+          .where(
+            (m) =>
+                (m['keyword'] ?? '').trim().isNotEmpty &&
+                (m['bankLedgerId'] ?? '').isNotEmpty,
+          )
+          .map(
+            (m) => {
+              'keyword': (m['keyword'] ?? '').trim().toUpperCase(),
+              'bankLedgerId': m['bankLedgerId']!,
+            },
+          )
+          .toList();
+
       final payload = {
         'defaultBankLedgerId': defaultBankLedgerId.value,
         'defaultExpenseLedgerId': defaultExpenseLedgerId.value,
         'defaultIncomeLedgerId': defaultIncomeLedgerId.value,
-        'autoPostHighConfidence': autoPostHighConfidence.value,
+        'autoPostEnabled': autoPostHighConfidence.value,
         'confidenceThreshold': confidenceThreshold.value,
+        'bankMappings': cleanedMappings,
       };
       await _repository.saveSettings(payload);
       Get.snackbar(
         'Success',
-        'Bank statement import settings updated.',
+        'Bank import configuration settings saved successfully.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withAlpha(40),
       );
-    } catch (_) {
+      await loadSettings();
+    } catch (e) {
+      Get.log('Failed to save settings dynamically: $e');
       Get.snackbar(
-        'Saved',
-        'Bank import configuration saved.',
+        'Error',
+        'Failed to save bank import settings.',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withAlpha(40),
       );
     } finally {
       isSaving.value = false;

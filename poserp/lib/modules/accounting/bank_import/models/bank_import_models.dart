@@ -119,8 +119,10 @@ class BankMappingRule {
   final String ledgerId;
   final String? ledgerCode;
   final String? ledgerName;
+  final String? groupType;
   final bool isActive;
   final int matchCount;
+  final double confidence;
 
   BankMappingRule({
     required this.id,
@@ -129,15 +131,20 @@ class BankMappingRule {
     required this.ledgerId,
     this.ledgerCode,
     this.ledgerName,
+    this.groupType,
     required this.isActive,
     required this.matchCount,
+    this.confidence = 100.0,
   });
 
   factory BankMappingRule.fromJson(Map<String, dynamic> json) {
     final ledger = json['ledger'];
     return BankMappingRule(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
-      narrationPattern: json['narrationPattern']?.toString() ?? '',
+      narrationPattern:
+          json['pattern']?.toString() ??
+          json['narrationPattern']?.toString() ??
+          '',
       matchType: json['matchType']?.toString() ?? 'contains',
       ledgerId: json['ledgerId']?.toString() ?? '',
       ledgerCode: ledger is Map
@@ -145,9 +152,14 @@ class BankMappingRule {
           : json['ledgerCode']?.toString(),
       ledgerName: ledger is Map
           ? ledger['name']?.toString()
-          : json['ledgerName']?.toString(),
+          : json['ledgerName']?.toString() ?? json['ledgerName']?.toString(),
+      groupType:
+          json['groupType']?.toString() ??
+          json['ledgerGroup']?.toString() ??
+          'INDIRECT_EXPENSES',
       isActive: json['isActive'] ?? true,
       matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 100.0,
     );
   }
 }

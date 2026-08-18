@@ -85,7 +85,10 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                     text: 'Add Rule',
                     icon: const Icon(Icons.add_rounded, size: 16),
                     variant: AppButtonVariant.primary,
-                    onPressed: () => _showRuleDialog(context),
+                    onPressed: () {
+                      controller.prepareCreate();
+                      _showRuleDialog(context);
+                    },
                   ),
                 ],
               ),
@@ -186,11 +189,25 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                       if (filtered.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.all(32.0),
-                          child: EmptyState(
-                            icon: Icons.tune_rounded,
-                            title: 'No Mapping Rules Found',
-                            description:
-                                'Add rules manually or mapping transactions during import runs will generate rules automatically.',
+                          child: Column(
+                            children: [
+                              EmptyState(
+                                icon: Icons.tune_rounded,
+                                title: 'No rules found',
+                                description:
+                                    'Add rules manually or mapping transactions in import runs will generate rules automatically.',
+                              ),
+                              const SizedBox(height: 12),
+                              AppButton(
+                                text: 'Create First Rule',
+                                icon: const Icon(Icons.add_rounded, size: 16),
+                                variant: AppButtonVariant.primary,
+                                onPressed: () {
+                                  controller.prepareCreate();
+                                  _showRuleDialog(context);
+                                },
+                              ),
+                            ],
                           ),
                         );
                       }
@@ -225,7 +242,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                   child: Row(
                                     children: const [
                                       SizedBox(
-                                        width: 200,
+                                        width: 220,
                                         child: Text(
                                           'NARRATION PATTERN',
                                           style: TextStyle(
@@ -236,7 +253,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 220,
+                                        width: 240,
                                         child: Text(
                                           'MAPPED LEDGER',
                                           style: TextStyle(
@@ -249,7 +266,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                       SizedBox(
                                         width: 140,
                                         child: Text(
-                                          'MATCH TYPE',
+                                          'LEDGER GROUP',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
@@ -258,9 +275,9 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 120,
+                                        width: 110,
                                         child: Text(
-                                          'MATCH COUNT',
+                                          'CONFIDENCE',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
@@ -269,7 +286,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 100,
+                                        width: 90,
                                         child: Text(
                                           'ACTIONS',
                                           style: TextStyle(
@@ -316,7 +333,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                         children: [
                                           // 1. Narration Pattern
                                           SizedBox(
-                                            width: 200,
+                                            width: 220,
                                             child: Text(
                                               rule.narrationPattern
                                                   .toUpperCase(),
@@ -324,14 +341,13 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
                                                 fontFamily: 'monospace',
-                                                color: AppColors.primary,
                                               ),
                                             ),
                                           ),
 
                                           // 2. Mapped Ledger
                                           SizedBox(
-                                            width: 220,
+                                            width: 240,
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
@@ -346,7 +362,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                                 ),
                                                 if (rule.ledgerCode != null)
                                                   Text(
-                                                    rule.ledgerCode!,
+                                                    '(${rule.ledgerCode!})',
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       color: Colors.grey[600],
@@ -357,41 +373,28 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                             ),
                                           ),
 
-                                          // 3. Match Type Badge
+                                          // 3. Ledger Group
                                           SizedBox(
                                             width: 140,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 2,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.primary
-                                                      .withAlpha(20),
-                                                  borderRadius: AppRadius.full,
-                                                ),
-                                                child: Text(
-                                                  rule.matchType.toUpperCase(),
-                                                  style: const TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
+                                            child: Text(
+                                              rule.groupType ??
+                                                  'INDIRECT_EXPENSES',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey[600],
                                               ),
                                             ),
                                           ),
 
-                                          // 4. Match Count
+                                          // 4. Confidence Badge
                                           SizedBox(
-                                            width: 120,
+                                            width: 110,
                                             child: Text(
-                                              '${rule.matchCount} run(s)',
+                                              '${rule.confidence.toInt()}%',
                                               style: const TextStyle(
                                                 fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primary,
                                                 fontFamily: 'monospace',
                                               ),
                                             ),
@@ -399,7 +402,7 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
 
                                           // 5. Actions
                                           SizedBox(
-                                            width: 100,
+                                            width: 90,
                                             child: Row(
                                               children: [
                                                 IconButton(
@@ -408,11 +411,15 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                                                     size: 18,
                                                   ),
                                                   tooltip: 'Edit Rule',
-                                                  onPressed: () =>
-                                                      _showRuleDialog(
-                                                        context,
-                                                        rule: rule,
-                                                      ),
+                                                  onPressed: () {
+                                                    controller.prepareEdit(
+                                                      rule,
+                                                    );
+                                                    _showRuleDialog(
+                                                      context,
+                                                      rule: rule,
+                                                    );
+                                                  },
                                                 ),
                                                 IconButton(
                                                   icon: const Icon(
@@ -449,26 +456,25 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // ADD / EDIT MAPPING RULE DIALOG (MATCHING NEXT.JS MAPPINGRULES PAGE)
+  // ---------------------------------------------------------------------------
   void _showRuleDialog(BuildContext context, {BankMappingRule? rule}) {
-    if (rule != null) {
-      controller.patternController.text = rule.narrationPattern;
-      controller.selectedMatchType.value = rule.matchType;
-      controller.selectedLedgerId.value = rule.ledgerId;
-    } else {
-      controller.patternController.clear();
-      controller.selectedMatchType.value = 'contains';
-      controller.selectedLedgerId.value = '';
-    }
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          rule != null ? 'Edit Mapping Rule' : 'Add Mapping Rule',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            const Icon(Icons.add_rounded, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              rule != null ? 'Edit Mapping Rule' : 'Add Mapping Rule',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         content: SizedBox(
-          width: 450,
+          width: 420,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,44 +483,69 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
                 'Define matching keywords inside statement narrations to auto-fill accounts.',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
+
+              // Field 1: Narration Pattern
               AppTextField(
                 label: 'Narration Pattern (e.g. AMAZON)',
                 hintText: 'AMAZON, SWIGGY, SALARY...',
                 controller: controller.patternController,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
+              // Field 2: Map to Ledger Dropdown (Populated dynamically from availableLedgers list)
+              const Text(
+                'Map to Ledger',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
               Obx(
                 () => DropdownButtonFormField<String>(
-                  initialValue: controller.selectedMatchType.value,
+                  initialValue: controller.selectedLedgerId.value.isEmpty
+                      ? 'NONE'
+                      : controller.selectedLedgerId.value,
                   decoration: const InputDecoration(
-                    labelText: 'Match Type',
                     isDense: true,
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'contains',
-                      child: Text('Contains Keyword'),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'NONE',
+                      child: Text(
+                        'Select Ledger...',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
-                    DropdownMenuItem(
-                      value: 'exact',
-                      child: Text('Exact Match'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'regex',
-                      child: Text('Regex Pattern'),
-                    ),
+                    ...controller.availableLedgers.map((l) {
+                      return DropdownMenuItem(
+                        value: l.id,
+                        child: Text(
+                          '${l.name} (${l.code})',
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }),
                   ],
                   onChanged: (val) {
-                    if (val != null) controller.selectedMatchType.value = val;
+                    controller.selectedLedgerId.value = val == 'NONE'
+                        ? ''
+                        : (val ?? '');
                   },
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
+              // Field 3: Confidence Weight (%)
               AppTextField(
-                label: 'Target Ledger ID',
-                hintText: 'e.g. ledger-rent',
-                onChanged: (val) => controller.selectedLedgerId.value = val,
+                label: 'Confidence Weight (%)',
+                hintText: '100',
+                keyboardType: TextInputType.number,
+                controller: controller.confidenceController,
               ),
             ],
           ),
@@ -524,13 +555,29 @@ class BankMappingRulesView extends GetView<BankMappingRulesController> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
-          AppButton(
-            text: rule != null ? 'Update Rule' : 'Save Rule',
-            variant: AppButtonVariant.primary,
-            onPressed: () {
-              Navigator.pop(ctx);
-              controller.createRule();
-            },
+          Obx(
+            () => AppButton(
+              text: rule != null ? 'Save Rule' : 'Save Rule',
+              icon: controller.isSaving.value
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_outlined, size: 16),
+              variant: AppButtonVariant.primary,
+              onPressed: controller.isSaving.value
+                  ? null
+                  : () async {
+                      await controller.saveRule();
+                      if (context.mounted) {
+                        Navigator.pop(ctx);
+                      }
+                    },
+            ),
           ),
         ],
       ),
