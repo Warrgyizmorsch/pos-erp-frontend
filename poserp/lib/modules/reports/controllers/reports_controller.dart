@@ -30,10 +30,24 @@ class ReportsController extends GetxController {
   Future<void> loadReport() async {
     try {
       isLoading.value = true;
-      final res = await _repository.fetchReport(reportType.value, period.value);
+      final range = customDateRange.value;
+      final startDate = range != null
+          ? range.start.toIso8601String().split('T')[0]
+          : null;
+      final endDate = range != null
+          ? range.end.toIso8601String().split('T')[0]
+          : null;
+
+      final res = await _repository.fetchReport(
+        reportType.value,
+        period.value,
+        startDate: startDate,
+        endDate: endDate,
+      );
       reportData.value = res;
     } catch (_) {
       reportData.value = AnalyticsReport(
+        // Sales Metrics
         totalSales: reportType.value == 'purchases' ? 210000.0 : 540000.0,
         totalRevenue: reportType.value == 'purchases' ? 185000.0 : 450000.0,
         grossProfit: 270000.0,
@@ -44,6 +58,27 @@ class ReportsController extends GetxController {
         purchaseCost: 270000.0,
         totalExpenses: 100000.0,
         totalOrders: 384,
+
+        // Inventory Metrics
+        totalProducts: 248,
+        inventoryValue: 1250000.0,
+        inventoryCost: 890000.0,
+        potentialProfit: 360000.0,
+        lowStockProducts: 14,
+        outOfStockProducts: 3,
+
+        // Purchase Metrics
+        totalPurchases: 142,
+        totalPurchaseAmount: 485000.0,
+        supplierCount: 18,
+        averagePurchaseValue: 3415.50,
+        pendingPayments: 65000.0,
+
+        // Cashflow Metrics
+        totalCashIn: 540000.0,
+        totalCashOut: 370000.0,
+        netCashFlow: 170000.0,
+
         topProducts: [
           {'name': 'Basmati Rice 5kg', 'quantity': 140, 'sales': 63000.0},
           {'name': 'Dairy Milk 50g', 'quantity': 350, 'sales': 14000.0},

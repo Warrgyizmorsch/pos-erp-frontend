@@ -1,4 +1,5 @@
 class AnalyticsReport {
+  // Sales Metrics
   final double totalSales;
   final double totalRevenue;
   final double grossProfit;
@@ -9,6 +10,27 @@ class AnalyticsReport {
   final double purchaseCost;
   final double totalExpenses;
   final int totalOrders;
+
+  // Inventory Metrics
+  final int totalProducts;
+  final double inventoryValue;
+  final double inventoryCost;
+  final double potentialProfit;
+  final int lowStockProducts;
+  final int outOfStockProducts;
+
+  // Purchase Metrics
+  final int totalPurchases;
+  final double totalPurchaseAmount;
+  final int supplierCount;
+  final double averagePurchaseValue;
+  final double pendingPayments;
+
+  // Cashflow Metrics
+  final double totalCashIn;
+  final double totalCashOut;
+  final double netCashFlow;
+
   final List<Map<String, dynamic>> topProducts;
   final List<Map<String, dynamic>> reportRows;
 
@@ -23,6 +45,20 @@ class AnalyticsReport {
     required this.purchaseCost,
     required this.totalExpenses,
     required this.totalOrders,
+    required this.totalProducts,
+    required this.inventoryValue,
+    required this.inventoryCost,
+    required this.potentialProfit,
+    required this.lowStockProducts,
+    required this.outOfStockProducts,
+    required this.totalPurchases,
+    required this.totalPurchaseAmount,
+    required this.supplierCount,
+    required this.averagePurchaseValue,
+    required this.pendingPayments,
+    required this.totalCashIn,
+    required this.totalCashOut,
+    required this.netCashFlow,
     required this.topProducts,
     required this.reportRows,
   });
@@ -57,8 +93,35 @@ class AnalyticsReport {
       totalOrders:
           (summary['totalOrders'] as num?)?.toInt() ??
           (summary['orderCount'] as num?)?.toInt() ??
-          (summary['count'] as num?)?.toInt() ??
           0,
+      totalProducts: (summary['totalProducts'] as num?)?.toInt() ?? 0,
+      inventoryValue:
+          (summary['inventoryValue'] as num?)?.toDouble() ??
+          (summary['currentInventoryValue'] as num?)?.toDouble() ??
+          0.0,
+      inventoryCost:
+          (summary['inventoryCost'] as num?)?.toDouble() ??
+          (summary['totalInventoryCost'] as num?)?.toDouble() ??
+          0.0,
+      potentialProfit: (summary['potentialProfit'] as num?)?.toDouble() ?? 0.0,
+      lowStockProducts:
+          (summary['lowStockProducts'] as num?)?.toInt() ??
+          (summary['lowStock'] as num?)?.toInt() ??
+          0,
+      outOfStockProducts:
+          (summary['outOfStockProducts'] as num?)?.toInt() ??
+          (summary['outOfStock'] as num?)?.toInt() ??
+          0,
+      totalPurchases: (summary['totalPurchases'] as num?)?.toInt() ?? 0,
+      totalPurchaseAmount:
+          (summary['totalPurchaseAmount'] as num?)?.toDouble() ?? 0.0,
+      supplierCount: (summary['supplierCount'] as num?)?.toInt() ?? 0,
+      averagePurchaseValue:
+          (summary['averagePurchaseValue'] as num?)?.toDouble() ?? 0.0,
+      pendingPayments: (summary['pendingPayments'] as num?)?.toDouble() ?? 0.0,
+      totalCashIn: (summary['totalCashIn'] as num?)?.toDouble() ?? 0.0,
+      totalCashOut: (summary['totalCashOut'] as num?)?.toDouble() ?? 0.0,
+      netCashFlow: (summary['netCashFlow'] as num?)?.toDouble() ?? 0.0,
       topProducts:
           (json['topProducts'] as List?)
               ?.map((e) => Map<String, dynamic>.from(e as Map))

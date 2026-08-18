@@ -127,15 +127,24 @@ class ApiEndpoints {
       '/accounting/bank-statement/$id/post-entries';
 
   // BI Analytics & Reports
-  static const String analyticsSales = '/analytics/sales';
-  static const String analyticsInventory = '/analytics/inventory';
-  static const String analyticsPurchases = '/analytics/purchases';
+  static const String analyticsSales = '/reports/sales';
+  static const String analyticsInventory = '/reports/inventory';
+  static const String analyticsPurchases = '/reports/purchases';
+  static const String analyticsRevenue = '/reports/revenue';
   static const String analyticsCashflow = '/analytics/cashflow';
 
-  // Activity Logs, Backup & Utilities
+  // Activity Logs, Backup, Notifications & Business Profile
   static const String activityLogs = '/activity-logs';
   static const String backup = '/backup';
   static const String barcode = '/utilities/barcode';
   static const String importExport = '/utilities/import-export';
   static const String settings = '/settings';
+  static const String businessProfile = '/business/profile';
+  static const String notifications = '/notifications';
+  static const String uploadSingle = '/uploads/single';
+  static const String uploadMultiple = '/uploads/multiple';
+  static const String productsGlobalLibrary = '/products/global-library';
+  static const String productsStatsOverview = '/products/stats/overview';
+  static String productBarcodeLookup(String barcode) =>
+      '/products/barcode/$barcode';
 }
