@@ -24,9 +24,10 @@ class LoginView extends GetView<AuthController> {
     }
   }
 
-  void _fillCredentials(String email, String password) {
+  void _fillAndLogin(String email, String password) {
     _emailController.text = email;
     _passwordController.text = password;
+    _onLogin();
   }
 
   @override
@@ -54,7 +55,7 @@ class LoginView extends GetView<AuthController> {
                     : AppColors.mutedForegroundLight,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
             // Email Field
             AppTextField(
@@ -115,7 +116,7 @@ class LoginView extends GetView<AuthController> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Sign In Button
             Obx(
@@ -128,7 +129,7 @@ class LoginView extends GetView<AuthController> {
                 onPressed: _onLogin,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Register Account Navigation Link
             Row(
@@ -160,73 +161,177 @@ class LoginView extends GetView<AuthController> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Demo Account Fill Cards
+            // Quick Demo Role Login Section
             AppCard(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'QUICK DEMO LOGINS',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 0.5,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text(
+                        'QUICK DEMO LOGINS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        'Tap to Login',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
+
+                  // Admin & Manager Row
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, AppSizes.minTouchTarget),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.md,
-                            ),
-                          ),
-                          icon: const Icon(Icons.shield_outlined, size: 16),
-                          label: const Text(
-                            'Admin',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                        child: _DemoRoleButton(
+                          title: 'Admin',
+                          subtitle: 'admin@poserp.com',
+                          icon: Icons.shield_outlined,
+                          color: AppColors.primary,
                           onPressed: () =>
-                              _fillCredentials('admin@poserp.com', 'admin123'),
+                              _fillAndLogin('admin@poserp.com', 'admin123'),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, AppSizes.minTouchTarget),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.md,
-                            ),
+                        child: _DemoRoleButton(
+                          title: 'Manager',
+                          subtitle: 'manager@poserp.com',
+                          icon: Icons.manage_accounts_outlined,
+                          color: Colors.orange,
+                          onPressed: () =>
+                              _fillAndLogin('manager@poserp.com', 'manager123'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Accountant & Stock Manager Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DemoRoleButton(
+                          title: 'Accountant',
+                          subtitle: 'accountant@poserp.com',
+                          icon: Icons.account_balance_wallet_outlined,
+                          color: AppColors.success,
+                          onPressed: () => _fillAndLogin(
+                            'accountant@poserp.com',
+                            'accountant123',
                           ),
-                          icon: const Icon(
-                            Icons.point_of_sale_rounded,
-                            size: 16,
-                          ),
-                          label: const Text(
-                            'Cashier',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          onPressed: () => _fillCredentials(
-                            'cashier@poserp.com',
-                            'cashier123',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DemoRoleButton(
+                          title: 'Stock Mgr',
+                          subtitle: 'stockmanager@poserp.com',
+                          icon: Icons.inventory_2_outlined,
+                          color: Colors.cyan,
+                          onPressed: () => _fillAndLogin(
+                            'stockmanager@poserp.com',
+                            'stockmanager123',
                           ),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Cashier Button Full Width
+                  _DemoRoleButton(
+                    title: 'Cashier Terminal',
+                    subtitle: 'cashier@poserp.com',
+                    icon: Icons.point_of_sale_rounded,
+                    color: Colors.purple,
+                    isFullWidth: true,
+                    onPressed: () =>
+                        _fillAndLogin('cashier@poserp.com', 'cashier123'),
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DemoRoleButton extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+  final bool isFullWidth;
+
+  const _DemoRoleButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+    this.isFullWidth = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(0, AppSizes.minTouchTarget),
+        side: BorderSide(color: color.withAlpha(80)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+      ),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisAlignment: isFullWidth
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: isFullWidth
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 9, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
