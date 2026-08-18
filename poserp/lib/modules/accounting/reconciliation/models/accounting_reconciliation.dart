@@ -49,6 +49,10 @@ class CashBankReconciliationAccount {
   final String suggestedFix;
   final String? mappedLedgerCode;
   final String? mappedLedgerName;
+  final bool openingPosted;
+  final String? openingVoucherNo;
+  final double? openingBalanceDifference;
+  final double? ledgerMasterOpeningDifference;
 
   CashBankReconciliationAccount({
     required this.accountId,
@@ -63,10 +67,15 @@ class CashBankReconciliationAccount {
     required this.suggestedFix,
     this.mappedLedgerCode,
     this.mappedLedgerName,
+    this.openingPosted = false,
+    this.openingVoucherNo,
+    this.openingBalanceDifference,
+    this.ledgerMasterOpeningDifference,
   });
 
   factory CashBankReconciliationAccount.fromJson(Map<String, dynamic> json) {
     final mapped = json['mappedLedger'];
+    final openVoucher = json['openingVoucher'];
     return CashBankReconciliationAccount(
       accountId: json['accountId']?.toString() ?? json['_id']?.toString() ?? '',
       accountName:
@@ -82,6 +91,14 @@ class CashBankReconciliationAccount {
       suggestedFix: json['suggestedFix']?.toString() ?? 'No action required.',
       mappedLedgerCode: mapped is Map ? mapped['code']?.toString() : null,
       mappedLedgerName: mapped is Map ? mapped['name']?.toString() : null,
+      openingPosted: json['openingPosted'] == true,
+      openingVoucherNo: openVoucher is Map
+          ? openVoucher['voucherNo']?.toString()
+          : null,
+      openingBalanceDifference: (json['openingBalanceDifference'] as num?)
+          ?.toDouble(),
+      ledgerMasterOpeningDifference:
+          (json['ledgerMasterOpeningDifference'] as num?)?.toDouble(),
     );
   }
 }
@@ -96,6 +113,7 @@ class PartyReconciliationRow {
   final double difference;
   final String status;
   final int partyLedgerEntryCount;
+  final String? lastReceiptNo;
 
   PartyReconciliationRow({
     required this.partyId,
@@ -107,9 +125,11 @@ class PartyReconciliationRow {
     required this.difference,
     required this.status,
     required this.partyLedgerEntryCount,
+    this.lastReceiptNo,
   });
 
   factory PartyReconciliationRow.fromJson(Map<String, dynamic> json) {
+    final lastEntry = json['lastPartyLedgerEntry'];
     return PartyReconciliationRow(
       partyId: json['partyId']?.toString() ?? '',
       partyType: json['partyType']?.toString() ?? 'customer',
@@ -121,6 +141,9 @@ class PartyReconciliationRow {
       status: json['status']?.toString() ?? 'ok',
       partyLedgerEntryCount:
           (json['partyLedgerEntryCount'] as num?)?.toInt() ?? 0,
+      lastReceiptNo: lastEntry is Map
+          ? lastEntry['receiptNo']?.toString()
+          : null,
     );
   }
 }
