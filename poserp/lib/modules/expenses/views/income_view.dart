@@ -13,6 +13,7 @@ class IncomeView extends GetView<ExpenseController> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final horizontalScrollController = ScrollController();
 
     return Scaffold(
       body: SafeArea(
@@ -22,10 +23,11 @@ class IncomeView extends GetView<ExpenseController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 700;
+
+                  final headerInfo = Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -40,32 +42,64 @@ class IncomeView extends GetView<ExpenseController> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Indirect Income Transactions',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Indirect Income Transactions',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Track non-operating income streams, commission credits, and interest earnings.',
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              'Track non-operating income streams, commission credits, and interest earnings.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.mutedForegroundDark
+                                    : AppColors.mutedForegroundLight,
+                              ),
+                              maxLines: isMobile ? 1 : 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
-                  ),
-                  AppButton(
+                  );
+
+                  final recordBtn = AppButton(
                     text: 'Record Income',
                     icon: const Icon(Icons.add_rounded, size: 16),
                     variant: AppButtonVariant.primary,
                     onPressed: () => _showRecordIncomeDialog(context),
-                  ),
-                ],
+                  );
+
+                  if (isMobile) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        headerInfo,
+                        const SizedBox(height: 12),
+                        SizedBox(width: double.infinity, child: recordBtn),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(child: headerInfo),
+                      const SizedBox(width: 16),
+                      recordBtn,
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 20),
 
@@ -75,98 +109,112 @@ class IncomeView extends GetView<ExpenseController> {
                   padding: EdgeInsets.zero,
                   child: ClipRRect(
                     borderRadius: AppRadius.lg,
-                    child: SingleChildScrollView(
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(
-                          isDark ? AppColors.inputDark : Colors.grey[100],
+                    child: Scrollbar(
+                      controller: horizontalScrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: SingleChildScrollView(
+                          child: DataTable(
+                            headingRowColor: WidgetStateProperty.all(
+                              isDark ? AppColors.inputDark : Colors.grey[100],
+                            ),
+                            columnSpacing: 24,
+                            columns: const [
+                              DataColumn(
+                                label: Text(
+                                  'DATE',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'INCOME CATEGORY / SOURCE',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'PAYMENT MODE',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                numeric: true,
+                                label: Text(
+                                  'AMOUNT',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: [
+                              DataRow(
+                                cells: [
+                                  const DataCell(Text('2026-08-08')),
+                                  const DataCell(
+                                    Text(
+                                      'Scrap & Packaging Sale',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const DataCell(Text('Cash')),
+                                  const DataCell(
+                                    Text(
+                                      '₹3,200.00',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              DataRow(
+                                cells: [
+                                  const DataCell(Text('2026-08-01')),
+                                  const DataCell(
+                                    Text(
+                                      'Bank Interest Income',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const DataCell(Text('HDFC Bank')),
+                                  const DataCell(
+                                    Text(
+                                      '₹1,250.00',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        columns: const [
-                          DataColumn(
-                            label: Text(
-                              'DATE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'INCOME CATEGORY / SOURCE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'PAYMENT MODE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                          DataColumn(
-                            numeric: true,
-                            label: Text(
-                              'AMOUNT',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ],
-                        rows: [
-                          DataRow(
-                            cells: [
-                              const DataCell(Text('2026-08-08')),
-                              const DataCell(
-                                Text(
-                                  'Scrap & Packaging Sale',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              const DataCell(Text('Cash')),
-                              const DataCell(
-                                Text(
-                                  '₹3,200.00',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          DataRow(
-                            cells: [
-                              const DataCell(Text('2026-08-01')),
-                              const DataCell(
-                                Text(
-                                  'Bank Interest Income',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              const DataCell(Text('HDFC Bank')),
-                              const DataCell(
-                                Text(
-                                  '₹1,250.00',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ),
                   ),

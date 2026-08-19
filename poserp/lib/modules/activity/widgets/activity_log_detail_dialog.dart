@@ -29,43 +29,52 @@ class ActivityLogDetailDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: AppRadius.md,
-                        ),
-                        child: const Icon(
-                          Icons.assignment_outlined,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Activity Log Details',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(25),
+                            borderRadius: AppRadius.md,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Recorded at ${log.createdAt.split('T')[0]}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                          child: const Icon(
+                            Icons.assignment_outlined,
+                            color: AppColors.primary,
+                            size: 22,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Activity Log Details',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Recorded at ${log.createdAt.split('T')[0]}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   _buildActionBadge(log.action),
                 ],
               ),
@@ -101,6 +110,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               if (log.userEmail != null)
                                 Text(
@@ -109,6 +120,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
                                     fontSize: 11,
                                     color: Colors.grey,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                             ],
                           ),
@@ -132,6 +145,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
                                   fontSize: 12,
                                   fontFamily: 'monospace',
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -170,6 +185,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.primary,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -194,6 +211,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -286,6 +305,8 @@ class ActivityLogDetailDialog extends StatelessWidget {
       child: Text(
         action.toUpperCase(),
         style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: bg),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

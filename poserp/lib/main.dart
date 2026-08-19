@@ -11,6 +11,5 @@ void main() async {
   await storageService.init();
   Get.put<StorageService>(storageService, permanent: true);
 
-
   runApp(const PosErpApp());
 }
