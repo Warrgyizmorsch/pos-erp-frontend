@@ -39,83 +39,84 @@ class ChequeListView extends GetView<ChequeListController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Metrics Summary Panel
-              Obx(
-                () => LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final pendStr =
-                        '₹${controller.totalPendingAmount.toStringAsFixed(2)}';
-                    final clrStr =
-                        '₹${controller.totalClearedAmount.toStringAsFixed(2)}';
-                    final bncStr =
-                        '₹${controller.totalBouncedAmount.toStringAsFixed(2)}';
+              // Obx(
+              //   () =>
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final pendStr =
+                      '₹${controller.totalPendingAmount.toStringAsFixed(2)}';
+                  final clrStr =
+                      '₹${controller.totalClearedAmount.toStringAsFixed(2)}';
+                  final bncStr =
+                      '₹${controller.totalBouncedAmount.toStringAsFixed(2)}';
 
-                    if (isMobile) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Pending Cheques',
-                                value: pendStr,
-                                icon: Icons.pending_actions_rounded,
-                              ),
+                  if (isMobile) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Pending Cheques',
+                              value: pendStr,
+                              icon: Icons.pending_actions_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Cleared Cheques',
-                                value: clrStr,
-                                icon: Icons.check_circle_outline_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Cleared Cheques',
+                              value: clrStr,
+                              icon: Icons.check_circle_outline_rounded,
                             ),
-                            const SizedBox(width: 10),
-                            SizedBox(
-                              width: 150,
-                              child: AppStatCard(
-                                title: 'Bounced Cheques',
-                                value: bncStr,
-                                icon: Icons.error_outline_rounded,
-                              ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            child: AppStatCard(
+                              title: 'Bounced Cheques',
+                              value: bncStr,
+                              icon: Icons.error_outline_rounded,
                             ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Pending Cheques',
-                            value: pendStr,
-                            icon: Icons.pending_actions_rounded,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Cleared Cheques',
-                            value: clrStr,
-                            icon: Icons.check_circle_outline_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppStatCard(
-                            title: 'Bounced Cheques',
-                            value: bncStr,
-                            icon: Icons.error_outline_rounded,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  },
-                ),
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Pending Cheques',
+                          value: pendStr,
+                          icon: Icons.pending_actions_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Cleared Cheques',
+                          value: clrStr,
+                          icon: Icons.check_circle_outline_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: AppStatCard(
+                          title: 'Bounced Cheques',
+                          value: bncStr,
+                          icon: Icons.error_outline_rounded,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
+              // ),
               const SizedBox(height: 16),
 
               // Filter Toolbar

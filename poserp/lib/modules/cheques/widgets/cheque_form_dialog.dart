@@ -65,13 +65,17 @@ class _ChequeFormDialogState extends State<ChequeFormDialog> {
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 10),
-                      Text(
-                        widget.cheque == null
-                            ? 'New Cheque Entry'
-                            : 'Edit Cheque Record',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          widget.cheque == null
+                              ? 'New Cheque Entry'
+                              : 'Edit Cheque Record',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -84,8 +88,12 @@ class _ChequeFormDialogState extends State<ChequeFormDialog> {
                       Expanded(
                         child: InkWell(
                           onTap: () => setState(() => _type = 'received'),
+                          borderRadius: AppRadius.md,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
                             child: Row(
                               children: [
                                 Icon(
@@ -98,20 +106,29 @@ class _ChequeFormDialogState extends State<ChequeFormDialog> {
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Received Cheque',
-                                  style: TextStyle(fontSize: 13),
+                                const Expanded(
+                                  child: Text(
+                                    'Received Cheque',
+                                    style: TextStyle(fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: InkWell(
                           onTap: () => setState(() => _type = 'issued'),
+                          borderRadius: AppRadius.md,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
                             child: Row(
                               children: [
                                 Icon(
@@ -124,9 +141,13 @@ class _ChequeFormDialogState extends State<ChequeFormDialog> {
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Issued Cheque',
-                                  style: TextStyle(fontSize: 13),
+                                const Expanded(
+                                  child: Text(
+                                    'Issued Cheque',
+                                    style: TextStyle(fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
