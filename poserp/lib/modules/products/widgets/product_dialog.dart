@@ -312,6 +312,7 @@ class _ProductDialogState extends State<ProductDialog>
                                                 : null);
 
                                       return DropdownButtonFormField<String>(
+                                        isExpanded: true,
                                         initialValue: validVal,
                                         dropdownColor: isDark
                                             ? AppColors.cardDark
@@ -390,6 +391,7 @@ class _ProductDialogState extends State<ProductDialog>
                                           : null;
 
                                       return DropdownButtonFormField<String>(
+                                        isExpanded: true,
                                         initialValue: validSubVal,
                                         hint: const Text('None'),
                                         dropdownColor: isDark
@@ -530,6 +532,7 @@ class _ProductDialogState extends State<ProductDialog>
                                     ),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
+                                      isExpanded: true,
                                       initialValue: _salesTaxType,
                                       dropdownColor: isDark
                                           ? AppColors.cardDark
@@ -604,6 +607,7 @@ class _ProductDialogState extends State<ProductDialog>
                                     ),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
+                                      isExpanded: true,
                                       initialValue: _purchaseTaxType,
                                       dropdownColor: isDark
                                           ? AppColors.cardDark
@@ -706,6 +710,7 @@ class _ProductDialogState extends State<ProductDialog>
                                     ),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
+                                      isExpanded: true,
                                       initialValue: _selectedUnit,
                                       dropdownColor: isDark
                                           ? AppColors.cardDark

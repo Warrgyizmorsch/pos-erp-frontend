@@ -58,6 +58,7 @@ class OpeningStockView extends GetView<OpeningStockController> {
                       const SizedBox(height: 4),
                       Obx(
                         () => DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: controller.globalTaxType.value,
                           dropdownColor: isDark
                               ? AppColors.cardDark
@@ -162,6 +163,7 @@ class OpeningStockView extends GetView<OpeningStockController> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 initialValue: item.product?.id,
                                 hint: const Text(
                                   'Select catalog product...',

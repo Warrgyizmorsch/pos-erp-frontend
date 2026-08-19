@@ -71,30 +71,37 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: AppRadius.md,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(25),
+                            borderRadius: AppRadius.md,
+                          ),
+                          child: const Icon(
+                            Icons.swap_vert_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.swap_vert_rounded,
-                          color: AppColors.primary,
-                          size: 20,
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Record Stock Adjustment',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Record Stock Adjustment',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Get.back(),
@@ -189,6 +196,8 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -213,13 +222,13 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
                           const SizedBox(height: 4),
                           SizedBox(
                             height: 36,
-                            width: 100,
+                            width: 90,
                             child: TextField(
                               controller: adjustedStockCtrl,
                               keyboardType: TextInputType.number,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                               decoration: InputDecoration(
@@ -255,12 +264,14 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
                                 ? '+$diff'
                                 : '$diff ${selectedProduct?.unit ?? 'pcs'}',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: diff > 0
                                   ? AppColors.success
                                   : (diff < 0 ? AppColors.danger : Colors.grey),
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -282,6 +293,7 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: selectedReason,
+                isExpanded: true,
                 dropdownColor: isDark
                     ? AppColors.cardDark
                     : AppColors.cardLight,
