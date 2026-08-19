@@ -35,24 +35,33 @@ class POSPrintDialog extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400),
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Thermal Receipt Preview',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  const Expanded(
+                    child: Text(
+                      'Thermal Receipt Preview',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Get.back(),
                   ),
                 ],
               ),
-              const Divider(height: 20),
+              const Divider(height: 16),
 
               // Thermal Receipt Container
               Container(
@@ -80,24 +89,36 @@ class POSPrintDialog extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Inv: $invoiceNo',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                        Expanded(
+                          child: Text(
+                            'Inv: $invoiceNo',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(
-                          customerName,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.black,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            customerName,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.right,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                     const Divider(color: Colors.black),
+
+                    // Items List
                     ...items.map((i) {
                       final name = i['name'] ?? i['itemName'] ?? 'Item';
                       final qty = (i['quantity'] as num?)?.toInt() ?? 1;
@@ -110,13 +131,18 @@ class POSPrintDialog extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '$name x$qty',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.black,
+                            Expanded(
+                              child: Text(
+                                '$name x$qty',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.black,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '₹${tot.toStringAsFixed(2)}',
                               style: const TextStyle(
@@ -130,6 +156,7 @@ class POSPrintDialog extends StatelessWidget {
                       );
                     }),
                     const Divider(color: Colors.black),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -163,7 +190,7 @@ class POSPrintDialog extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

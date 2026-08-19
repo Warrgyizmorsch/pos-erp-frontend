@@ -36,19 +36,29 @@ class SaleDetailDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.receipt_long, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Sale Details — ${sale.invoiceNumber}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.receipt_long,
+                          color: AppColors.primary,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Sale Details — ${sale.invoiceNumber}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Get.back(),
@@ -79,6 +89,8 @@ class SaleDetailDialog extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -102,6 +114,8 @@ class SaleDetailDialog extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -135,6 +149,8 @@ class SaleDetailDialog extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               color: AppColors.success,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

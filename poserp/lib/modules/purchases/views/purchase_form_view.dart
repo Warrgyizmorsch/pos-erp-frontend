@@ -5,8 +5,6 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
-import '../../parties/suppliers/models/supplier.dart';
-import '../../parties/transporters/models/transporter.dart';
 import '../../products/models/product.dart';
 import '../controllers/purchase_controller.dart';
 
@@ -69,9 +67,22 @@ class PurchaseFormView extends GetView<PurchaseController> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Obx(
-                              () => DropdownButtonFormField<Supplier>(
-                                initialValue: controller.formSupplier.value,
+                            Obx(() {
+                              final suppIds = controller.availableSuppliers
+                                  .map((s) => s.id)
+                                  .toSet();
+                              final currentSuppId =
+                                  controller.formSupplier.value?.id;
+                              final validSuppId =
+                                  suppIds.contains(currentSuppId)
+                                  ? currentSuppId
+                                  : (controller.availableSuppliers.isNotEmpty
+                                        ? controller.availableSuppliers.first.id
+                                        : null);
+
+                              return DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                initialValue: validSuppId,
                                 dropdownColor: isDark
                                     ? AppColors.cardDark
                                     : AppColors.cardLight,
@@ -95,19 +106,23 @@ class PurchaseFormView extends GetView<PurchaseController> {
                                 ),
                                 items: controller.availableSuppliers
                                     .map(
-                                      (s) => DropdownMenuItem(
-                                        value: s,
+                                      (s) => DropdownMenuItem<String>(
+                                        value: s.id,
                                         child: Text(
                                           '${s.name} (${s.phone})',
                                           style: const TextStyle(fontSize: 13),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     )
                                     .toList(),
-                                onChanged: (s) =>
-                                    controller.formSupplier.value = s,
-                              ),
-                            ),
+                                onChanged: (id) {
+                                  controller.formSupplier.value = controller
+                                      .availableSuppliers
+                                      .firstWhereOrNull((s) => s.id == id);
+                                },
+                              );
+                            }),
                           ],
                         ),
                       ),
@@ -167,9 +182,24 @@ class PurchaseFormView extends GetView<PurchaseController> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Obx(
-                              () => DropdownButtonFormField<Transporter>(
-                                initialValue: controller.formTransporter.value,
+                            Obx(() {
+                              final transIds = controller.availableTransporters
+                                  .map((t) => t.id)
+                                  .toSet();
+                              final currentTransId =
+                                  controller.formTransporter.value?.id;
+                              final validTransId =
+                                  transIds.contains(currentTransId)
+                                  ? currentTransId
+                                  : null;
+
+                              return DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                initialValue: validTransId,
+                                hint: const Text(
+                                  'None',
+                                  style: TextStyle(fontSize: 13),
+                                ),
                                 dropdownColor: isDark
                                     ? AppColors.cardDark
                                     : AppColors.cardLight,
@@ -193,19 +223,23 @@ class PurchaseFormView extends GetView<PurchaseController> {
                                 ),
                                 items: controller.availableTransporters
                                     .map(
-                                      (t) => DropdownMenuItem(
-                                        value: t,
+                                      (t) => DropdownMenuItem<String>(
+                                        value: t.id,
                                         child: Text(
                                           t.name,
                                           style: const TextStyle(fontSize: 13),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     )
                                     .toList(),
-                                onChanged: (t) =>
-                                    controller.formTransporter.value = t,
-                              ),
-                            ),
+                                onChanged: (id) {
+                                  controller.formTransporter.value = controller
+                                      .availableTransporters
+                                      .firstWhereOrNull((t) => t.id == id);
+                                },
+                              );
+                            }),
                           ],
                         ),
                       ),
@@ -463,10 +497,28 @@ class PurchaseFormView extends GetView<PurchaseController> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Obx(
-                              () => DropdownButtonFormField<String>(
-                                initialValue:
-                                    controller.formPaymentMethod.value,
+                            Obx(() {
+                              final allowedMethods = {
+                                'cash',
+                                'bank',
+                                'bank_transfer',
+                                'upi',
+                                'card',
+                                'cheque',
+                                'credit',
+                              };
+                              String rawMethod = controller
+                                  .formPaymentMethod
+                                  .value
+                                  .toLowerCase()
+                                  .trim();
+                              if (!allowedMethods.contains(rawMethod)) {
+                                rawMethod = 'cash';
+                              }
+
+                              return DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                initialValue: rawMethod,
                                 dropdownColor: isDark
                                     ? AppColors.cardDark
                                     : AppColors.cardLight,
@@ -498,6 +550,10 @@ class PurchaseFormView extends GetView<PurchaseController> {
                                     child: Text('Bank Transfer'),
                                   ),
                                   DropdownMenuItem(
+                                    value: 'bank_transfer',
+                                    child: Text('Bank Transfer (Wire)'),
+                                  ),
+                                  DropdownMenuItem(
                                     value: 'upi',
                                     child: Text('UPI / QR'),
                                   ),
@@ -505,14 +561,22 @@ class PurchaseFormView extends GetView<PurchaseController> {
                                     value: 'card',
                                     child: Text('Card'),
                                   ),
+                                  DropdownMenuItem(
+                                    value: 'cheque',
+                                    child: Text('Cheque'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'credit',
+                                    child: Text('Credit / Ledger'),
+                                  ),
                                 ],
                                 onChanged: (val) {
                                   if (val != null) {
                                     controller.formPaymentMethod.value = val;
                                   }
                                 },
-                              ),
-                            ),
+                              );
+                            }),
                           ],
                         ),
                       ),

@@ -14,6 +14,7 @@ class PurchaseDetailView extends GetView<PurchaseController> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final String? purchaseId = Get.parameters['id'];
+    final horizontalScrollController = ScrollController();
 
     if (purchaseId != null &&
         (controller.selectedPurchase.value == null ||
@@ -63,7 +64,8 @@ class PurchaseDetailView extends GetView<PurchaseController> {
         }
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -72,34 +74,41 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          purchase.purchaseNumber,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            purchase.purchaseNumber,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Created Date: ${purchase.purchaseDate.split('T')[0]}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.mutedForegroundDark
-                                : AppColors.mutedForegroundLight,
+                          const SizedBox(height: 4),
+                          Text(
+                            'Created Date: ${purchase.purchaseDate.split('T')[0]}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark
+                                  ? AppColors.mutedForegroundDark
+                                  : AppColors.mutedForegroundLight,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
+                            horizontal: 8,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
@@ -109,16 +118,16 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           child: Text(
                             purchase.status.toUpperCase(),
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
+                            horizontal: 8,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
@@ -132,7 +141,7 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           child: Text(
                             purchase.paymentStatus.toUpperCase(),
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: purchase.paymentStatus == 'paid'
                                   ? AppColors.success
@@ -159,7 +168,7 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           const Text(
                             'SUPPLIER DETAILS',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
                             ),
@@ -168,23 +177,29 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           Text(
                             purchase.supplierName,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           if (purchase.supplierPhone != null)
                             Text(
                               'Phone: ${purchase.supplierPhone}',
-                              style: const TextStyle(fontSize: 13),
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           if (purchase.supplierGst != null)
                             Text(
                               'GSTIN: ${purchase.supplierGst}',
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                         ],
                       ),
@@ -199,7 +214,7 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           const Text(
                             'BILL SUMMARY',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
                             ),
@@ -208,19 +223,25 @@ class PurchaseDetailView extends GetView<PurchaseController> {
                           if (purchase.invoiceNumber != null &&
                               purchase.invoiceNumber!.isNotEmpty)
                             Text(
-                              'Supplier Ref: ${purchase.invoiceNumber}',
+                              'Ref: ${purchase.invoiceNumber}',
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           Text(
-                            'Payment Mode: ${purchase.paymentMethod.toUpperCase()}',
-                            style: const TextStyle(fontSize: 13),
+                            'Mode: ${purchase.paymentMethod.toUpperCase()}',
+                            style: const TextStyle(fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'State of Supply: ${purchase.stateOfSupply ?? 'Rajasthan'}',
-                            style: const TextStyle(fontSize: 13),
+                            'Supply: ${purchase.stateOfSupply ?? 'Rajasthan'}',
+                            style: const TextStyle(fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -233,66 +254,76 @@ class PurchaseDetailView extends GetView<PurchaseController> {
               // Items Table Card
               AppCard(
                 padding: EdgeInsets.zero,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(
-                        isDark ? AppColors.cardDark : Colors.grey[100],
-                      ),
-                      columns: const [
-                        DataColumn(label: Text('#')),
-                        DataColumn(label: Text('Item Name')),
-                        DataColumn(label: Text('SKU / Barcode')),
-                        DataColumn(label: Text('Qty')),
-                        DataColumn(label: Text('Purchase Rate (₹)')),
-                        DataColumn(label: Text('Sales Price (₹)')),
-                        DataColumn(label: Text('Tax %')),
-                        DataColumn(label: Text('Line Total (₹)')),
-                      ],
-                      rows: purchase.items.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final item = entry.value;
+                child: ClipRRect(
+                  borderRadius: AppRadius.lg,
+                  child: Scrollbar(
+                    controller: horizontalScrollController,
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    child: SingleChildScrollView(
+                      controller: horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowColor: WidgetStateProperty.all(
+                          isDark ? AppColors.cardDark : Colors.grey[100],
+                        ),
+                        columnSpacing: 20,
+                        columns: const [
+                          DataColumn(label: Text('#')),
+                          DataColumn(label: Text('Item Name')),
+                          DataColumn(label: Text('SKU / Barcode')),
+                          DataColumn(label: Text('Qty')),
+                          DataColumn(label: Text('Purchase Rate (₹)')),
+                          DataColumn(label: Text('Sales Price (₹)')),
+                          DataColumn(label: Text('Tax %')),
+                          DataColumn(label: Text('Line Total (₹)')),
+                        ],
+                        rows: purchase.items.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final item = entry.value;
 
-                        return DataRow(
-                          cells: [
-                            DataCell(Text('${idx + 1}')),
-                            DataCell(
-                              Text(
-                                item.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                          return DataRow(
+                            cells: [
+                              DataCell(Text('${idx + 1}')),
+                              DataCell(
+                                Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataCell(
-                              Text(
-                                item.sku ?? item.barcode ?? '-',
-                                style: const TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontSize: 12,
+                              DataCell(
+                                Text(
+                                  item.sku ?? item.barcode ?? '-',
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                            ),
-                            DataCell(Text('${item.quantity.toInt()}')),
-                            DataCell(
-                              Text('₹${item.purchasePrice.toStringAsFixed(2)}'),
-                            ),
-                            DataCell(
-                              Text('₹${item.salesPrice.toStringAsFixed(2)}'),
-                            ),
-                            DataCell(Text('${item.taxRate}%')),
-                            DataCell(
-                              Text(
-                                '₹${item.total.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                              DataCell(Text('${item.quantity.toInt()}')),
+                              DataCell(
+                                Text(
+                                  '₹${item.purchasePrice.toStringAsFixed(2)}',
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
+                              DataCell(
+                                Text('₹${item.salesPrice.toStringAsFixed(2)}'),
+                              ),
+                              DataCell(Text('${item.taxRate}%')),
+                              DataCell(
+                                Text(
+                                  '₹${item.total.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                 ),
