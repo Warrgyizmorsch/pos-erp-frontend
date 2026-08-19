@@ -38,33 +38,41 @@ class _ExpenseCategoryDialogState extends State<ExpenseCategoryDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Modal Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: AppRadius.md,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(25),
+                            borderRadius: AppRadius.md,
+                          ),
+                          child: const Icon(
+                            Icons.category_outlined,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.category_outlined,
-                          color: AppColors.primary,
-                          size: 20,
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Expense Categories',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Expense Categories',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Get.back(),

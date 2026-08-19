@@ -203,41 +203,58 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<ExpenseCategory>(
-                          initialValue: selectedCategory,
-                          isExpanded: true,
-                          dropdownColor: isDark
-                              ? AppColors.cardDark
-                              : AppColors.cardLight,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            filled: true,
-                            fillColor: isDark
-                                ? AppColors.inputDark
-                                : Colors.grey[100],
-                            border: OutlineInputBorder(
-                              borderRadius: AppRadius.md,
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? AppColors.borderDark
-                                    : AppColors.borderLight,
+                        Builder(
+                          builder: (context) {
+                            final catIds = controller.categories
+                                .map((c) => c.id)
+                                .toSet();
+                            final validCatId =
+                                catIds.contains(selectedCategory?.id)
+                                ? selectedCategory?.id
+                                : (controller.categories.isNotEmpty
+                                      ? controller.categories.first.id
+                                      : null);
+
+                            return DropdownButtonFormField<String>(
+                              initialValue: validCatId,
+                              isExpanded: true,
+                              dropdownColor: isDark
+                                  ? AppColors.cardDark
+                                  : AppColors.cardLight,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? AppColors.inputDark
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.md,
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          items: controller.categories.map((c) {
-                            return DropdownMenuItem<ExpenseCategory>(
-                              value: c,
-                              child: Text(
-                                c.name,
-                                style: const TextStyle(fontSize: 13),
-                              ),
+                              items: controller.categories.map((c) {
+                                return DropdownMenuItem<String>(
+                                  value: c.id,
+                                  child: Text(
+                                    c.name,
+                                    style: const TextStyle(fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (id) => setState(() {
+                                selectedCategory = controller.categories
+                                    .firstWhereOrNull((c) => c.id == id);
+                              }),
                             );
-                          }).toList(),
-                          onChanged: (c) =>
-                              setState(() => selectedCategory = c),
+                          },
                         ),
                       ],
                     ),
@@ -302,6 +319,7 @@ class _ExpenseFormDialogState extends State<ExpenseFormDialog> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: selectedPaymentMethod,
                           dropdownColor: isDark
                               ? AppColors.cardDark
