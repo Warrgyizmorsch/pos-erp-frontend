@@ -436,33 +436,37 @@ class _CustomerDialogState extends State<CustomerDialog>
                 ),
               ),
               child: Obx(
-                () => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppButton(
-                      text: 'Cancel',
-                      variant: AppButtonVariant.ghost,
-                      onPressed: () => Get.back(),
-                    ),
-                    Row(
-                      children: [
-                        if (widget.customer == null) ...[
+                () => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppButton(
+                        text: 'Cancel',
+                        variant: AppButtonVariant.ghost,
+                        onPressed: () => Get.back(),
+                      ),
+                      const SizedBox(width: 8),
+                      Row(
+                        children: [
+                          if (widget.customer == null) ...[
+                            AppButton(
+                              text: 'Save & New',
+                              variant: AppButtonVariant.outline,
+                              isLoading: controller.isSubmitting.value,
+                              onPressed: () => _handleSave(stayOpen: true),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           AppButton(
-                            text: 'Save & New',
-                            variant: AppButtonVariant.outline,
+                            text: widget.customer != null ? 'Update' : 'Save',
                             isLoading: controller.isSubmitting.value,
-                            onPressed: () => _handleSave(stayOpen: true),
+                            onPressed: () => _handleSave(stayOpen: false),
                           ),
-                          const SizedBox(width: 8),
                         ],
-                        AppButton(
-                          text: widget.customer != null ? 'Update' : 'Save',
-                          isLoading: controller.isSubmitting.value,
-                          onPressed: () => _handleSave(stayOpen: false),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

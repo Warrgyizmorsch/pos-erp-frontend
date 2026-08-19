@@ -658,35 +658,39 @@ class _SupplierDialogState extends State<SupplierDialog>
                 ),
               ),
               child: Obx(
-                () => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppButton(
-                      text: 'Cancel',
-                      variant: AppButtonVariant.ghost,
-                      onPressed: () => Get.back(),
-                    ),
-                    Row(
-                      children: [
-                        if (widget.supplier == null) ...[
+                () => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppButton(
+                        text: 'Cancel',
+                        variant: AppButtonVariant.ghost,
+                        onPressed: () => Get.back(),
+                      ),
+                      const SizedBox(width: 8),
+                      Row(
+                        children: [
+                          if (widget.supplier == null) ...[
+                            AppButton(
+                              text: 'Save & New',
+                              variant: AppButtonVariant.outline,
+                              isLoading: controller.isSubmitting.value,
+                              onPressed: () => _handleSave(stayOpen: true),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           AppButton(
-                            text: 'Save & New',
-                            variant: AppButtonVariant.outline,
+                            text: widget.supplier != null
+                                ? 'Update Supplier'
+                                : 'Save Supplier',
                             isLoading: controller.isSubmitting.value,
-                            onPressed: () => _handleSave(stayOpen: true),
+                            onPressed: () => _handleSave(stayOpen: false),
                           ),
-                          const SizedBox(width: 8),
                         ],
-                        AppButton(
-                          text: widget.supplier != null
-                              ? 'Update Supplier'
-                              : 'Save Supplier',
-                          isLoading: controller.isSubmitting.value,
-                          onPressed: () => _handleSave(stayOpen: false),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
