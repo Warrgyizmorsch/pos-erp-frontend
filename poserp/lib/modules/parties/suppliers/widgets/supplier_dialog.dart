@@ -295,6 +295,7 @@ class _SupplierDialogState extends State<SupplierDialog>
                                             ),
                                             const SizedBox(height: 6),
                                             DropdownButtonFormField<String>(
+                                              isExpanded: true,
                                               initialValue: _gstType,
                                               dropdownColor: isDark
                                                   ? AppColors.cardDark
@@ -366,6 +367,7 @@ class _SupplierDialogState extends State<SupplierDialog>
                                             ),
                                             const SizedBox(height: 6),
                                             DropdownButtonFormField<String>(
+                                              isExpanded: true,
                                               initialValue: _stateCode,
                                               dropdownColor: isDark
                                                   ? AppColors.cardDark
@@ -490,6 +492,7 @@ class _SupplierDialogState extends State<SupplierDialog>
                                             ),
                                             const SizedBox(height: 6),
                                             DropdownButtonFormField<String>(
+                                              isExpanded: true,
                                               initialValue: _openingBalanceType,
                                               dropdownColor: isDark
                                                   ? AppColors.cardDark

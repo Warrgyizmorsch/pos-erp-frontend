@@ -58,6 +58,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final customer = widget.customer;
     final balance = customer.walletBalance;
+    final horizontalScrollController = ScrollController();
 
     final filteredLedger = ledgerEntries.where((t) {
       if (searchQuery.isEmpty) return true;
@@ -74,7 +75,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
       expand: false,
       builder: (context, scrollController) {
         return Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0),
           child: ListView(
             controller: scrollController,
             children: [
@@ -82,22 +83,29 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Customer Profile & Ledger',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        const Expanded(
+                          child: Text(
+                            'Customer Profile & Ledger',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   AppButton(
                     text: 'Edit Profile',
                     variant: AppButtonVariant.outline,
@@ -109,11 +117,11 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                   ),
                 ],
               ),
-              const Divider(height: 24),
+              const Divider(height: 20),
 
               // 2. Customer Info Card
               AppCard(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -121,20 +129,20 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
-                          radius: 24,
+                          radius: 20,
                           backgroundColor: AppColors.primary.withAlpha(30),
                           child: Text(
                             customer.name.isNotEmpty
                                 ? customer.name[0].toUpperCase()
                                 : 'C',
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,24 +150,28 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                               Text(
                                 customer.name,
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 'Phone: ${customer.phone} ${(customer.email != null && customer.email!.isNotEmpty) ? "• ${customer.email}" : ""}',
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   color: Colors.grey,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               if (customer.gstNumber != null &&
                                   customer.gstNumber!.isNotEmpty)
                                 Text(
                                   'GSTIN: ${customer.gstNumber}',
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontFamily: 'monospace',
                                     color: Colors.grey,
                                   ),
@@ -167,13 +179,14 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             const Text(
-                              'OUTSTANDING BALANCE',
+                              'OUTSTANDING',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey,
                               ),
@@ -182,7 +195,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                             Text(
                               '₹${balance.abs().toStringAsFixed(2)}',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: balance > 0
                                     ? Colors.green
@@ -194,7 +207,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                                   ? 'RECEIVABLE'
                                   : (balance < 0 ? 'ADVANCE' : 'CLEAR'),
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
                                 color: balance > 0
                                     ? Colors.green
@@ -208,18 +221,26 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // 3. Transactions Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Ledger Transactions',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  const Expanded(
+                    child: Text(
+                      'Ledger Transactions',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   SizedBox(
-                    width: 220,
+                    width: 170,
                     child: TextField(
                       style: const TextStyle(fontSize: 12),
                       decoration: const InputDecoration(
@@ -227,7 +248,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                         prefixIcon: Icon(Icons.search, size: 16),
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: 8,
                           vertical: 8,
                         ),
                         border: OutlineInputBorder(),
@@ -270,151 +291,160 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                   padding: EdgeInsets.zero,
                   child: ClipRRect(
                     borderRadius: AppRadius.lg,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(
-                          isDark ? AppColors.inputDark : Colors.grey[100],
-                        ),
-                        columnSpacing: 24,
-                        columns: const [
-                          DataColumn(
-                            label: Text(
-                              'TYPE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                    child: Scrollbar(
+                      controller: horizontalScrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(
+                            isDark ? AppColors.inputDark : Colors.grey[100],
+                          ),
+                          columnSpacing: 24,
+                          columns: const [
+                            DataColumn(
+                              label: Text(
+                                'TYPE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'NUMBER',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                            DataColumn(
+                              label: Text(
+                                'NUMBER',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'DATE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                            DataColumn(
+                              label: Text(
+                                'DATE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'DEBIT (SALE)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                            DataColumn(
+                              label: Text(
+                                'DEBIT (SALE)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'CREDIT (PAYMENT)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                            DataColumn(
+                              label: Text(
+                                'CREDIT (PAYMENT)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'OUTSTANDING BALANCE',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                            DataColumn(
+                              label: Text(
+                                'OUTSTANDING BALANCE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                        rows: filteredLedger.map((t) {
-                          final type = (t['type'] ?? '')
-                              .toString()
-                              .replaceAll('_', ' ')
-                              .toUpperCase();
-                          final receiptNo =
-                              (t['receiptNo'] ?? t['referenceId'] ?? '-')
-                                  .toString();
-                          final dateStr = (t['date'] ?? t['createdAt'] ?? '')
-                              .toString();
-                          final dt = dateStr.contains('T')
-                              ? dateStr.split('T')[0]
-                              : dateStr;
-                          final debit = (t['debitAmount'] ?? 0.0) as num;
-                          final credit = (t['creditAmount'] ?? 0.0) as num;
-                          final balAfter = (t['balanceAfter'] ?? 0.0) as num;
+                          ],
+                          rows: filteredLedger.map((t) {
+                            final type = (t['type'] ?? '')
+                                .toString()
+                                .replaceAll('_', ' ')
+                                .toUpperCase();
+                            final receiptNo =
+                                (t['receiptNo'] ?? t['referenceId'] ?? '-')
+                                    .toString();
+                            final dateStr = (t['date'] ?? t['createdAt'] ?? '')
+                                .toString();
+                            final dt = dateStr.contains('T')
+                                ? dateStr.split('T')[0]
+                                : dateStr;
+                            final debit = (t['debitAmount'] ?? 0.0) as num;
+                            final credit = (t['creditAmount'] ?? 0.0) as num;
+                            final balAfter = (t['balanceAfter'] ?? 0.0) as num;
 
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                Text(
-                                  type,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    type,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Text(
-                                  receiptNo,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontFamily: 'monospace',
+                                DataCell(
+                                  Text(
+                                    receiptNo,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Text(dt, style: const TextStyle(fontSize: 11)),
-                              ),
-                              DataCell(
-                                Text(
-                                  debit > 0
-                                      ? '+₹${debit.toStringAsFixed(2)}'
-                                      : '—',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
+                                DataCell(
+                                  Text(
+                                    dt,
+                                    style: const TextStyle(fontSize: 11),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Text(
-                                  credit > 0
-                                      ? '-₹${credit.toStringAsFixed(2)}'
-                                      : '—',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green,
+                                DataCell(
+                                  Text(
+                                    debit > 0
+                                        ? '+₹${debit.toStringAsFixed(2)}'
+                                        : '—',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Text(
-                                  '₹${balAfter.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                DataCell(
+                                  Text(
+                                    credit > 0
+                                        ? '-₹${credit.toStringAsFixed(2)}'
+                                        : '—',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                                DataCell(
+                                  Text(
+                                    '₹${balAfter.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),

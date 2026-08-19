@@ -326,6 +326,7 @@ class _CustomerDialogState extends State<CustomerDialog>
                                                 ),
                                                 const SizedBox(height: 6),
                                                 DropdownButtonFormField<String>(
+                                                  isExpanded: true,
                                                   initialValue:
                                                       _openingBalanceType,
                                                   dropdownColor: isDark
