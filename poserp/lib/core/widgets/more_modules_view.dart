@@ -13,8 +13,12 @@ class MoreModulesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final userRole = authController.currentUser.value?.role ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       appBar: AppTopBar(
         title: 'More System Modules',
         subtitle: 'Access all enterprise ERP capabilities & tools',
@@ -118,7 +122,7 @@ class MoreModulesView extends StatelessWidget {
                   context: context,
                   title: 'Cash & Banking',
                   icon: Icons.account_balance_wallet_outlined,
-                  color: AppColors.info,
+                  color: isDark ? AppColors.info : const Color(0xFF0284C7),
                 ),
                 _buildGridSection([
                   _ModuleItem(
@@ -190,7 +194,7 @@ class MoreModulesView extends StatelessWidget {
                   context: context,
                   title: 'Inventory & Product Catalog',
                   icon: Icons.inventory_2_outlined,
-                  color: AppColors.info,
+                  color: isDark ? AppColors.info : const Color(0xFF0284C7),
                 ),
                 _buildGridSection([
                   _ModuleItem(
@@ -308,7 +312,7 @@ class MoreModulesView extends StatelessWidget {
                   context: context,
                   title: 'Expenses & Indirect Income',
                   icon: Icons.receipt_long_outlined,
-                  color: AppColors.warning,
+                  color: isDark ? AppColors.warning : const Color(0xFFD97706),
                 ),
                 _buildGridSection([
                   _ModuleItem(
@@ -330,7 +334,7 @@ class MoreModulesView extends StatelessWidget {
                 context: context,
                 title: 'Shift & Utility Tools',
                 icon: Icons.construction_outlined,
-                color: AppColors.warning,
+                color: isDark ? AppColors.warning : const Color(0xFFD97706),
               ),
               _buildGridSection([
                 if (PermissionService.hasRole(
@@ -369,7 +373,7 @@ class MoreModulesView extends StatelessWidget {
                   context: context,
                   title: 'Administration & Security',
                   icon: Icons.admin_panel_settings_outlined,
-                  color: AppColors.danger,
+                  color: isDark ? AppColors.danger : const Color(0xFFE11D48),
                 ),
                 _buildGridSection([
                   _ModuleItem(
@@ -458,12 +462,23 @@ class MoreModulesView extends StatelessWidget {
                         ? AppColors.borderDark
                         : AppColors.borderLight,
                   ),
+                  boxShadow: isDark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(10),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 14,
-                      backgroundColor: AppColors.primary.withAlpha(20),
+                      backgroundColor: isDark
+                          ? AppColors.primary.withAlpha(30)
+                          : AppColors.primary.withAlpha(20),
                       child: Icon(
                         item.icon,
                         size: 15,
@@ -476,9 +491,12 @@ class MoreModulesView extends StatelessWidget {
                         item.label,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.foregroundDark
+                              : AppColors.foregroundLight,
                         ),
                       ),
                     ),
