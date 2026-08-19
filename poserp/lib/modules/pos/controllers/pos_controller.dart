@@ -202,6 +202,50 @@ class POSController extends GetxController {
     _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
   }
 
+  Future<bool> onScanBarcode(String barcodeQuery) async {
+    final query = barcodeQuery.trim();
+    if (query.isEmpty) return false;
+
+    // 1. Search local cached products first
+    Product? match = availableProducts.firstWhereOrNull(
+      (p) =>
+          p.barcode == query ||
+          p.sku.toLowerCase() == query.toLowerCase() ||
+          p.id == query,
+    );
+
+    // 2. If not found in local cache, query API
+    if (match == null) {
+      try {
+        final results = await _repository.fetchProducts(search: query);
+        match =
+            results.firstWhereOrNull(
+              (p) =>
+                  p.barcode == query ||
+                  p.sku.toLowerCase() == query.toLowerCase(),
+            ) ??
+            (results.isNotEmpty ? results.first : null);
+      } catch (_) {}
+    }
+
+    if (match != null) {
+      addItemFromProduct(match);
+      Get.snackbar(
+        'Scanned Successfully',
+        'Added "${match.name}" to cart.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(16),
+      );
+      return true;
+    } else {
+      showErrorSnackbar('Product not found for barcode: $query');
+      return false;
+    }
+  }
+
   void updateItemQuantity(String itemId, double qty) {
     final cur = activeBill;
     if (cur == null) return;
