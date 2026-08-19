@@ -61,14 +61,17 @@ import type {
   Subcategory,
 } from "@/types";
 
-const TableCellInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => {
+const TableCellInput = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(({ className, ...props }, ref) => {
   return (
     <input
       ref={ref}
       className={cn(
         "w-full bg-transparent border-none outline-none ring-0 shadow-none px-1 py-1 text-center font-bold tabular-nums",
         "focus:outline-none focus:ring-0 focus:border-none focus-visible:ring-0 focus-visible:outline-none",
-        className
+        className,
       )}
       {...props}
     />
@@ -133,10 +136,15 @@ const calcItemTotal = (item: ItemRow) => {
   return afterDisc + taxAmt;
 };
 
-const roundMoney = (value: number) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+const roundMoney = (value: number) =>
+  Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 const normalizeState = (value = "") => value.trim().toLowerCase();
 
-const splitGST = (taxAmount: number, stateOfSupply: string, businessState: string) => {
+const splitGST = (
+  taxAmount: number,
+  stateOfSupply: string,
+  businessState: string,
+) => {
   const tax = roundMoney(taxAmount);
   if (tax <= 0) return { cgst: 0, sgst: 0, igst: 0 };
   if (
@@ -158,7 +166,9 @@ export default function CreatePurchasePage() {
   const { sidebarCollapsed } = useThemeStore();
 
   // Global Tax Mode State
-  const [globalTaxType, setGlobalTaxType] = useState<"without" | "with">("without");
+  const [globalTaxType, setGlobalTaxType] = useState<"without" | "with">(
+    "without",
+  );
 
   const handleGlobalTaxTypeChange = (newType: "without" | "with") => {
     setGlobalTaxType(newType);
@@ -167,7 +177,7 @@ export default function CreatePurchasePage() {
         const updated = { ...item, purchaseTaxType: newType };
         updated.total = calcItemTotal(updated);
         return updated;
-      })
+      }),
     );
   };
 
@@ -186,14 +196,25 @@ export default function CreatePurchasePage() {
   // Mobile summary panel toggle
   const [summaryOpen, setSummaryOpen] = useState(false);
 
-  const focusCell = (itemId: string, field: "barcode" | "sku" | "name" | "quantity" | "purchaseRate" | "salesPrice" | "discount") => {
+  const focusCell = (
+    itemId: string,
+    field:
+      | "barcode"
+      | "sku"
+      | "name"
+      | "quantity"
+      | "purchaseRate"
+      | "salesPrice"
+      | "discount",
+  ) => {
     setTimeout(() => {
       let input: HTMLInputElement | null = null;
       if (field === "barcode") input = barcodeRefs.current[itemId];
       else if (field === "sku") input = skuRefs.current[itemId];
       else if (field === "name") input = nameRefs.current[itemId];
       else if (field === "quantity") input = qtyRefs.current[itemId];
-      else if (field === "purchaseRate") input = purchaseRateRefs.current[itemId];
+      else if (field === "purchaseRate")
+        input = purchaseRateRefs.current[itemId];
       else if (field === "salesPrice") input = salesPriceRefs.current[itemId];
       else if (field === "discount") input = discountRefs.current[itemId];
 
@@ -207,8 +228,15 @@ export default function CreatePurchasePage() {
   const handleCustomTab = (
     e: React.KeyboardEvent,
     itemId: string,
-    currentField: "barcode" | "sku" | "name" | "quantity" | "purchaseRate" | "salesPrice" | "discount",
-    idx: number
+    currentField:
+      | "barcode"
+      | "sku"
+      | "name"
+      | "quantity"
+      | "purchaseRate"
+      | "salesPrice"
+      | "discount",
+    idx: number,
   ) => {
     if (e.key === "Tab") {
       e.preventDefault();
@@ -299,7 +327,8 @@ export default function CreatePurchasePage() {
   const [supplierGst, setSupplierGst] = useState("");
   const [showSupplierSuggestions, setShowSupplierSuggestions] = useState(false);
   const [isSupplierMatched, setIsSupplierMatched] = useState(false);
-  const [selectedSupplierDropdownIdx, setSelectedSupplierDropdownIdx] = useState(-1);
+  const [selectedSupplierDropdownIdx, setSelectedSupplierDropdownIdx] =
+    useState(-1);
   const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const supplierWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -321,14 +350,17 @@ export default function CreatePurchasePage() {
     if (!editingPurchaseId) return;
 
     let cancelled = false;
-    purchaseService.getById(editingPurchaseId)
+    purchaseService
+      .getById(editingPurchaseId)
       .then((purchase: Purchase) => {
         if (cancelled) return;
 
-        const supplier = typeof purchase.supplier === "string" ? null : purchase.supplier;
-        const transporterId = typeof purchase.transporter === "string"
-          ? purchase.transporter
-          : purchase.transporter?._id || "none";
+        const supplier =
+          typeof purchase.supplier === "string" ? null : purchase.supplier;
+        const transporterId =
+          typeof purchase.transporter === "string"
+            ? purchase.transporter
+            : purchase.transporter?._id || "none";
 
         if (supplier) {
           setSupplierId(supplier._id);
@@ -340,33 +372,43 @@ export default function CreatePurchasePage() {
 
         setTransporterId(transporterId);
         setInvoiceNumber(purchase.invoiceNumber || "");
-        setPurchaseDate((purchase.purchaseDate || purchase.createdAt).split("T")[0]);
+        setPurchaseDate(
+          (purchase.purchaseDate || purchase.createdAt).split("T")[0],
+        );
         setStateOfSupply(purchase.stateOfSupply || "Rajasthan");
         setShippingCharges(purchase.shippingCharges || 0);
         setRoundOff(Boolean(purchase.roundOff));
         setPaymentMethod(purchase.paymentMethod || "cash");
         setCashBankAccountId(purchase.cashBankAccountId || "");
         setNotes(purchase.notes || "");
-        setExistingPayment({ amountPaid: purchase.amountPaid, paymentStatus: purchase.paymentStatus });
-        setItems(purchase.items.length > 0 ? purchase.items.map((item) => {
-          const product = typeof item.product === "string" ? null : item.product;
-          return {
-            id: crypto.randomUUID(),
-            product,
-            productSearch: item.name,
-            sku: item.sku,
-            barcode: product?.barcode || "",
-            quantity: item.quantity,
-            purchaseRate: item.purchasePrice,
-            purchaseTaxType: "without",
-            salesPrice: item.salesPrice,
-            salesTaxType: "without",
-            discount: 0,
-            taxRate: item.taxRate || 0,
-            unit: product?.unit || "piece",
-            total: item.total,
-          };
-        }) : [newItem()]);
+        setExistingPayment({
+          amountPaid: purchase.amountPaid,
+          paymentStatus: purchase.paymentStatus,
+        });
+        setItems(
+          purchase.items.length > 0
+            ? purchase.items.map((item) => {
+                const product =
+                  typeof item.product === "string" ? null : item.product;
+                return {
+                  id: crypto.randomUUID(),
+                  product,
+                  productSearch: item.name,
+                  sku: item.sku,
+                  barcode: product?.barcode || "",
+                  quantity: item.quantity,
+                  purchaseRate: item.purchasePrice,
+                  purchaseTaxType: "without",
+                  salesPrice: item.salesPrice,
+                  salesTaxType: "without",
+                  discount: 0,
+                  taxRate: item.taxRate || 0,
+                  unit: product?.unit || "piece",
+                  total: item.total,
+                };
+              })
+            : [newItem()],
+        );
       })
       .catch((error) => {
         console.error("Failed to load purchase for editing", error);
@@ -389,7 +431,9 @@ export default function CreatePurchasePage() {
   const reloadSuppliers = async () => {
     try {
       const res = await supplierService.getAll({ limit: 200 });
-      const newSuppliers = res.data.filter((s: Supplier) => !suppliers.some(prev => prev._id === s._id));
+      const newSuppliers = res.data.filter(
+        (s: Supplier) => !suppliers.some((prev) => prev._id === s._id),
+      );
       setSuppliers(res.data);
       if (newSuppliers.length > 0) {
         selectSupplier(newSuppliers[0]);
@@ -414,7 +458,9 @@ export default function CreatePurchasePage() {
     if (val === "default") {
       setNotes("Thanks for doing business with us!");
     } else if (val === "standard") {
-      setNotes("1. Goods once sold will not be taken back.\n2. Subject to local jurisdiction.\n3. Payment due within 15 days.");
+      setNotes(
+        "1. Goods once sold will not be taken back.\n2. Subject to local jurisdiction.\n3. Payment due within 15 days.",
+      );
     } else {
       setNotes("");
     }
@@ -428,26 +474,56 @@ export default function CreatePurchasePage() {
   const [stateOfSupply, setStateOfSupply] = useState("Rajasthan");
   const [businessState, setBusinessState] = useState("Rajasthan");
   const [roundOff, setRoundOff] = useState(false);
-  const [existingPayment, setExistingPayment] = useState<Pick<Purchase, "amountPaid" | "paymentStatus"> | null>(null);
+  const [existingPayment, setExistingPayment] = useState<Pick<
+    Purchase,
+    "amountPaid" | "paymentStatus"
+  > | null>(null);
 
   useEffect(() => {
-    supplierService.getAll({ limit: 200 }).then((r) => setSuppliers(r.data)).catch(() => {});
-    transporterService.getAll({ limit: 200 }).then((r) => setTransporters(r.data)).catch(() => {});
-    productService.getAll({ limit: 500 }).then((r) => setProducts(r.data)).catch(() => {});
-    categoryService.getAll().then((r) => setCategories(r)).catch(() => {});
-    subcategoryService.getAll().then((r) => setSubcategories(r)).catch(() => {});
-    businessService.getProfile().then((profile) => {
-      const profileState = profile.state || "Rajasthan";
-      setBusinessState(profileState);
-      if (!editingPurchaseId) {
-        setStateOfSupply((current) => current && current !== "Rajasthan" ? current : profileState);
-      }
-    }).catch(() => {});
-    cashBankService.getAccounts().then((res) => {
-      if (res.success && res.data) {
-        setBankAccounts(res.data.filter((a: any) => a.accountType === "bank" && a.status === "active"));
-      }
-    }).catch((err) => console.error("Failed to load bank accounts:", err));
+    supplierService
+      .getAll({ limit: 200 })
+      .then((r) => setSuppliers(r.data))
+      .catch(() => {});
+    transporterService
+      .getAll({ limit: 200 })
+      .then((r) => setTransporters(r.data))
+      .catch(() => {});
+    productService
+      .getAll({ limit: 500 })
+      .then((r) => setProducts(r.data))
+      .catch(() => {});
+    categoryService
+      .getAll()
+      .then((r) => setCategories(r))
+      .catch(() => {});
+    subcategoryService
+      .getAll()
+      .then((r) => setSubcategories(r))
+      .catch(() => {});
+    businessService
+      .getProfile()
+      .then((profile) => {
+        const profileState = profile.state || "Rajasthan";
+        setBusinessState(profileState);
+        if (!editingPurchaseId) {
+          setStateOfSupply((current) =>
+            current && current !== "Rajasthan" ? current : profileState,
+          );
+        }
+      })
+      .catch(() => {});
+    cashBankService
+      .getAccounts()
+      .then((res) => {
+        if (res.success && res.data) {
+          setBankAccounts(
+            res.data.filter(
+              (a: any) => a.accountType === "bank" && a.status === "active",
+            ),
+          );
+        }
+      })
+      .catch((err) => console.error("Failed to load bank accounts:", err));
   }, []);
 
   useEffect(() => {
@@ -457,7 +533,8 @@ export default function CreatePurchasePage() {
   const handlePaymentMethodChange = (val: string) => {
     setPaymentMethod(val);
     if (val !== "cash") {
-      const defaultBank = bankAccounts.find((a) => a.isDefault) || bankAccounts[0];
+      const defaultBank =
+        bankAccounts.find((a) => a.isDefault) || bankAccounts[0];
       if (defaultBank && !cashBankAccountId) {
         setCashBankAccountId(defaultBank._id);
       }
@@ -470,7 +547,7 @@ export default function CreatePurchasePage() {
     ? suppliers.filter(
         (s) =>
           s.name.toLowerCase().includes(supplierSearch.toLowerCase()) ||
-          (s.phone && s.phone.includes(supplierSearch))
+          (s.phone && s.phone.includes(supplierSearch)),
       )
     : suppliers;
 
@@ -488,7 +565,7 @@ export default function CreatePurchasePage() {
     }
 
     const exact = suppliers.find(
-      (s) => s.name.toLowerCase() === query.trim().toLowerCase()
+      (s) => s.name.toLowerCase() === query.trim().toLowerCase(),
     );
 
     if (exact) {
@@ -533,7 +610,10 @@ export default function CreatePurchasePage() {
       });
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (selectedSupplierDropdownIdx >= 0 && selectedSupplierDropdownIdx < filtered.length) {
+      if (
+        selectedSupplierDropdownIdx >= 0 &&
+        selectedSupplierDropdownIdx < filtered.length
+      ) {
         selectSupplier(filtered[selectedSupplierDropdownIdx]);
       } else if (filtered.length > 0) {
         selectSupplier(filtered[0]);
@@ -564,7 +644,9 @@ export default function CreatePurchasePage() {
     const q = query.trim().toLowerCase();
 
     const exactMatch = products.find(
-      (p) => p.barcode?.trim().toLowerCase() === q || p.sku.trim().toLowerCase() === q,
+      (p) =>
+        p.barcode?.trim().toLowerCase() === q ||
+        p.sku.trim().toLowerCase() === q,
     );
 
     if (exactMatch) {
@@ -591,7 +673,10 @@ export default function CreatePurchasePage() {
     setProductResults(results.slice(0, 8));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    idx: number,
+  ) => {
     if (e.key === "ArrowDown") {
       if (productResults.length === 0) return;
       e.preventDefault();
@@ -611,7 +696,9 @@ export default function CreatePurchasePage() {
       const query = items[idx].productSearch.trim().toLowerCase();
       if (query) {
         const exactMatch = products.find(
-          (p) => p.barcode?.trim().toLowerCase() === query || p.sku.trim().toLowerCase() === query,
+          (p) =>
+            p.barcode?.trim().toLowerCase() === query ||
+            p.sku.trim().toLowerCase() === query,
         );
         if (exactMatch) {
           const now = Date.now();
@@ -629,7 +716,10 @@ export default function CreatePurchasePage() {
         }
       }
       if (productResults.length > 0) {
-        if (selectedDropdownIdx >= 0 && selectedDropdownIdx < productResults.length) {
+        if (
+          selectedDropdownIdx >= 0 &&
+          selectedDropdownIdx < productResults.length
+        ) {
           selectProduct(idx, productResults[selectedDropdownIdx]);
         } else {
           selectProduct(idx, productResults[0]);
@@ -645,25 +735,49 @@ export default function CreatePurchasePage() {
   const selectProduct = (idx: number, product: Product) => {
     const existingIdx = items.findIndex((item, i) => {
       if (i === idx) return false;
-      if (item.product && product && item.product._id === product._id) return true;
-      if (item.barcode && product.barcode && item.barcode.trim() !== "" && item.barcode.trim().toLowerCase() === product.barcode.trim().toLowerCase()) return true;
-      if (item.sku && product.sku && item.sku.trim() !== "" && item.sku.trim().toLowerCase() === product.sku.trim().toLowerCase()) return true;
+      if (item.product && product && item.product._id === product._id)
+        return true;
+      if (
+        item.barcode &&
+        product.barcode &&
+        item.barcode.trim() !== "" &&
+        item.barcode.trim().toLowerCase() ===
+          product.barcode.trim().toLowerCase()
+      )
+        return true;
+      if (
+        item.sku &&
+        product.sku &&
+        item.sku.trim() !== "" &&
+        item.sku.trim().toLowerCase() === product.sku.trim().toLowerCase()
+      )
+        return true;
       return false;
     });
 
     if (existingIdx !== -1) {
       const updated = [...items];
-      updated[existingIdx] = { ...updated[existingIdx], quantity: updated[existingIdx].quantity + 1 };
+      updated[existingIdx] = {
+        ...updated[existingIdx],
+        quantity: updated[existingIdx].quantity + 1,
+      };
       updated[existingIdx].total = calcItemTotal(updated[existingIdx]);
       if (!items[idx].product) {
-        updated[idx] = { ...updated[idx], productSearch: "", barcode: "", product: null };
+        updated[idx] = {
+          ...updated[idx],
+          productSearch: "",
+          barcode: "",
+          product: null,
+        };
       }
       setItems(updated);
       setProductResults([]);
       setActiveSearchIdx(null);
       setScanHistory((prev) => [...prev, updated[existingIdx].id]);
       focusCell(updated[idx].id, "barcode");
-      toast.success(`${product.name} qty increased to ${updated[existingIdx].quantity}`);
+      toast.success(
+        `${product.name} qty increased to ${updated[existingIdx].quantity}`,
+      );
       return;
     }
 
@@ -695,7 +809,11 @@ export default function CreatePurchasePage() {
 
   const handleAddNewProductSubmit = async () => {
     if (newProductIdx === null) return;
-    if (!newProductForm.name || !newProductForm.category || !newProductForm.sku) {
+    if (
+      !newProductForm.name ||
+      !newProductForm.category ||
+      !newProductForm.sku
+    ) {
       toast.error("Please fill Name, Category, and SKU");
       return;
     }
@@ -713,7 +831,10 @@ export default function CreatePurchasePage() {
         lowStockThreshold: Number(newProductForm.lowStockThreshold) || 10,
         unit: newProductForm.unit as any,
         images: newProductForm.images,
-        image: newProductForm.images.length > 0 ? newProductForm.images[0] : undefined,
+        image:
+          newProductForm.images.length > 0
+            ? newProductForm.images[0]
+            : undefined,
       };
       const savedProduct = await productService.create(payload);
       setProducts((prev) => [...prev, savedProduct]);
@@ -735,7 +856,19 @@ export default function CreatePurchasePage() {
       };
       setItems(updated);
       setNewProductModalOpen(false);
-      setNewProductForm({ name: "", description: "", barcode: "", sku: "", category: "", subcategoryId: "", hsnCode: "", unit: "piece", stock: "0", lowStockThreshold: "10", images: [] });
+      setNewProductForm({
+        name: "",
+        description: "",
+        barcode: "",
+        sku: "",
+        category: "",
+        subcategoryId: "",
+        hsnCode: "",
+        unit: "piece",
+        stock: "0",
+        lowStockThreshold: "10",
+        images: [],
+      });
       setProductResults([]);
       setActiveSearchIdx(null);
       toast.success("Product created successfully!");
@@ -747,7 +880,11 @@ export default function CreatePurchasePage() {
     }
   };
 
-  const updateItem = (idx: number, field: keyof ItemRow, value: number | string) => {
+  const updateItem = (
+    idx: number,
+    field: keyof ItemRow,
+    value: number | string,
+  ) => {
     const updated = [...items];
     updated[idx] = { ...updated[idx], [field]: value };
     updated[idx].total = calcItemTotal(updated[idx]);
@@ -756,7 +893,7 @@ export default function CreatePurchasePage() {
 
   const addRow = () => {
     const ni = newItem(globalTaxType);
-    setItems(prev => [...prev, ni]);
+    setItems((prev) => [...prev, ni]);
     setTimeout(() => focusCell(ni.id, "barcode"), 80);
   };
 
@@ -764,7 +901,7 @@ export default function CreatePurchasePage() {
     if (items.length <= 1) return;
     const removedId = items[idx].id;
     setItems(items.filter((_, i) => i !== idx));
-    setScanHistory(prev => prev.filter(id => id !== removedId));
+    setScanHistory((prev) => prev.filter((id) => id !== removedId));
   };
 
   const isRowFilled = (item: ItemRow) => {
@@ -787,49 +924,91 @@ export default function CreatePurchasePage() {
           let newHistory = [...scanHistory];
           while (newHistory.length > 0) {
             const lastId = newHistory[newHistory.length - 1];
-            const itemExists = items.some(i => i.id === lastId && isRowFilled(i));
-            if (itemExists) { targetItemId = lastId; break; }
-            else newHistory.pop();
+            const itemExists = items.some(
+              (i) => i.id === lastId && isRowFilled(i),
+            );
+            if (itemExists) {
+              targetItemId = lastId;
+              break;
+            } else newHistory.pop();
           }
           if (targetItemId) {
-            const targetIdx = items.findIndex(i => i.id === targetItemId);
+            const targetIdx = items.findIndex((i) => i.id === targetItemId);
             if (targetIdx !== -1) {
               const targetRow = items[targetIdx];
               if (targetRow.quantity > 1) {
-                const updatedRow = { ...targetRow, quantity: targetRow.quantity - 1 };
+                const updatedRow = {
+                  ...targetRow,
+                  quantity: targetRow.quantity - 1,
+                };
                 updatedRow.total = calcItemTotal(updatedRow);
-                toast.success(`Reduced qty of ${updatedRow.product?.name || updatedRow.newProductName || "item"}`);
+                toast.success(
+                  `Reduced qty of ${updatedRow.product?.name || updatedRow.newProductName || "item"}`,
+                );
                 newHistory.pop();
                 setScanHistory(newHistory);
-                setItems(prev => { const next = [...prev]; next[targetIdx] = updatedRow; return next; });
+                setItems((prev) => {
+                  const next = [...prev];
+                  next[targetIdx] = updatedRow;
+                  return next;
+                });
               } else {
                 toast.success("Row removed");
                 newHistory.pop();
                 setScanHistory(newHistory);
-                setItems(prev => prev.length <= 1 ? [newItem()] : prev.filter((_, i) => i !== targetIdx));
+                setItems((prev) =>
+                  prev.length <= 1
+                    ? [newItem()]
+                    : prev.filter((_, i) => i !== targetIdx),
+                );
               }
             }
           } else {
-            const lastFilledIdxReversed = [...items].reverse().findIndex(isRowFilled);
+            const lastFilledIdxReversed = [...items]
+              .reverse()
+              .findIndex(isRowFilled);
             if (lastFilledIdxReversed !== -1) {
               const lastFilledIdx = items.length - 1 - lastFilledIdxReversed;
               const lastFilledRow = items[lastFilledIdx];
               if (lastFilledRow.quantity > 1) {
-                const updatedRow = { ...lastFilledRow, quantity: lastFilledRow.quantity - 1 };
+                const updatedRow = {
+                  ...lastFilledRow,
+                  quantity: lastFilledRow.quantity - 1,
+                };
                 updatedRow.total = calcItemTotal(updatedRow);
-                toast.success(`Reduced qty of ${updatedRow.product?.name || updatedRow.newProductName || "item"}`);
-                setItems(prev => { const next = [...prev]; next[lastFilledIdx] = updatedRow; return next; });
+                toast.success(
+                  `Reduced qty of ${updatedRow.product?.name || updatedRow.newProductName || "item"}`,
+                );
+                setItems((prev) => {
+                  const next = [...prev];
+                  next[lastFilledIdx] = updatedRow;
+                  return next;
+                });
               } else {
                 toast.success("Row removed");
-                setItems(prev => prev.length <= 1 ? [newItem()] : prev.filter((_, i) => i !== lastFilledIdx));
+                setItems((prev) =>
+                  prev.length <= 1
+                    ? [newItem()]
+                    : prev.filter((_, i) => i !== lastFilledIdx),
+                );
               }
             } else {
-              setItems(prev => { if (prev.length > 1) { toast.success("Row removed"); return prev.slice(0, -1); } return prev; });
+              setItems((prev) => {
+                if (prev.length > 1) {
+                  toast.success("Row removed");
+                  return prev.slice(0, -1);
+                }
+                return prev;
+              });
             }
           }
           break;
         }
-        case "F2": e.preventDefault(); addRow(); toast.success("New row added"); break;
+        case "F2":
+          e.preventDefault();
+          addRow();
+          toast.success("New row added");
+          break;
         case "F3": {
           e.preventDefault();
           const lastFilled = [...items].reverse().find(isRowFilled);
@@ -844,14 +1023,24 @@ export default function CreatePurchasePage() {
         }
         case "F8": {
           e.preventDefault();
-          const shippingInput = document.querySelector<HTMLInputElement>('input[data-field="shipping"]');
-          if (shippingInput) { shippingInput.focus(); shippingInput.select(); }
+          const shippingInput = document.querySelector<HTMLInputElement>(
+            'input[data-field="shipping"]',
+          );
+          if (shippingInput) {
+            shippingInput.focus();
+            shippingInput.select();
+          }
           break;
         }
-        case "F9": e.preventDefault(); handleSubmit("confirmed"); break;
+        case "F9":
+          e.preventDefault();
+          handleSubmit("confirmed");
+          break;
         case "F12": {
           e.preventDefault();
-          const notesEl = document.querySelector<HTMLTextAreaElement>('textarea[data-field="notes"]');
+          const notesEl = document.querySelector<HTMLTextAreaElement>(
+            'textarea[data-field="notes"]',
+          );
           if (notesEl) notesEl.focus();
           break;
         }
@@ -868,7 +1057,10 @@ export default function CreatePurchasePage() {
   }, [items, scanHistory, newProductModalOpen, supplierModalOpen]);
 
   useEffect(() => {
-    const totalQty = items.reduce((s, item) => s + (item.product || item.isNewProduct ? item.quantity : 0), 0);
+    const totalQty = items.reduce(
+      (s, item) => s + (item.product || item.isNewProduct ? item.quantity : 0),
+      0,
+    );
     const perItemShipping = totalQty > 0 ? shippingCharges / totalQty : 0;
 
     setItems((prev) => {
@@ -879,10 +1071,19 @@ export default function CreatePurchasePage() {
         const discAmt = (base * item.discount) / 100;
         const afterDisc = base - discAmt;
         const taxAmt = (afterDisc * item.taxRate) / 100;
-        const newSalesPrice = Number((afterDisc + taxAmt + perItemShipping).toFixed(2));
-        if (item.salesPrice !== newSalesPrice && (item.salesPrice === 0 || item._autoCalculated === item.salesPrice)) {
+        const newSalesPrice = Number(
+          (afterDisc + taxAmt + perItemShipping).toFixed(2),
+        );
+        if (
+          item.salesPrice !== newSalesPrice &&
+          (item.salesPrice === 0 || item._autoCalculated === item.salesPrice)
+        ) {
           changed = true;
-          return { ...item, salesPrice: newSalesPrice, _autoCalculated: newSalesPrice };
+          return {
+            ...item,
+            salesPrice: newSalesPrice,
+            _autoCalculated: newSalesPrice,
+          };
         }
         return item;
       });
@@ -892,7 +1093,10 @@ export default function CreatePurchasePage() {
 
   const subtotal = items.reduce((s, item) => {
     const taxMultiplier = 1 + item.taxRate / 100;
-    const baseRate = item.purchaseTaxType === "with" ? item.purchaseRate / taxMultiplier : item.purchaseRate;
+    const baseRate =
+      item.purchaseTaxType === "with"
+        ? item.purchaseRate / taxMultiplier
+        : item.purchaseRate;
     const base = item.quantity * baseRate;
     const discAmt = (base * item.discount) / 100;
     return s + (base - discAmt);
@@ -900,7 +1104,10 @@ export default function CreatePurchasePage() {
 
   const totalTax = items.reduce((s, item) => {
     const taxMultiplier = 1 + item.taxRate / 100;
-    const baseRate = item.purchaseTaxType === "with" ? item.purchaseRate / taxMultiplier : item.purchaseRate;
+    const baseRate =
+      item.purchaseTaxType === "with"
+        ? item.purchaseRate / taxMultiplier
+        : item.purchaseRate;
     const base = item.quantity * baseRate;
     const discAmt = (base * item.discount) / 100;
     const afterDisc = base - discAmt;
@@ -909,38 +1116,81 @@ export default function CreatePurchasePage() {
 
   const totalDiscount = items.reduce((s, item) => {
     const taxMultiplier = 1 + item.taxRate / 100;
-    const baseRate = item.purchaseTaxType === "with" ? item.purchaseRate / taxMultiplier : item.purchaseRate;
+    const baseRate =
+      item.purchaseTaxType === "with"
+        ? item.purchaseRate / taxMultiplier
+        : item.purchaseRate;
     const base = item.quantity * baseRate;
     return s + (base * item.discount) / 100;
   }, 0);
 
   const calculatedGrandTotal = subtotal + totalTax + shippingCharges;
-  const finalTotal = roundOff ? Math.round(calculatedGrandTotal) : calculatedGrandTotal;
+  const finalTotal = roundOff
+    ? Math.round(calculatedGrandTotal)
+    : calculatedGrandTotal;
   const roundOffValue = finalTotal - calculatedGrandTotal;
   const grandTotal = finalTotal;
 
-  const handleSubmit = async (status: "confirmed" | "draft", printAfterSave = false) => {
+  const handleSubmit = async (
+    status: "confirmed" | "draft",
+    printAfterSave = false,
+  ) => {
     let finalSupplierId = supplierId;
     let finalSupplierName = "";
 
     if (!finalSupplierId) {
-      if (!supplierSearch.trim()) { toast.error("Please enter a supplier name"); return; }
-      if (!supplierPhone.trim()) { toast.error("Please enter a mobile number for the unmatched supplier"); return; }
+      if (!supplierSearch.trim()) {
+        toast.error("Please enter a supplier name");
+        return;
+      }
+      if (!supplierPhone.trim()) {
+        toast.error("Please enter a mobile number for the unmatched supplier");
+        return;
+      }
     }
 
     const validItems = items.filter(
-      (i) => i.product || (i.productSearch.trim() !== "" || (i.newProductName && i.newProductName.trim() !== "")),
+      (i) =>
+        i.product ||
+        i.productSearch.trim() !== "" ||
+        (i.newProductName && i.newProductName.trim() !== ""),
     );
-    if (validItems.length === 0) { toast.error("Please add at least one product"); return; }
-    if (validItems.some((i) => !i.product && (!i.newProductName || i.newProductName.trim() === ""))) {
-      toast.error("Please enter a product name for all new items"); return;
+    if (validItems.length === 0) {
+      toast.error("Please add at least one product");
+      return;
     }
-    if (validItems.some((i) => i.quantity <= 0)) { toast.error("Quantity must be > 0"); return; }
-    if (validItems.some((i) => i.purchaseRate < 0 || i.salesPrice < 0 || i.discount < 0 || i.taxRate < 0)) {
-      toast.error("Price, discount, and tax values cannot be negative"); return;
+    if (
+      validItems.some(
+        (i) =>
+          !i.product && (!i.newProductName || i.newProductName.trim() === ""),
+      )
+    ) {
+      toast.error("Please enter a product name for all new items");
+      return;
     }
-    if (status === "confirmed" && paymentMethod !== "cash" && !cashBankAccountId) {
-      toast.error("Please select a bank account for non-cash payment"); return;
+    if (validItems.some((i) => i.quantity <= 0)) {
+      toast.error("Quantity must be > 0");
+      return;
+    }
+    if (
+      validItems.some(
+        (i) =>
+          i.purchaseRate < 0 ||
+          i.salesPrice < 0 ||
+          i.discount < 0 ||
+          i.taxRate < 0,
+      )
+    ) {
+      toast.error("Price, discount, and tax values cannot be negative");
+      return;
+    }
+    if (
+      status === "confirmed" &&
+      paymentMethod !== "cash" &&
+      !cashBankAccountId
+    ) {
+      toast.error("Please select a bank account for non-cash payment");
+      return;
     }
     try {
       setSaving(true);
@@ -959,17 +1209,31 @@ export default function CreatePurchasePage() {
         finalSupplierName = matched?.name || "";
       }
 
-      const paidAmount = editingPurchaseId && existingPayment
-        ? existingPayment.amountPaid
-        : status === "confirmed" ? finalTotal : 0;
-      const paymentStatus = status === "draft"
-        ? "pending"
-        : paidAmount >= finalTotal ? "paid" : paidAmount > 0 ? "partial" : "pending";
+      const paidAmount =
+        editingPurchaseId && existingPayment
+          ? existingPayment.amountPaid
+          : status === "confirmed"
+            ? finalTotal
+            : 0;
+      const paymentStatus =
+        status === "draft"
+          ? "pending"
+          : paidAmount >= finalTotal
+            ? "paid"
+            : paidAmount > 0
+              ? "partial"
+              : "pending";
 
       const purchaseLines = validItems.map((i) => {
         const taxMultiplier = 1 + i.taxRate / 100;
-        const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
-        const salesPrice = i.salesTaxType === "with" ? i.salesPrice / taxMultiplier : i.salesPrice;
+        const purchasePrice =
+          i.purchaseTaxType === "with"
+            ? i.purchaseRate / taxMultiplier
+            : i.purchaseRate;
+        const salesPrice =
+          i.salesTaxType === "with"
+            ? i.salesPrice / taxMultiplier
+            : i.salesPrice;
         const finalSubtotal = i.quantity * purchasePrice;
         const discountAmt = (finalSubtotal * i.discount) / 100;
         const finalAfterDisc = finalSubtotal - discountAmt;
@@ -1019,15 +1283,22 @@ export default function CreatePurchasePage() {
       const payload = {
         supplier: finalSupplierId,
         supplierName: finalSupplierName,
-        transporter: transporterId && transporterId !== "none" ? transporterId : undefined,
-        transporterName: transporterId && transporterId !== "none" ? transporters.find((t) => t._id === transporterId)?.name : undefined,
+        transporter:
+          transporterId && transporterId !== "none" ? transporterId : undefined,
+        transporterName:
+          transporterId && transporterId !== "none"
+            ? transporters.find((t) => t._id === transporterId)?.name
+            : undefined,
         invoiceNumber,
         purchaseDate,
         stateOfSupply,
         items: purchaseLines,
         subtotal: validItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
-          const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
+          const purchasePrice =
+            i.purchaseTaxType === "with"
+              ? i.purchaseRate / taxMultiplier
+              : i.purchaseRate;
           return s + i.quantity * purchasePrice;
         }, 0),
         taxAmount: gstTotals.totalTax,
@@ -1036,7 +1307,10 @@ export default function CreatePurchasePage() {
         totalIgst: gstTotals.igst,
         discountAmount: validItems.reduce((s, i) => {
           const taxMultiplier = 1 + i.taxRate / 100;
-          const purchasePrice = i.purchaseTaxType === "with" ? i.purchaseRate / taxMultiplier : i.purchaseRate;
+          const purchasePrice =
+            i.purchaseTaxType === "with"
+              ? i.purchaseRate / taxMultiplier
+              : i.purchaseRate;
           const base = i.quantity * purchasePrice;
           return s + (base * i.discount) / 100;
         }, 0),
@@ -1047,25 +1321,38 @@ export default function CreatePurchasePage() {
         status,
         paymentStatus,
         paymentMethod: status === "confirmed" ? paymentMethod : undefined,
-        cashBankAccountId: status === "confirmed" && paymentMethod !== "cash" ? cashBankAccountId : undefined,
+        cashBankAccountId:
+          status === "confirmed" && paymentMethod !== "cash"
+            ? cashBankAccountId
+            : undefined,
         notes,
       };
 
       let savedPurchase: Purchase;
       if (editingPurchaseId) {
-        savedPurchase = await purchaseService.update(editingPurchaseId, payload);
-        toast.success(status === "draft" ? "Draft updated!" : "Purchase updated! Stock updated automatically.");
+        savedPurchase = await purchaseService.update(
+          editingPurchaseId,
+          payload,
+        );
+        toast.success(
+          status === "draft"
+            ? "Draft updated!"
+            : "Purchase updated! Stock updated automatically.",
+        );
       } else if (status === "draft") {
         savedPurchase = await purchaseService.saveDraft(payload);
         toast.success("Draft saved!");
       } else {
         savedPurchase = await purchaseService.create(payload);
-        const createdCount = ((savedPurchase as any).createdProducts || []).length;
-        toast.success(createdCount > 0
-          ? `Purchase saved. ${createdCount} new product${createdCount === 1 ? "" : "s"} created.`
-          : savedPurchase.accountingPosted
-          ? "Purchase saved and accounting voucher posted."
-          : "Purchase created! Stock updated automatically.");
+        const createdCount = ((savedPurchase as any).createdProducts || [])
+          .length;
+        toast.success(
+          createdCount > 0
+            ? `Purchase saved. ${createdCount} new product${createdCount === 1 ? "" : "s"} created.`
+            : savedPurchase.accountingPosted
+              ? "Purchase saved and accounting voucher posted."
+              : "Purchase created! Stock updated automatically.",
+        );
       }
       if (printAfterSave) {
         setPrintPurchase(savedPurchase);
@@ -1082,7 +1369,10 @@ export default function CreatePurchasePage() {
   };
 
   // Calculate totalQty at render scope
-  const totalQty = items.reduce((s, item) => s + (item.product || item.newProductName ? item.quantity : 0), 0);
+  const totalQty = items.reduce(
+    (s, item) => s + (item.product || item.newProductName ? item.quantity : 0),
+    0,
+  );
 
   return (
     <div className="bg-background pb-32 relative">
@@ -1090,7 +1380,11 @@ export default function CreatePurchasePage() {
       <div className="mb-4">
         <PageHeader
           title={editingPurchaseId ? "Edit Purchase" : "Purchase"}
-          description={editingPurchaseId ? "Update purchase bill details" : "Create and manage purchase bills"}
+          description={
+            editingPurchaseId
+              ? "Update purchase bill details"
+              : "Create and manage purchase bills"
+          }
           icon={Receipt}
         />
       </div>
@@ -1099,11 +1393,15 @@ export default function CreatePurchasePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-card p-4 rounded-xl border border-border/80 shadow-sm mb-4">
         {/* Left Side: Supplier Details */}
         <div className="space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-wider text-muted-foreground/80 border-b pb-1">Supplier Details</h2>
+          <h2 className="text-xs font-black uppercase tracking-wider text-muted-foreground/80 border-b pb-1">
+            Supplier Details
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Supplier select */}
             <div className="space-y-1.5 relative" ref={supplierWrapperRef}>
-              <Label className="text-xs font-semibold text-foreground">Supplier / Party <span className="text-destructive">*</span></Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Supplier / Party <span className="text-destructive">*</span>
+              </Label>
               <div className="relative flex items-center">
                 <Input
                   value={supplierSearch}
@@ -1119,8 +1417,8 @@ export default function CreatePurchasePage() {
                     isSupplierMatched
                       ? "border-emerald-500/50 bg-emerald-500/5 text-emerald-600 font-bold"
                       : supplierSearch.trim() !== ""
-                      ? "border-amber-500/55 bg-amber-500/5 text-amber-600 font-semibold"
-                      : ""
+                        ? "border-amber-500/55 bg-amber-500/5 text-amber-600 font-semibold"
+                        : "",
                   )}
                 />
                 {isSupplierMatched ? (
@@ -1144,13 +1442,18 @@ export default function CreatePurchasePage() {
                 <div className="absolute z-50 left-0 w-full min-w-[240px] top-full mt-1.5 bg-card border border-border rounded-xl shadow-2xl max-h-56 overflow-y-auto flex flex-col">
                   <button
                     type="button"
-                    onClick={() => { setSupplierModalOpen(true); setShowSupplierSuggestions(false); }}
+                    onClick={() => {
+                      setSupplierModalOpen(true);
+                      setShowSupplierSuggestions(false);
+                    }}
                     className="px-3 py-2.5 text-left text-xs font-bold text-primary hover:bg-primary/10 border-b border-border/50 sticky top-0 bg-card z-10 flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add New Supplier
                   </button>
                   {filteredSuppliers.length === 0 ? (
-                    <div className="p-3 text-xs text-center text-muted-foreground">No suppliers found.</div>
+                    <div className="p-3 text-xs text-center text-muted-foreground">
+                      No suppliers found.
+                    </div>
                   ) : (
                     filteredSuppliers.slice(0, 10).map((s, idx) => (
                       <button
@@ -1159,15 +1462,26 @@ export default function CreatePurchasePage() {
                         onClick={() => selectSupplier(s)}
                         className={cn(
                           "w-full px-3 py-2.5 text-left text-xs hover:bg-muted/50 transition-colors flex justify-between border-b border-border/10 last:border-0",
-                          selectedSupplierDropdownIdx === idx ? "bg-primary/10 text-primary font-bold" : "",
-                          supplierId === s._id && "bg-primary/5 font-semibold"
+                          selectedSupplierDropdownIdx === idx
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "",
+                          supplierId === s._id && "bg-primary/5 font-semibold",
                         )}
                       >
                         <div>
                           <p className="font-semibold">{s.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{s.phone}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {s.phone}
+                          </p>
                         </div>
-                        {s.gstNumber && <Badge variant="secondary" className="text-[9px] shrink-0 self-center">GST</Badge>}
+                        {s.gstNumber && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] shrink-0 self-center"
+                          >
+                            GST
+                          </Badge>
+                        )}
                       </button>
                     ))
                   )}
@@ -1177,15 +1491,20 @@ export default function CreatePurchasePage() {
 
             {/* Phone No */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">Phone No.</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Phone No.
+              </Label>
               <Input
                 value={supplierPhone}
-                onChange={(e) => { if (!isSupplierMatched) setSupplierPhone(e.target.value); }}
+                onChange={(e) => {
+                  if (!isSupplierMatched) setSupplierPhone(e.target.value);
+                }}
                 readOnly={isSupplierMatched}
                 placeholder="Phone No."
                 className={cn(
                   "h-9 text-xs bg-card border border-border/80 shadow-sm rounded-lg focus-visible:ring-1 focus-visible:ring-primary/30",
-                  isSupplierMatched && "bg-muted/30 text-muted-foreground border-transparent shadow-none cursor-not-allowed"
+                  isSupplierMatched &&
+                    "bg-muted/30 text-muted-foreground border-transparent shadow-none cursor-not-allowed",
                 )}
               />
             </div>
@@ -1194,11 +1513,15 @@ export default function CreatePurchasePage() {
 
         {/* Right Side: Bill Details */}
         <div className="space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-wider text-muted-foreground/80 border-b pb-1">Bill Details</h2>
+          <h2 className="text-xs font-black uppercase tracking-wider text-muted-foreground/80 border-b pb-1">
+            Bill Details
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Bill Number */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">Bill Number</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Bill Number
+              </Label>
               <Input
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
@@ -1209,7 +1532,9 @@ export default function CreatePurchasePage() {
 
             {/* Bill Date */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">Bill Date</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Bill Date
+              </Label>
               <Input
                 type="date"
                 value={purchaseDate}
@@ -1220,14 +1545,34 @@ export default function CreatePurchasePage() {
 
             {/* State of Supply */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">State of Supply</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                State of Supply
+              </Label>
               <Select value={stateOfSupply} onValueChange={setStateOfSupply}>
                 <SelectTrigger className="h-9 text-xs font-semibold bg-card border border-border/85 shadow-sm rounded-lg focus:ring-1 focus:ring-primary/30 transition-all hover:bg-card/90 cursor-pointer">
                   <SelectValue placeholder="Select State" />
                 </SelectTrigger>
                 <SelectContent>
-                  {["Rajasthan", "Delhi", "Maharashtra", "Gujarat", "Uttar Pradesh", "Haryana", "Punjab", "Karnataka", "Tamil Nadu", "Telangana", "Other"].map((state) => (
-                    <SelectItem key={state} value={state} className="text-xs font-medium">{state}</SelectItem>
+                  {[
+                    "Rajasthan",
+                    "Delhi",
+                    "Maharashtra",
+                    "Gujarat",
+                    "Uttar Pradesh",
+                    "Haryana",
+                    "Punjab",
+                    "Karnataka",
+                    "Tamil Nadu",
+                    "Telangana",
+                    "Other",
+                  ].map((state) => (
+                    <SelectItem
+                      key={state}
+                      value={state}
+                      className="text-xs font-medium"
+                    >
+                      {state}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1243,38 +1588,78 @@ export default function CreatePurchasePage() {
             <thead>
               <tr className="text-[10px] font-black uppercase tracking-[0.08em] text-muted-foreground text-center bg-muted/40 border-b border-border/80">
                 <th className="w-[3%] py-2 border-r border-border/30">#</th>
-                <th className="w-[10%] py-2 text-left px-3 border-r border-border/30">BARCODE</th>
-                <th className="w-[18%] py-2 text-left px-3 border-r border-border/30">ITEM / PRODUCT NAME</th>
+                <th className="w-[10%] py-2 text-left px-3 border-r border-border/30">
+                  BARCODE
+                </th>
+                <th className="w-[18%] py-2 text-left px-3 border-r border-border/30">
+                  ITEM / PRODUCT NAME
+                </th>
                 <th className="w-[5%] py-2 border-r border-border/30">QTY</th>
                 <th className="w-[7%] py-2 border-r border-border/30">UNIT</th>
                 <th className="w-[13%] py-2 px-2 border-r border-border/30">
                   <div className="flex flex-col items-center justify-center gap-0.5">
                     <span className="font-black">PRICE / UNIT</span>
                     <div className="flex items-center gap-1">
-                      <Select value={globalTaxType} onValueChange={(v: "without" | "with") => handleGlobalTaxTypeChange(v)}>
+                      <Select
+                        value={globalTaxType}
+                        onValueChange={(v: "without" | "with") =>
+                          handleGlobalTaxTypeChange(v)
+                        }
+                      >
                         <SelectTrigger className="h-5 px-1.5 py-0 bg-background/80 hover:bg-background border border-border/80 rounded text-[9px] font-bold text-foreground cursor-pointer justify-center gap-1 [&>svg]:h-3 [&>svg]:w-3">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="min-w-[100px]">
-                          <SelectItem value="without" className="text-[10px] font-semibold">Without Tax</SelectItem>
-                          <SelectItem value="with" className="text-[10px] font-semibold">With Tax</SelectItem>
+                          <SelectItem
+                            value="without"
+                            className="text-[10px] font-semibold"
+                          >
+                            Without Tax
+                          </SelectItem>
+                          <SelectItem
+                            value="with"
+                            className="text-[10px] font-semibold"
+                          >
+                            With Tax
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <div className="relative group flex items-center">
-                        <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-muted border border-border text-[9px] font-bold text-muted-foreground cursor-help hover:bg-primary/10 hover:text-primary transition-all">?</span>
+                        <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-muted border border-border text-[9px] font-bold text-muted-foreground cursor-help hover:bg-primary/10 hover:text-primary transition-all">
+                          ?
+                        </span>
                         <div className="absolute -translate-x-1/2 top-0 mb-2 bg-popover border border-border text-popover-foreground text-[10px] rounded p-2.5 shadow-xl w-64 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 leading-relaxed text-left font-normal normal-case">
-                          <p className="font-bold border-b pb-1 mb-1 text-[9px] uppercase tracking-wider text-foreground">Price Type Helper</p>
-                          <p className="mb-1"><strong className="text-primary font-bold">Without Tax:</strong> Tax will be added separately on top of purchase price.</p>
-                          <p><strong className="text-primary font-bold">With Tax:</strong> Tax is already included in the entered price.</p>
+                          <p className="font-bold border-b pb-1 mb-1 text-[9px] uppercase tracking-wider text-foreground">
+                            Price Type Helper
+                          </p>
+                          <p className="mb-1">
+                            <strong className="text-primary font-bold">
+                              Without Tax:
+                            </strong>{" "}
+                            Tax will be added separately on top of purchase
+                            price.
+                          </p>
+                          <p>
+                            <strong className="text-primary font-bold">
+                              With Tax:
+                            </strong>{" "}
+                            Tax is already included in the entered price.
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </th>
-                <th className="w-[12%] py-2 px-2 border-r border-border/30">SALE PRICE</th>
-                <th className="w-[6%] py-2 border-r border-border/30">DISC %</th>
+                <th className="w-[12%] py-2 px-2 border-r border-border/30">
+                  SALE PRICE
+                </th>
+                <th className="w-[6%] py-2 border-r border-border/30">
+                  DISC %
+                </th>
                 <th className="w-[7%] py-2 border-r border-border/30">TAX %</th>
-                <th className="w-[12%] py-2 text-right px-3 border-r border-border/30">AMOUNT</th>
+                <th className="w-[12%] py-2 text-right px-3 border-r border-border/30">
+                  AMOUNT
+                </th>
                 <th className="w-[3%]"></th>
               </tr>
             </thead>
@@ -1284,7 +1669,7 @@ export default function CreatePurchasePage() {
                   key={item.id}
                   className={cn(
                     "hover:bg-muted/10 transition-colors text-center h-9 border-b border-border/40 relative",
-                    activeSearchIdx === idx ? "z-30" : "z-0"
+                    activeSearchIdx === idx ? "z-30" : "z-0",
                   )}
                 >
                   {/* # */}
@@ -1296,66 +1681,110 @@ export default function CreatePurchasePage() {
                   <td className="py-0.5 px-1 border-r border-border/15 relative">
                     <TableCellInput
                       id={`scan-input-${idx}`}
-                      ref={(el) => { barcodeRefs.current[item.id] = el; }}
-                      value={item.product ? item.product.barcode || item.product.sku : item.productSearch}
+                      ref={(el) => {
+                        barcodeRefs.current[item.id] = el;
+                      }}
+                      value={
+                        item.product
+                          ? item.product.barcode || item.product.sku
+                          : item.productSearch
+                      }
                       onChange={(e) => handleProductSearch(idx, e.target.value)}
                       onFocus={() => setActiveSearchIdx(idx)}
-                      onKeyDown={(e) => { handleKeyDown(e, idx); handleCustomTab(e, item.id, "barcode", idx); }}
+                      onKeyDown={(e) => {
+                        handleKeyDown(e, idx);
+                        handleCustomTab(e, item.id, "barcode", idx);
+                      }}
                       placeholder="Scan/Search"
                       className={cn(
                         "h-8 text-left font-mono text-[11px] bg-muted/10 border border-border/40 rounded-lg px-2.5 transition-all w-full focus:bg-background focus:border-primary/45 focus:ring-1 focus:ring-primary/20 focus:shadow-sm",
-                        item.productSearch && !item.product ? "border-amber-500/30 text-amber-500 bg-amber-500/5 focus:border-amber-500/50 focus:ring-amber-500/20" : ""
+                        item.productSearch && !item.product
+                          ? "border-amber-500/30 text-amber-500 bg-amber-500/5 focus:border-amber-500/50 focus:ring-amber-500/20"
+                          : "",
                       )}
                     />
-                    {activeSearchIdx === idx && item.productSearch.length > 0 && (
-                      <div className="absolute z-50 left-1 w-72 top-full mt-1.5 bg-card border border-border rounded-xl shadow-2xl overflow-hidden max-h-[180px] overflow-y-auto flex flex-col animate-in fade-in duration-100">
-                        {productResults.length === 0 ? (
-                          <div className="p-3 text-[10px] text-center text-muted-foreground font-medium">Type to create a new product</div>
-                        ) : (
-                          productResults.map((p, pIdx) => (
-                            <button
-                              key={p._id}
-                              type="button"
-                              onClick={() => selectProduct(idx, p)}
-                              className={cn(
-                                "flex items-center gap-2 w-full px-3 py-1.5 text-left border-b border-border/10 last:border-0 transition-colors",
-                                selectedDropdownIdx === pIdx ? "bg-primary/10 font-bold" : "hover:bg-muted/40"
-                              )}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-semibold truncate">{p.name}</p>
-                                <p className="text-[9px] font-mono text-muted-foreground">{p.sku} {p.barcode ? `• ${p.barcode}` : ""}</p>
-                              </div>
-                              <Badge variant="secondary" className="text-[9px] shrink-0 font-bold">{p.stock} in stock</Badge>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
+                    {activeSearchIdx === idx &&
+                      item.productSearch.length > 0 && (
+                        <div className="absolute z-50 left-1 w-72 top-full mt-1.5 bg-card border border-border rounded-xl shadow-2xl overflow-hidden max-h-[180px] overflow-y-auto flex flex-col animate-in fade-in duration-100">
+                          {productResults.length === 0 ? (
+                            <div className="p-3 text-[10px] text-center text-muted-foreground font-medium">
+                              Type to create a new product
+                            </div>
+                          ) : (
+                            productResults.map((p, pIdx) => (
+                              <button
+                                key={p._id}
+                                type="button"
+                                onClick={() => selectProduct(idx, p)}
+                                className={cn(
+                                  "flex items-center gap-2 w-full px-3 py-1.5 text-left border-b border-border/10 last:border-0 transition-colors",
+                                  selectedDropdownIdx === pIdx
+                                    ? "bg-primary/10 font-bold"
+                                    : "hover:bg-muted/40",
+                                )}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[11px] font-semibold truncate">
+                                    {p.name}
+                                  </p>
+                                  <p className="text-[9px] font-mono text-muted-foreground">
+                                    {p.sku} {p.barcode ? `• ${p.barcode}` : ""}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[9px] shrink-0 font-bold"
+                                >
+                                  {p.stock} in stock
+                                </Badge>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                   </td>
 
                   {/* Product Name */}
                   <td className="py-0.5 px-1 border-r border-border/15 text-left">
                     {item.product ? (
-                      <span className="text-xs font-semibold px-2 block truncate w-full" title={item.product.name}>
+                      <span
+                        className="text-xs font-semibold px-2 block truncate w-full"
+                        title={item.product.name}
+                      >
                         {item.product.name}
                       </span>
                     ) : (
                       <div className="space-y-1">
                         <div className="flex items-center gap-1">
                           <TableCellInput
-                            ref={(el) => { nameRefs.current[item.id] = el; }}
+                            ref={(el) => {
+                              nameRefs.current[item.id] = el;
+                            }}
                             value={item.newProductName}
-                            onChange={(e) => updateItem(idx, "newProductName", e.target.value)}
-                            onKeyDown={(e) => handleCustomTab(e, item.id, "name", idx)}
+                            onChange={(e) =>
+                              updateItem(idx, "newProductName", e.target.value)
+                            }
+                            onKeyDown={(e) =>
+                              handleCustomTab(e, item.id, "name", idx)
+                            }
                             placeholder="New product name..."
                             className="h-8 text-left text-xs font-semibold bg-amber-500/5 border border-amber-500/20 text-amber-500 placeholder:text-amber-500/40 rounded-lg px-2.5 w-full focus:bg-background focus:border-amber-500/45 focus:ring-1 focus:ring-amber-500/20 focus:shadow-sm"
                           />
-                          {item.newProductName?.trim() && <Badge variant="outline" className="h-5 shrink-0 border-amber-500/40 px-1.5 text-[9px] font-bold text-amber-600">New</Badge>}
+                          {item.newProductName?.trim() && (
+                            <Badge
+                              variant="outline"
+                              className="h-5 shrink-0 border-amber-500/40 px-1.5 text-[9px] font-bold text-amber-600"
+                            >
+                              New
+                            </Badge>
+                          )}
                         </div>
-                        {item.newProductName?.trim() && !item.barcode.trim() && (
-                          <p className="px-1 text-[9px] font-medium text-muted-foreground">Barcode will be auto-generated</p>
-                        )}
+                        {item.newProductName?.trim() &&
+                          !item.barcode.trim() && (
+                            <p className="px-1 text-[9px] font-medium text-muted-foreground">
+                              Barcode will be auto-generated
+                            </p>
+                          )}
                       </div>
                     )}
                   </td>
@@ -1363,29 +1792,68 @@ export default function CreatePurchasePage() {
                   {/* Qty */}
                   <td className="py-0.5 px-1 border-r border-border/15">
                     <TableCellInput
-                      ref={(el) => { qtyRefs.current[item.id] = el; }}
+                      ref={(el) => {
+                        qtyRefs.current[item.id] = el;
+                      }}
                       type="number"
                       min={1}
                       value={item.quantity}
-                      onChange={(e) => updateItem(idx, "quantity", +e.target.value)}
-                      onKeyDown={(e) => handleCustomTab(e, item.id, "quantity", idx)}
+                      onChange={(e) =>
+                        updateItem(idx, "quantity", +e.target.value)
+                      }
+                      onKeyDown={(e) =>
+                        handleCustomTab(e, item.id, "quantity", idx)
+                      }
                       className="h-8 text-center text-xs font-bold bg-muted/10 border border-border/40 rounded-lg px-1.5 focus:bg-background focus:border-primary/45 focus:ring-1 focus:ring-primary/20 focus:shadow-sm transition-all w-full"
                     />
                   </td>
 
                   {/* Unit */}
                   <td className="py-0.5 px-1 border-r border-border/15">
-                    <Select value={item.unit} onValueChange={(v) => updateItem(idx, "unit", v)}>
+                    <Select
+                      value={item.unit}
+                      onValueChange={(v) => updateItem(idx, "unit", v)}
+                    >
                       <SelectTrigger className="h-8 w-full px-2 bg-muted/10 hover:bg-muted/20 border border-border/40 focus:ring-0 focus:ring-offset-0 rounded-lg text-xs font-semibold text-foreground cursor-pointer transition-all">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent align="center" className="min-w-[80px]">
-                        <SelectItem value="piece" className="text-xs font-semibold">Pcs</SelectItem>
-                        <SelectItem value="box" className="text-xs font-semibold">Box</SelectItem>
-                        <SelectItem value="kg" className="text-xs font-semibold">Kg</SelectItem>
-                        <SelectItem value="liter" className="text-xs font-semibold">L</SelectItem>
-                        <SelectItem value="meter" className="text-xs font-semibold">m</SelectItem>
-                        <SelectItem value="dozen" className="text-xs font-semibold">Dz</SelectItem>
+                        <SelectItem
+                          value="piece"
+                          className="text-xs font-semibold"
+                        >
+                          Pcs
+                        </SelectItem>
+                        <SelectItem
+                          value="box"
+                          className="text-xs font-semibold"
+                        >
+                          Box
+                        </SelectItem>
+                        <SelectItem
+                          value="kg"
+                          className="text-xs font-semibold"
+                        >
+                          Kg
+                        </SelectItem>
+                        <SelectItem
+                          value="liter"
+                          className="text-xs font-semibold"
+                        >
+                          L
+                        </SelectItem>
+                        <SelectItem
+                          value="meter"
+                          className="text-xs font-semibold"
+                        >
+                          m
+                        </SelectItem>
+                        <SelectItem
+                          value="dozen"
+                          className="text-xs font-semibold"
+                        >
+                          Dz
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
@@ -1394,21 +1862,42 @@ export default function CreatePurchasePage() {
                   <td className="py-0.5 px-1 border-r border-border/15">
                     <div className="flex items-center h-8 rounded-lg border border-border/40 bg-muted/10 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/45 focus-within:bg-background transition-all px-2 gap-1 w-full focus-within:shadow-sm">
                       <TableCellInput
-                        ref={(el) => { purchaseRateRefs.current[item.id] = el; }}
+                        ref={(el) => {
+                          purchaseRateRefs.current[item.id] = el;
+                        }}
                         type="number"
                         min={0}
                         value={item.purchaseRate || ""}
-                        onChange={(e) => updateItem(idx, "purchaseRate", +e.target.value)}
-                        onKeyDown={(e) => handleCustomTab(e, item.id, "purchaseRate", idx)}
+                        onChange={(e) =>
+                          updateItem(idx, "purchaseRate", +e.target.value)
+                        }
+                        onKeyDown={(e) =>
+                          handleCustomTab(e, item.id, "purchaseRate", idx)
+                        }
                         className="text-right text-xs font-semibold bg-transparent border-none p-0 h-6 focus:ring-0 w-full min-w-0"
                       />
-                      <Select value={item.purchaseTaxType} onValueChange={(v) => updateItem(idx, "purchaseTaxType", v)}>
+                      <Select
+                        value={item.purchaseTaxType}
+                        onValueChange={(v) =>
+                          updateItem(idx, "purchaseTaxType", v)
+                        }
+                      >
                         <SelectTrigger className="w-[32px] shrink-0 h-5 px-0.5 py-0 bg-muted/30 hover:bg-muted/50 border-transparent focus:ring-0 focus:ring-offset-0 rounded text-[8px] font-black uppercase text-muted-foreground cursor-pointer transition-colors [&>svg]:hidden justify-center">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent align="end" className="min-w-[65px]">
-                          <SelectItem value="without" className="text-[10px] font-bold">EXC</SelectItem>
-                          <SelectItem value="with" className="text-[10px] font-bold">INC</SelectItem>
+                          <SelectItem
+                            value="without"
+                            className="text-[10px] font-bold"
+                          >
+                            EXC
+                          </SelectItem>
+                          <SelectItem
+                            value="with"
+                            className="text-[10px] font-bold"
+                          >
+                            INC
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1418,21 +1907,42 @@ export default function CreatePurchasePage() {
                   <td className="py-0.5 px-1 border-r border-border/15">
                     <div className="flex items-center h-8 rounded-lg border border-border/40 bg-muted/10 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/45 focus-within:bg-background transition-all px-2 gap-1 w-full focus-within:shadow-sm">
                       <TableCellInput
-                        ref={(el) => { salesPriceRefs.current[item.id] = el; }}
+                        ref={(el) => {
+                          salesPriceRefs.current[item.id] = el;
+                        }}
                         type="number"
                         min={0}
                         value={item.salesPrice || ""}
-                        onChange={(e) => updateItem(idx, "salesPrice", +e.target.value)}
-                        onKeyDown={(e) => handleCustomTab(e, item.id, "salesPrice", idx)}
+                        onChange={(e) =>
+                          updateItem(idx, "salesPrice", +e.target.value)
+                        }
+                        onKeyDown={(e) =>
+                          handleCustomTab(e, item.id, "salesPrice", idx)
+                        }
                         className="text-right text-xs font-semibold bg-transparent border-none p-0 h-6 focus:ring-0 w-full min-w-0"
                       />
-                      <Select value={item.salesTaxType} onValueChange={(v) => updateItem(idx, "salesTaxType", v)}>
+                      <Select
+                        value={item.salesTaxType}
+                        onValueChange={(v) =>
+                          updateItem(idx, "salesTaxType", v)
+                        }
+                      >
                         <SelectTrigger className="w-[32px] shrink-0 h-5 px-0.5 py-0 bg-muted/30 hover:bg-muted/50 border-transparent focus:ring-0 focus:ring-offset-0 rounded text-[8px] font-black uppercase text-muted-foreground cursor-pointer transition-colors [&>svg]:hidden justify-center">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent align="end" className="min-w-[65px]">
-                          <SelectItem value="without" className="text-[10px] font-bold">EXC</SelectItem>
-                          <SelectItem value="with" className="text-[10px] font-bold">INC</SelectItem>
+                          <SelectItem
+                            value="without"
+                            className="text-[10px] font-bold"
+                          >
+                            EXC
+                          </SelectItem>
+                          <SelectItem
+                            value="with"
+                            className="text-[10px] font-bold"
+                          >
+                            INC
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1441,29 +1951,48 @@ export default function CreatePurchasePage() {
                   {/* Discount % */}
                   <td className="py-0.5 px-1 border-r border-border/15">
                     <TableCellInput
-                      ref={(el) => { discountRefs.current[item.id] = el; }}
+                      ref={(el) => {
+                        discountRefs.current[item.id] = el;
+                      }}
                       type="number"
                       min={0}
                       max={100}
                       value={item.discount}
-                      onChange={(e) => updateItem(idx, "discount", +e.target.value)}
-                      onKeyDown={(e) => handleCustomTab(e, item.id, "discount", idx)}
+                      onChange={(e) =>
+                        updateItem(idx, "discount", +e.target.value)
+                      }
+                      onKeyDown={(e) =>
+                        handleCustomTab(e, item.id, "discount", idx)
+                      }
                       className="h-8 text-center text-xs font-bold bg-muted/10 border border-border/40 rounded-lg px-1 focus:bg-background focus:border-primary/45 focus:ring-1 focus:ring-primary/20 focus:shadow-sm transition-all w-full"
                     />
                   </td>
 
                   {/* Tax % */}
                   <td className="py-0.5 px-1 border-r border-border/15">
-                    <Select value={item.taxRate.toString()} onValueChange={(v) => updateItem(idx, "taxRate", +v)}>
+                    <Select
+                      value={item.taxRate.toString()}
+                      onValueChange={(v) => updateItem(idx, "taxRate", +v)}
+                    >
                       <SelectTrigger className="h-8 w-full px-2 bg-muted/10 hover:bg-muted/20 border border-border/40 focus:ring-0 focus:ring-offset-0 rounded-lg text-xs font-bold text-muted-foreground cursor-pointer transition-all">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent align="center" className="min-w-[70px]">
-                        <SelectItem value="0" className="text-xs font-bold">0%</SelectItem>
-                        <SelectItem value="5" className="text-xs font-bold">5%</SelectItem>
-                        <SelectItem value="12" className="text-xs font-bold">12%</SelectItem>
-                        <SelectItem value="18" className="text-xs font-bold">18%</SelectItem>
-                        <SelectItem value="28" className="text-xs font-bold">28%</SelectItem>
+                        <SelectItem value="0" className="text-xs font-bold">
+                          0%
+                        </SelectItem>
+                        <SelectItem value="5" className="text-xs font-bold">
+                          5%
+                        </SelectItem>
+                        <SelectItem value="12" className="text-xs font-bold">
+                          12%
+                        </SelectItem>
+                        <SelectItem value="18" className="text-xs font-bold">
+                          18%
+                        </SelectItem>
+                        <SelectItem value="28" className="text-xs font-bold">
+                          28%
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
@@ -1523,23 +2052,38 @@ export default function CreatePurchasePage() {
         <div className="bg-card p-4 rounded-xl border border-border/80 shadow-sm flex flex-col justify-between">
           <div className="space-y-3 flex-1 flex flex-col">
             <div className="flex items-center justify-between border-b pb-1">
-              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Terms & Conditions</h3>
+              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                Terms & Conditions
+              </h3>
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] font-bold text-muted-foreground uppercase">Template</Label>
-              <Select value={termsTemplate} onValueChange={handleTemplateChange}>
+              <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                Template
+              </Label>
+              <Select
+                value={termsTemplate}
+                onValueChange={handleTemplateChange}
+              >
                 <SelectTrigger className="h-8 text-xs font-semibold bg-card border border-border/80 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default" className="text-xs font-medium">Purchase Bill</SelectItem>
-                  <SelectItem value="standard" className="text-xs font-medium">Standard Terms</SelectItem>
-                  <SelectItem value="custom" className="text-xs font-medium">Custom / Blank</SelectItem>
+                  <SelectItem value="default" className="text-xs font-medium">
+                    Purchase Bill
+                  </SelectItem>
+                  <SelectItem value="standard" className="text-xs font-medium">
+                    Standard Terms
+                  </SelectItem>
+                  <SelectItem value="custom" className="text-xs font-medium">
+                    Custom / Blank
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1 flex-1 flex flex-col">
-              <Label className="text-[10px] font-bold text-muted-foreground uppercase">Terms Text</Label>
+              <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                Terms Text
+              </Label>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -1555,30 +2099,57 @@ export default function CreatePurchasePage() {
         <div className="bg-card p-4 rounded-xl border border-border/80 shadow-sm flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b pb-1">
-              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Payment & Attachments</h3>
+              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                Payment & Attachments
+              </h3>
             </div>
             <div className="space-y-2.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Payment Type</Label>
-                  <Select value={paymentMethod} onValueChange={handlePaymentMethodChange}>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Payment Type
+                  </Label>
+                  <Select
+                    value={paymentMethod}
+                    onValueChange={handlePaymentMethodChange}
+                  >
                     <SelectTrigger className="h-8 text-xs font-semibold bg-card border border-border/80 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="cash" className="text-xs font-medium">Cash</SelectItem>
-                      <SelectItem value="upi" className="text-xs font-medium">UPI</SelectItem>
-                      <SelectItem value="card" className="text-xs font-medium">Card</SelectItem>
-                      <SelectItem value="bank_transfer" className="text-xs font-medium">Bank</SelectItem>
-                      <SelectItem value="cheque" className="text-xs font-medium">Cheque</SelectItem>
+                      <SelectItem value="cash" className="text-xs font-medium">
+                        Cash
+                      </SelectItem>
+                      <SelectItem value="upi" className="text-xs font-medium">
+                        UPI
+                      </SelectItem>
+                      <SelectItem value="card" className="text-xs font-medium">
+                        Card
+                      </SelectItem>
+                      <SelectItem
+                        value="bank_transfer"
+                        className="text-xs font-medium"
+                      >
+                        Bank
+                      </SelectItem>
+                      <SelectItem
+                        value="cheque"
+                        className="text-xs font-medium"
+                      >
+                        Cheque
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Shipping Charges</Label>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Shipping Charges
+                  </Label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-2.5 text-[10px] font-bold text-muted-foreground/60 pointer-events-none">₹</span>
+                    <span className="absolute left-2.5 text-[10px] font-bold text-muted-foreground/60 pointer-events-none">
+                      ₹
+                    </span>
                     <Input
                       type="number"
                       min={0}
@@ -1595,15 +2166,25 @@ export default function CreatePurchasePage() {
               {/* Bank Accounts */}
               {paymentMethod !== "cash" && bankAccounts.length > 0 && (
                 <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Pay From Bank *</Label>
-                  <Select value={cashBankAccountId} onValueChange={setCashBankAccountId}>
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Pay From Bank *
+                  </Label>
+                  <Select
+                    value={cashBankAccountId}
+                    onValueChange={setCashBankAccountId}
+                  >
                     <SelectTrigger className="h-8 text-xs font-semibold bg-card border border-border/80 rounded-lg">
                       <SelectValue placeholder="Select bank account" />
                     </SelectTrigger>
                     <SelectContent>
                       {bankAccounts.map((account) => (
-                        <SelectItem key={account._id} value={account._id} className="text-xs font-medium">
-                          {account.accountName} - ₹{account.currentBalance.toFixed(2)}
+                        <SelectItem
+                          key={account._id}
+                          value={account._id}
+                          className="text-xs font-medium"
+                        >
+                          {account.accountName} - ₹
+                          {account.currentBalance.toFixed(2)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1615,15 +2196,25 @@ export default function CreatePurchasePage() {
 
           {/* Transporter selector positioned at the bottom */}
           <div className="space-y-1 mt-3">
-            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Transporter</Label>
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">
+              Transporter
+            </Label>
             <Select value={transporterId} onValueChange={setTransporterId}>
               <SelectTrigger className="h-8 text-xs font-semibold bg-card border border-border/80 rounded-lg">
                 <SelectValue placeholder="Select Transporter" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none" className="text-xs font-medium">None</SelectItem>
+                <SelectItem value="none" className="text-xs font-medium">
+                  None
+                </SelectItem>
                 {transporters.map((t) => (
-                  <SelectItem key={t._id} value={t._id} className="text-xs font-medium">{t.name}</SelectItem>
+                  <SelectItem
+                    key={t._id}
+                    value={t._id}
+                    className="text-xs font-medium"
+                  >
+                    {t.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -1634,26 +2225,36 @@ export default function CreatePurchasePage() {
         <div className="bg-card p-4 rounded-xl border border-border/80 shadow-sm space-y-3 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b pb-1 mb-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Totals</h3>
+              <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                Totals
+              </h3>
             </div>
-            
+
             <div className="space-y-2.5">
               <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
                 <span>Subtotal</span>
-                <span className="tabular-nums text-foreground">{formatCurrency(subtotal)}</span>
+                <span className="tabular-nums text-foreground">
+                  {formatCurrency(subtotal)}
+                </span>
               </div>
               <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
                 <span>Discount</span>
-                <span className="tabular-nums text-emerald-600">- {formatCurrency(totalDiscount)}</span>
+                <span className="tabular-nums text-emerald-600">
+                  - {formatCurrency(totalDiscount)}
+                </span>
               </div>
               <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
                 <span>Tax Amount</span>
-                <span className="tabular-nums text-foreground">{formatCurrency(totalTax)}</span>
+                <span className="tabular-nums text-foreground">
+                  {formatCurrency(totalTax)}
+                </span>
               </div>
               {shippingCharges > 0 && (
                 <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
                   <span>Shipping Charges</span>
-                  <span className="tabular-nums text-foreground">{formatCurrency(shippingCharges)}</span>
+                  <span className="tabular-nums text-foreground">
+                    {formatCurrency(shippingCharges)}
+                  </span>
                 </div>
               )}
             </div>
@@ -1670,29 +2271,41 @@ export default function CreatePurchasePage() {
                   onChange={(e) => setRoundOff(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                 />
-                <Label htmlFor="roundOffCheckbox" className="font-semibold text-muted-foreground uppercase text-[10px] cursor-pointer">Round Off</Label>
+                <Label
+                  htmlFor="roundOffCheckbox"
+                  className="font-semibold text-muted-foreground uppercase text-[10px] cursor-pointer"
+                >
+                  Round Off
+                </Label>
               </div>
               {roundOff && (
                 <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
-                  {roundOffValue >= 0 ? "+" : ""}{roundOffValue.toFixed(2)}
+                  {roundOffValue >= 0 ? "+" : ""}
+                  {roundOffValue.toFixed(2)}
                 </span>
               )}
             </div>
 
             {/* Grand Total Display */}
             <div className="flex justify-between items-center bg-primary/5 p-3 rounded-lg border border-primary/10">
-              <span className="text-xs font-black uppercase text-foreground">Grand Total</span>
-              <span className="text-lg font-black text-primary tabular-nums">{formatCurrency(grandTotal)}</span>
+              <span className="text-xs font-black uppercase text-foreground">
+                Grand Total
+              </span>
+              <span className="text-lg font-black text-primary tabular-nums">
+                {formatCurrency(grandTotal)}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Sticky Bottom Action Bar */}
-            <div className={cn(
-        "fixed bottom-0 right-0 h-16 bg-card border-t border-border/80 shadow-lg px-6 py-3 flex items-center justify-between z-40 transition-all duration-300",
-        sidebarCollapsed ? "left-0 lg:left-[72px]" : "left-0 lg:left-[256px]"
-      )}>
+      <div
+        className={cn(
+          "fixed bottom-0 right-0 h-16 bg-card border-t border-border/80 shadow-lg px-6 py-3 flex items-center justify-between z-40 transition-all duration-300",
+          sidebarCollapsed ? "left-0 lg:left-[72px]" : "left-0 lg:left-[256px]",
+        )}
+      >
         <div>
           <Button
             type="button"
@@ -1703,7 +2316,9 @@ export default function CreatePurchasePage() {
               fileInput.type = "file";
               fileInput.accept = "image/*,application/pdf";
               fileInput.onchange = () => {
-                toast.success("Bill document selected and attached to this purchase invoice draft.");
+                toast.success(
+                  "Bill document selected and attached to this purchase invoice draft.",
+                );
               };
               fileInput.click();
             }}
@@ -1728,7 +2343,9 @@ export default function CreatePurchasePage() {
             <div className="absolute right-0 bottom-full mb-1 bg-card border border-border rounded-xl shadow-2xl overflow-hidden min-w-[160px] hidden group-hover:block hover:block z-50">
               <button
                 type="button"
-                onClick={() => toast.success("WhatsApp link generated and copied!")}
+                onClick={() =>
+                  toast.success("WhatsApp link generated and copied!")
+                }
                 className="w-full px-4 py-2.5 text-left text-xs font-semibold hover:bg-muted transition-colors border-b border-border/10"
               >
                 Share on WhatsApp
@@ -1768,8 +2385,10 @@ export default function CreatePurchasePage() {
           >
             {saving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : editingPurchaseId ? (
+              "Update"
             ) : (
-              editingPurchaseId ? "Update" : "Save"
+              "Save"
             )}
           </Button>
         </div>
@@ -1780,7 +2399,9 @@ export default function CreatePurchasePage() {
         <DialogContent className="w-[calc(100vw-32px)] sm:w-auto sm:max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle>Add Product</DialogTitle>
-            <DialogDescription>Fill in the product details and upload images.</DialogDescription>
+            <DialogDescription>
+              Fill in the product details and upload images.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:gap-6 py-4">
             <div className="space-y-2">
@@ -1788,7 +2409,12 @@ export default function CreatePurchasePage() {
               <ImageUploader
                 multiple
                 value={newProductForm.images}
-                onChange={(urls) => setNewProductForm({ ...newProductForm, images: urls as string[] })}
+                onChange={(urls) =>
+                  setNewProductForm({
+                    ...newProductForm,
+                    images: urls as string[],
+                  })
+                }
                 folder="products"
                 maxFiles={10}
               />
@@ -1796,29 +2422,82 @@ export default function CreatePurchasePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Name *</Label>
-                <Input value={newProductForm.name} onChange={(e) => setNewProductForm({ ...newProductForm, name: e.target.value })} placeholder="Product name" />
+                <Input
+                  value={newProductForm.name}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Product name"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Description</Label>
-                <Input value={newProductForm.description} onChange={(e) => setNewProductForm({ ...newProductForm, description: e.target.value })} placeholder="Brief description" />
+                <Input
+                  value={newProductForm.description}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Brief description"
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/30 p-3 sm:p-4 rounded-xl border border-border/50">
               <div className="space-y-2">
                 <Label>Category *</Label>
-                <Select value={newProductForm.category} onValueChange={(v) => setNewProductForm({ ...newProductForm, category: v, subcategoryId: "" })}>
-                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <Select
+                  value={newProductForm.category}
+                  onValueChange={(v) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      category: v,
+                      subcategoryId: "",
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>)}
+                    {categories.map((cat) => (
+                      <SelectItem key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Subcategory</Label>
-                <Select value={newProductForm.subcategoryId} onValueChange={(v) => setNewProductForm({ ...newProductForm, subcategoryId: v })} disabled={!newProductForm.category}>
-                  <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
+                <Select
+                  value={newProductForm.subcategoryId}
+                  onValueChange={(v) =>
+                    setNewProductForm({ ...newProductForm, subcategoryId: v })
+                  }
+                  disabled={!newProductForm.category}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {subcategories.filter((s) => { const pId = typeof s.parentCategoryId === "string" ? s.parentCategoryId : (s.parentCategoryId as any)._id; return pId === newProductForm.category; }).map((sub) => <SelectItem key={sub._id} value={sub._id}>{sub.name}</SelectItem>)}
+                    {subcategories
+                      .filter((s) => {
+                        const pId =
+                          typeof s.parentCategoryId === "string"
+                            ? s.parentCategoryId
+                            : (s.parentCategoryId as any)?._id;
+                        return pId === newProductForm.category;
+                      })
+                      .map((sub) => (
+                        <SelectItem key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1826,46 +2505,124 @@ export default function CreatePurchasePage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>SKU *</Label>
-                <Input value={newProductForm.sku} onChange={(e) => setNewProductForm({ ...newProductForm, sku: e.target.value.toUpperCase() })} placeholder="SKU-001" />
+                <Input
+                  value={newProductForm.sku}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      sku: e.target.value.toUpperCase(),
+                    })
+                  }
+                  placeholder="SKU-001"
+                />
               </div>
               <div className="space-y-2">
                 <Label>HSN Code</Label>
-                <Input value={newProductForm.hsnCode} onChange={(e) => setNewProductForm({ ...newProductForm, hsnCode: e.target.value })} placeholder="HSN" />
+                <Input
+                  value={newProductForm.hsnCode}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      hsnCode: e.target.value,
+                    })
+                  }
+                  placeholder="HSN"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Barcode</Label>
-                <Input value={newProductForm.barcode} onChange={(e) => setNewProductForm({ ...newProductForm, barcode: e.target.value })} placeholder="Barcode" />
+                <Input
+                  value={newProductForm.barcode}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      barcode: e.target.value,
+                    })
+                  }
+                  placeholder="Barcode"
+                />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Stock *</Label>
-                <Input type="number" value={newProductForm.stock} onChange={(e) => setNewProductForm({ ...newProductForm, stock: e.target.value })} placeholder="0" />
+                <Input
+                  type="number"
+                  value={newProductForm.stock}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      stock: e.target.value,
+                    })
+                  }
+                  placeholder="0"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Low Stock Alert</Label>
-                <Input type="number" value={newProductForm.lowStockThreshold} onChange={(e) => setNewProductForm({ ...newProductForm, lowStockThreshold: e.target.value })} placeholder="10" />
+                <Input
+                  type="number"
+                  value={newProductForm.lowStockThreshold}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      lowStockThreshold: e.target.value,
+                    })
+                  }
+                  placeholder="10"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Unit</Label>
-                <Select value={newProductForm.unit} onValueChange={(v) => setNewProductForm({ ...newProductForm, unit: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={newProductForm.unit}
+                  onValueChange={(v) =>
+                    setNewProductForm({ ...newProductForm, unit: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {["piece", "kg", "liter", "meter", "box", "dozen"].map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    {["piece", "kg", "liter", "meter", "box", "dozen"].map(
+                      (u) => (
+                        <SelectItem key={u} value={u}>
+                          {u}
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setNewProductModalOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-            <Button onClick={handleAddNewProductSubmit} disabled={newProductSaving} className="min-w-24 w-full sm:w-auto">
-              {newProductSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Product"}
+            <Button
+              variant="outline"
+              onClick={() => setNewProductModalOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddNewProductSubmit}
+              disabled={newProductSaving}
+              className="min-w-24 w-full sm:w-auto"
+            >
+              {newProductSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Create Product"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <PrintPurchaseDialog open={printOpen} onOpenChange={setPrintOpen} purchase={printPurchase} />
+      <PrintPurchaseDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        purchase={printPurchase}
+      />
 
       {/* Supplier Modal */}
       <SupplierModal
@@ -1875,6 +2632,4 @@ export default function CreatePurchasePage() {
       />
     </div>
   );
-
-
 }

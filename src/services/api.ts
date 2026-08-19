@@ -34,9 +34,12 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("pos-token");
-        localStorage.removeItem("pos-user");
-        window.location.href = "/login";
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (!isLoginRequest && window.location.pathname !== '/login') {
+          localStorage.removeItem("pos-token");
+          localStorage.removeItem("pos-user");
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

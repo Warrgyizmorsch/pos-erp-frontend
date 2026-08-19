@@ -121,7 +121,7 @@ export function SimpleProductModal({ open, onOpenChange, onSuccess, initialBarco
                 <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
                 <SelectContent className="z-[120]">
                   {subcategories.filter(s => {
-                    const pId = typeof s.parentCategoryId === 'string' ? s.parentCategoryId : (s.parentCategoryId as any)._id;
+                    const pId = typeof s.parentCategoryId === 'string' ? s.parentCategoryId : (s.parentCategoryId as any)?._id;
                     return pId === form.category;
                   }).map((sub) => (
                     <SelectItem key={sub._id} value={sub._id}>{sub.name}</SelectItem>

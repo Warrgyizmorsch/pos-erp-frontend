@@ -48,14 +48,15 @@ export default function LoginPage() {
       toast.success("Welcome back!", {
         description: `Logged in as ${response.data.name}`,
       });
-      router.push("/dashboard");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500); // Wait 1.5s before redirecting
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error("Login failed", {
         description: err.response?.data?.message || "Invalid credentials",
       });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only reset loading on error so the button stays spinning during redirect
     }
   };
 
@@ -149,10 +150,13 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-xl bg-muted/50 p-4 space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Demo Credentials</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Demo Credentials</p>
           <div className="text-xs text-muted-foreground space-y-1">
-            <p>Admin: admin@poserp.com / admin123</p>
-            <p>Cashier: cashier@poserp.com / cashier123</p>
+            <p><span className="font-medium text-foreground">Admin:</span> admin@poserp.com / admin123</p>
+            <p><span className="font-medium text-foreground">Manager:</span> manager@poserp.com / manager123</p>
+            <p><span className="font-medium text-foreground">Accountant:</span> accountant@poserp.com / accountant123</p>
+            <p><span className="font-medium text-foreground">Stock Manager:</span> stockmanager@poserp.com / stockmanager123</p>
+            <p><span className="font-medium text-foreground">Cashier:</span> cashier@poserp.com / cashier123</p>
           </div>
         </div>
       </motion.div>

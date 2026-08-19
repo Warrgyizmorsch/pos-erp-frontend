@@ -3,9 +3,18 @@ export interface User {
   name: string;
   email: string;
   role: "admin" | "manager" | "accountant" | "stock_manager" | "cashier";
+  permissions?: string[];
   phone?: string;
   avatar?: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Role {
+  _id: string;
+  name: string;
+  permissions: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -252,11 +261,13 @@ export interface DashboardStats {
   }>;
   recentSales: Sale[];
   lowStockProducts: Product[];
-  paymentBreakdown: Array<{
-    _id: string;
-    count: number;
-    total: number;
-  }>;
+  paymentBreakdown: { _id: string; count: number; total: number }[];
+  accounting?: {
+    totalCashBalance: number;
+    totalBankBalance: number;
+    recentTransactions: any[];
+  };
+  shift?: any | null;
 }
 
 // ============================================

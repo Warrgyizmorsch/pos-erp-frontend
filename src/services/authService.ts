@@ -1,5 +1,5 @@
 import api from "./api";
-import type { User } from "@/types";
+import type { User, Role } from "@/types";
 
 interface AuthResponse {
   success: boolean;
@@ -37,6 +37,36 @@ export const authService = {
 
   changePassword: async (payload: { currentPassword?: string; newPassword?: string }) => {
     const { data } = await api.put("/auth/change-password", payload);
+    return data;
+  },
+
+  getUsers: async (): Promise<{ success: boolean; data: User[] }> => {
+    const { data } = await api.get("/auth/users");
+    return data;
+  },
+
+  updateUser: async (id: string, payload: Partial<User> & { password?: string }): Promise<{ success: boolean; data: User }> => {
+    const { data } = await api.put(`/auth/users/${id}`, payload);
+    return data;
+  },
+
+  createUser: async (payload: Partial<User> & { password?: string }): Promise<{ success: boolean; data: User }> => {
+    const { data } = await api.post(`/auth/users`, payload);
+    return data;
+  },
+
+  deleteUser: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const { data } = await api.delete(`/auth/users/${id}`);
+    return data;
+  },
+
+  getRoles: async (): Promise<{ success: boolean; data: Role[] }> => {
+    const { data } = await api.get("/auth/roles");
+    return data;
+  },
+
+  updateRolePermissions: async (id: string, permissions: string[]): Promise<{ success: boolean; data: Role }> => {
+    const { data } = await api.put(`/auth/roles/${id}`, { permissions });
     return data;
   },
 };

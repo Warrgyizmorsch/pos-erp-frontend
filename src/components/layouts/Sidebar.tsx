@@ -229,30 +229,60 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   }, [fetchAccountingPreference]);
 
   const visibleNavEntries = useMemo(
-    () => navEntries.filter((entry) => {
+    () => {
       const role = user?.role;
-      if (!role) return false;
+      const permissions = user?.permissions || [];
+      const hasPerm = (p: string) => role === "admin" || permissions.includes(p);
+      
+      if (!role) return [];
 
-      if (entry.label === "Accounting" && accountingEnabled === false) return false;
+      const filterLink = (link: NavLink) => {
+        const href = link.href;
+        if (href === "/dashboard") return hasPerm("dashboard");
+        if (href.startsWith("/customers")) return hasPerm("customers");
+        if (href.startsWith("/suppliers")) return hasPerm("suppliers");
+        if (href.startsWith("/transporters")) return hasPerm("transporters");
+        if (href.startsWith("/products")) return hasPerm("products");
+        if (href.startsWith("/categories")) return hasPerm("categories");
+        if (href.startsWith("/subcategories")) return hasPerm("subcategories");
+        if (href.startsWith("/inventory")) return hasPerm("inventory");
+        if (href === "/pos") return hasPerm("pos");
+        if (href.startsWith("/sales")) return hasPerm("sales");
+        if (href.startsWith("/purchases")) return hasPerm("purchases");
+        if (href === "/bank") return hasPerm("bank");
+        if (href === "/cash") return hasPerm("cash");
+        if (href.startsWith("/cash-bank")) return hasPerm("cash-bank");
+        if (href.startsWith("/cheques")) return hasPerm("cheques");
+        if (href.startsWith("/loans")) return hasPerm("loans");
+        if (href.startsWith("/expenses")) return hasPerm("expenses");
+        if (href.startsWith("/accounting")) return accountingEnabled !== false && hasPerm("accounting");
+        if (href.startsWith("/reports")) return hasPerm("reports");
+        if (href.startsWith("/shifts")) return hasPerm("shifts");
+        if (href.startsWith("/activity")) return hasPerm("activity");
+        if (href.startsWith("/backup")) return hasPerm("backup");
+        if (href.startsWith("/utilities")) return hasPerm("utilities");
+        if (href.startsWith("/settings")) return hasPerm("settings");
+        return true;
+      };
 
-      // Role filter constraints
-      if (entry.label === "Parties" && !["admin", "manager", "cashier"].includes(role)) return false;
-      if (entry.label === "Inventory Master" && !["admin", "manager", "stock_manager"].includes(role)) return false;
-      if (entry.label === "Sale" && !["admin", "manager", "cashier"].includes(role)) return false;
-      if (entry.label === "Purchase" && !["admin", "manager", "stock_manager"].includes(role)) return false;
-      if (entry.label === "Cash & Bank" && !["admin", "accountant"].includes(role)) return false;
-      if (entry.label === "Expenses / Income" && !["admin", "manager", "accountant"].includes(role)) return false;
-      if (entry.label === "Accounting" && !["admin", "accountant"].includes(role)) return false;
-      if (entry.label === "Reports" && !["admin", "manager", "accountant"].includes(role)) return false;
-      if (entry.label === "Shifts" && !["admin", "manager", "cashier"].includes(role)) return false;
-      if (entry.label === "Activity Logs" && role !== "admin") return false;
-      if (entry.label === "Sync & Backup" && role !== "admin") return false;
-      if (entry.label === "Settings" && role !== "admin") return false;
-      if (entry.label === "Utilities" && !["admin", "manager"].includes(role)) return false;
+      const filterEntry = (entry: NavEntry): NavEntry | null => {
+        if (isGroup(entry)) {
+          // Special case: if Accounting module is disabled globally, hide its group entirely
+          if (entry.label === "Accounting" && accountingEnabled === false) return null;
+          
+          const filteredChildren = entry.children.filter(filterLink);
+          if (filteredChildren.length > 0) {
+            return { ...entry, children: filteredChildren };
+          }
+          return null;
+        } else {
+          return filterLink(entry) ? entry : null;
+        }
+      };
 
-      return true;
-    }),
-    [accountingEnabled, user?.role],
+      return navEntries.map(filterEntry).filter(Boolean) as NavEntry[];
+    },
+    [accountingEnabled, user?.role, user?.permissions],
   );
 
   const flatNavLinks = useMemo(
