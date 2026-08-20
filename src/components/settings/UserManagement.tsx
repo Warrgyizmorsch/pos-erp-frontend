@@ -493,11 +493,29 @@ export function UserManagement() {
                 </TabsContent>
 
                 <TabsContent value="permissions" className="p-6 m-0 focus-visible:outline-none">
-                  <div className="bg-muted/30 p-4 rounded-lg mb-6 flex items-start gap-3">
-                    <Settings2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <div className="text-sm text-muted-foreground">
-                      Override default module access. By default, users inherit the permissions of their assigned <strong className="capitalize text-foreground">{userForm.role?.replace('_', ' ') || 'Cashier'}</strong> role. Ticking or unticking boxes below overrides those defaults specifically for <strong className="text-foreground">{userForm.name || 'this user'}</strong>.
+                  <div className="bg-muted/30 p-4 rounded-lg mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <Settings2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div className="text-sm text-muted-foreground">
+                        Override default module access. By default, users inherit the permissions of their assigned <strong className="capitalize text-foreground">{userForm.role?.replace('_', ' ') || 'Cashier'}</strong> role. Ticking or unticking boxes below overrides those defaults specifically for <strong className="text-foreground">{userForm.name || 'this user'}</strong>.
+                      </div>
                     </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => {
+                        const defaultRole = roles.find(r => r.name === (userForm.role || 'cashier'));
+                        if (defaultRole) {
+                          setUserPermissions([...defaultRole.permissions]);
+                        } else {
+                          setUserPermissions([]);
+                        }
+                      }}
+                    >
+                      Load Defaults
+                    </Button>
                   </div>
                   
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-5 gap-x-4">
