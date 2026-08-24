@@ -506,11 +506,20 @@ export function UserManagement() {
                       size="sm"
                       className="shrink-0"
                       onClick={() => {
-                        const defaultRole = roles.find(r => r.name === (userForm.role || 'cashier'));
+                        const currentRole = String(userForm.role || 'cashier').toLowerCase();
+                        const defaultRole = roles.find(r => String(r.name).toLowerCase() === currentRole);
+                        
                         if (defaultRole) {
-                          setUserPermissions([...defaultRole.permissions]);
+                          const perms = defaultRole.permissions || [];
+                          setUserPermissions([...perms]);
+                          if (perms.length === 0) {
+                            toast.info(`No default permissions found for ${userForm.role || 'Cashier'} role.`);
+                          } else {
+                            toast.success(`Loaded ${perms.length} default permissions.`);
+                          }
                         } else {
                           setUserPermissions([]);
+                          toast.error(`Role configuration for ${userForm.role || 'Cashier'} not found.`);
                         }
                       }}
                     >

@@ -40,6 +40,7 @@ function POSRightPanelContent() {
   // Modal states
   const [showFullBreakup, setShowFullBreakup] = useState(false);
   const [showMultiPay, setShowMultiPay] = useState(false);
+  const [sendWhatsapp, setSendWhatsapp] = useState(true);
   const [printSaleData, setPrintSaleData] = useState<Sale | null>(null);
   const [bankAccounts, setBankAccounts] = useState<POSBankAccount[]>([]);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -238,6 +239,7 @@ function POSRightPanelContent() {
         amountPaid: receivedAmount,
         status: "completed", paymentStatus: paidInFull ? "paid" : "partial", paymentMethod, notes: activeBill.remarks,
         cashBankAccountId: (activeBill.paymentMode !== "Cash" && activeBill.paymentMode !== "Wallet" && activeBill.paymentMode !== "Partial") ? activeBill.cashBankAccountId : undefined,
+        sendWhatsapp: sendWhatsapp,
       };
 
       let savedSale;
@@ -509,6 +511,22 @@ function POSRightPanelContent() {
           <span className="text-xs font-bold text-foreground">{paymentBalanceLabel}</span>
           <span className="text-lg font-black text-success tabular-nums">{formatCurrency(paymentBalance)}</span>
         </div>
+
+        {/* WhatsApp Toggle */}
+        {bill?.customer?._id && bill?.customer?.phone && (
+          <div className="flex items-center justify-between px-2 py-1">
+            <label htmlFor="send-wa" className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+              Send WhatsApp Receipt
+            </label>
+            <input 
+              type="checkbox" 
+              id="send-wa" 
+              checked={sendWhatsapp} 
+              onChange={(e) => setSendWhatsapp(e.target.checked)} 
+              className="accent-primary"
+            />
+          </div>
+        )}
 
         {/* Save */}
         <button

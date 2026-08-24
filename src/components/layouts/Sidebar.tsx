@@ -41,6 +41,7 @@ import {
   X,
   Zap,
   Boxes,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -204,6 +205,11 @@ const navEntries: NavEntry[] = [
     label: "Settings",
     icon: Settings,
     href: "/settings",
+  },
+  {
+    label: "Integrations",
+    icon: Plug,
+    href: "/integrations",
   },
 ];
 

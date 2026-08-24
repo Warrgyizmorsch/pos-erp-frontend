@@ -40,7 +40,7 @@ export function PrintSaleDialog({ open, onOpenChange, sale }: { open: boolean; o
   };
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="flex h-[92vh] max-w-6xl flex-col overflow-hidden p-0">
+    <DialogContent aria-describedby={undefined} className="flex h-[92vh] max-w-6xl flex-col overflow-hidden p-0">
       <DialogHeader className="border-b p-5"><DialogTitle className="flex items-center gap-2"><ReceiptText className="h-5 w-5 text-primary" /> Print Sale Invoice <span className="text-sm font-normal text-muted-foreground">#{sale.invoiceNumber}</span></DialogTitle></DialogHeader>
       <div className="flex min-h-0 flex-1">
         <aside className="w-64 shrink-0 space-y-5 border-r bg-muted/10 p-5">
