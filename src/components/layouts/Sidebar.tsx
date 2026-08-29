@@ -42,6 +42,7 @@ import {
   Zap,
   Boxes,
   Plug,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -205,6 +206,11 @@ const navEntries: NavEntry[] = [
     label: "Settings",
     icon: Settings,
     href: "/settings",
+  },
+  {
+    label: "Marketing",
+    icon: Megaphone,
+    href: "/marketing",
   },
   {
     label: "Integrations",

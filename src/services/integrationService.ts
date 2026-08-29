@@ -19,6 +19,7 @@ export interface Integration {
     port?: number;
     user?: string;
     password?: string;
+    sendgridApiKey?: string;
   };
 }
 

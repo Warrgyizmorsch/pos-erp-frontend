@@ -68,6 +68,13 @@ export default function IntegrationsPage() {
     } : null);
   };
 
+  const updateEmail = (field: string, value: any) => {
+    setIntegration(prev => prev ? {
+      ...prev,
+      email: { ...prev.email, [field]: value } as any
+    } : null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -120,7 +127,7 @@ export default function IntegrationsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kapso">Kapso WhatsApp API</SelectItem>
-                        <SelectItem value="twilio" disabled>Twilio (Disabled)</SelectItem>
+                        <SelectItem value="twilio">Twilio</SelectItem>
                         <SelectItem value="meta" disabled>Meta Cloud API (Coming Soon)</SelectItem>
                         <SelectItem value="wati" disabled>WATI (Coming Soon)</SelectItem>
                       </SelectContent>
@@ -205,12 +212,110 @@ export default function IntegrationsPage() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Email Settings</CardTitle>
-                  <CardDescription>Configure SMTP server to send emails</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Email Settings</CardTitle>
+                      <CardDescription>Configure SMTP server to send PDF invoices to clients</CardDescription>
+                    </div>
+                    <Switch 
+                      checked={integration?.email?.isActive || false}
+                      onCheckedChange={(val) => updateEmail('isActive', val)}
+                    />
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center p-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-                    This module will be activated in the next phase.
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <Select 
+                      value={integration?.email?.provider || 'smtp'} 
+                      onValueChange={(val) => updateEmail('provider', val)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Provider" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="smtp">Custom SMTP / Gmail</SelectItem>
+                        <SelectItem value="sendgrid">SendGrid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {integration?.email?.provider === 'smtp' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                      <h4 className="font-medium text-sm">SMTP Credentials</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Host</Label>
+                          <Input 
+                            placeholder="smtp.gmail.com" 
+                            value={integration?.email?.host || ''}
+                            onChange={(e) => updateEmail('host', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Port</Label>
+                          <Input 
+                            type="number"
+                            placeholder="465 or 587" 
+                            value={integration?.email?.port || ''}
+                            onChange={(e) => updateEmail('port', parseInt(e.target.value) || 0)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>User (Email Address)</Label>
+                        <Input 
+                          placeholder="yourbusiness@gmail.com" 
+                          value={integration?.email?.user || ''}
+                          onChange={(e) => updateEmail('user', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Password (App Password)</Label>
+                        <Input 
+                          type="password" 
+                          placeholder="16-letter App Password" 
+                          value={integration?.email?.password || ''}
+                          onChange={(e) => updateEmail('password', e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">If using Gmail, generate an App Password from Google Account Security.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {integration?.email?.provider === 'sendgrid' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                      <h4 className="font-medium text-sm">SendGrid Credentials</h4>
+                      
+                      <div className="space-y-2">
+                        <Label>Sender Email Address</Label>
+                        <Input 
+                          placeholder="Sender identity (e.g. billing@yourdomain.com)" 
+                          value={integration?.email?.user || ''}
+                          onChange={(e) => updateEmail('user', e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">This email must be verified as a Sender in your SendGrid account.</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>SendGrid API Key</Label>
+                        <Input 
+                          type="password" 
+                          placeholder="SG.xxxxxxxxxxxxxx" 
+                          value={integration?.email?.sendgridApiKey || ''}
+                          onChange={(e) => updateEmail('sendgridApiKey', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-4">
+                    <Button onClick={() => handleSave('email')} disabled={saving} className="gap-2">
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save Email Settings
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
