@@ -8,6 +8,8 @@ import { KeyboardShortcutProvider } from "@/providers/KeyboardShortcutProvider";
 import { ShortcutHelpModal } from "@/components/shortcuts/ShortcutHelpModal";
 import { SyncProvider } from "@/providers/SyncProvider";
 
+import { QueryProvider } from "@/providers/QueryProvider";
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const { theme } = useThemeStore();
   const { initialize } = useAuthStore();
@@ -21,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [initialize]);
 
   return (
-    <>
+    <QueryProvider>
       <KeyboardShortcutProvider>
         <SyncProvider>
           {children}
@@ -39,6 +41,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         }}
       />
-    </>
+    </QueryProvider>
   );
 }
