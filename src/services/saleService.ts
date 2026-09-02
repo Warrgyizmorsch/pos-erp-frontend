@@ -1,5 +1,6 @@
 import { Sale, DashboardStats } from "@/types";
 import api from "./api";
+import { db } from "@/lib/db";
 
 export const saleService = {
   // Existing methods...
@@ -14,8 +15,34 @@ export const saleService = {
   },
 
   create: async (payload: any) => {
-    const { data } = await api.post("/sales", payload);
-    return data.data;
+    try {
+      const { data } = await api.post("/sales", payload);
+      return data.data;
+    } catch (error: any) {
+      if (error.code === 'ERR_NETWORK' || !navigator.onLine) {
+        console.warn("Offline mode: Queuing sale to local IndexedDB");
+        
+        const offlineSaleId = crypto.randomUUID();
+        // Construct a mock response so the frontend can clear the cart and print
+        const mockResponse = {
+          ...payload,
+          _id: `offline_${offlineSaleId}`,
+          invoiceNumber: `OFFLINE-${Math.floor(1000 + Math.random() * 9000)}`,
+          createdAt: new Date().toISOString(),
+          isOffline: true
+        };
+        
+        await db.offlineSales.add({
+          uuid: offlineSaleId,
+          payload: payload,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        });
+        
+        return mockResponse;
+      }
+      throw error;
+    }
   },
 
   getDashboardStats: async (): Promise<DashboardStats> => {
@@ -28,6 +55,10 @@ export const saleService = {
   },
   update: async (id: string, payload: any) => {
     const { data } = await api.put(`/sales/${id}`, payload);
+    return data.data;
+  },
+  generateEInvoice: async (id: string) => {
+    const { data } = await api.post(`/sales/${id}/einvoice`);
     return data.data;
   },
   delete: async (id: string) => {

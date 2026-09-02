@@ -42,6 +42,7 @@ export default function SalesPage() {
   const [printOpen, setPrintOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [generatingIRN, setGeneratingIRN] = useState(false);
   const [metrics, setMetrics] = useState({
     totalAmount: 0,
     amountPaid: 0,
@@ -112,6 +113,21 @@ export default function SalesPage() {
       setDeleteId(null);
     } catch {
       toast.error("Failed to delete sale");
+    }
+  };
+
+  const handleGenerateIRN = async () => {
+    if (!selectedSale) return;
+    try {
+      setGeneratingIRN(true);
+      const updatedSale = await saleService.generateEInvoice(selectedSale._id);
+      setSelectedSale(updatedSale);
+      toast.success("E-Invoice (IRN) generated successfully");
+      load();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || "Failed to generate E-Invoice");
+    } finally {
+      setGeneratingIRN(false);
     }
   };
 
@@ -288,7 +304,15 @@ export default function SalesPage() {
                   <span>Total</span><span className="text-primary">{formatCurrency(selectedSale.totalAmount)}</span>
                 </div>
               </div>
-              <div className="flex justify-end border-t pt-4">
+              <div className="flex justify-between items-center border-t pt-4">
+                <div className="flex gap-2">
+                  {!selectedSale.irn && (selectedSale.totalAmount >= 50000 || (typeof selectedSale.customer !== 'string' && selectedSale.customer?.gstNumber)) && (
+                    <Button variant="outline" className="gap-2" disabled={generatingIRN} onClick={handleGenerateIRN}>
+                      {generatingIRN ? "Generating..." : "Generate IRN (E-Invoice)"}
+                    </Button>
+                  )}
+                  {selectedSale.irn && <Badge variant="secondary" className="flex items-center gap-1"><Receipt className="h-3 w-3" /> E-Invoice Generated</Badge>}
+                </div>
                 <Button className="gap-2" onClick={() => { setDetailOpen(false); setPrintOpen(true); }}><Printer className="h-4 w-4" /> Print / PDF Invoice</Button>
               </div>
             </div>

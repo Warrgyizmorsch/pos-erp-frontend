@@ -208,6 +208,10 @@ export interface Sale {
   accountingPostedAt?: string;
   accountingStatus?: "not_posted" | "posted" | "failed";
   accountingError?: string;
+  irn?: string;
+  qrCode?: string;
+  eInvoiceStatus?: "pending" | "generated" | "failed" | "not_applicable";
+  ewayBillNumber?: string;
   createdAt: string;
 }
 
@@ -591,6 +595,7 @@ export interface BusinessProfile {
   businessType?: string;
   category?: string;
   state?: string;
+  stateCode?: string;
   pincode?: string;
   logo?: string;
   signature?: string;

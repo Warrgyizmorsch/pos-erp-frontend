@@ -41,6 +41,20 @@ export function POSBillTopBar({ onAddCustomItem }: POSBillTopBarProps) {
     }).catch(() => {});
   }, []);
 
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    setIsOffline(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -110,6 +124,16 @@ export function POSBillTopBar({ onAddCustomItem }: POSBillTopBarProps) {
         </div>
 
         <div className="flex-1" />
+
+        {/* Network Status Indicator */}
+        <div className="hidden md:flex shrink-0 items-center mr-2">
+          {isOffline ? (
+            <div className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-500 border border-red-500/20">
+              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              Offline Mode
+            </div>
+          ) : null}
+        </div>
 
         <div className="relative hidden md:block min-w-[150px] max-w-[220px]" ref={wrapperRef}>
           <div className="relative flex items-center">

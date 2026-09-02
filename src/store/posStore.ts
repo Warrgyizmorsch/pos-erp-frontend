@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Product, Customer } from '@/types';
 import { saleService } from '@/services/saleService';
+import { useBusinessStore } from '@/store/businessStore';
 
 // Dummy walk-in customer — never persisted to DB
 export const WALK_IN_CUSTOMER: Customer = {
@@ -44,6 +45,10 @@ export interface POSItem {
   taxRate: number;
   taxableAmount: number;
   taxAmount: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
+  taxType?: "CGST_SGST" | "IGST" | "NONE";
   total: number;
   totalAmount: number;
   discount: number;
@@ -121,6 +126,10 @@ export const createPlaceholderItem = (): POSItem => ({
   taxRate: 0,
   taxableAmount: 0,
   taxAmount: 0,
+  cgstAmount: 0,
+  sgstAmount: 0,
+  igstAmount: 0,
+  taxType: "NONE",
   total: 0,
   totalAmount: 0,
   discount: 0,
@@ -128,7 +137,11 @@ export const createPlaceholderItem = (): POSItem => ({
   incomeLedger: null,
 });
 
-export const calculatePOSItemAmounts = (item: POSItem): POSItem => {
+export const calculatePOSItemAmounts = (
+  item: POSItem,
+  customerStateCode?: string | null,
+  businessStateCode?: string | null
+): POSItem => {
   const quantity = Math.max(0, Number(item.quantity || 0));
   const rate = Math.max(0, Number(item.pricePerUnit ?? item.rate ?? 0));
   const discount = Math.max(0, Math.min(100, Number(item.discount || 0)));
@@ -148,6 +161,22 @@ export const calculatePOSItemAmounts = (item: POSItem): POSItem => {
     totalAmount = taxableAmount + taxAmount;
   }
 
+  let cgstAmount = 0;
+  let sgstAmount = 0;
+  let igstAmount = 0;
+  let taxType: "CGST_SGST" | "IGST" | "NONE" = "NONE";
+
+  if (taxPercent > 0) {
+    if (customerStateCode && businessStateCode && customerStateCode !== businessStateCode) {
+      taxType = "IGST";
+      igstAmount = Number(taxAmount.toFixed(2));
+    } else {
+      taxType = "CGST_SGST";
+      cgstAmount = Number((taxAmount / 2).toFixed(2));
+      sgstAmount = Number((taxAmount - cgstAmount).toFixed(2));
+    }
+  }
+
   return {
     ...item,
     quantity,
@@ -158,6 +187,10 @@ export const calculatePOSItemAmounts = (item: POSItem): POSItem => {
     taxRate: taxPercent,
     taxableAmount: Number(taxableAmount.toFixed(2)),
     taxAmount: Number(taxAmount.toFixed(2)),
+    cgstAmount,
+    sgstAmount,
+    igstAmount,
+    taxType,
     total: Number(totalAmount.toFixed(2)),
     totalAmount: Number(totalAmount.toFixed(2)),
   };
@@ -260,7 +293,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
             discount: item.discount || 0,
             isInclusive: false,
             incomeLedger: item.incomeLedger || null,
-          });
+          }, typeof sale.customer === 'object' && sale.customer ? sale.customer.stateCode : undefined, useBusinessStore.getState().profile?.stateCode);
         });
 
         return {
@@ -327,7 +360,11 @@ export const usePOSStore = create<POSStore>((set, get) => ({
         ...itemData,
       };
 
-      const calculatedItem = calculatePOSItemAmounts(newItem);
+      const activeBill = state.bills.find(b => b.id === state.activeBillId);
+      const customerStateCode = activeBill?.customer?.stateCode;
+      const businessStateCode = useBusinessStore.getState().profile?.stateCode;
+
+      const calculatedItem = calculatePOSItemAmounts(newItem, customerStateCode, businessStateCode);
 
       return {
         bills: state.bills.map((b) => {
@@ -346,7 +383,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
               items[existingIndex] = calculatePOSItemAmounts({
                 ...existing,
                 quantity: existing.quantity + 1,
-              });
+              }, customerStateCode, businessStateCode);
               return { ...b, items, selectedRowIndex: existingIndex };
             }
           }
@@ -362,19 +399,25 @@ export const usePOSStore = create<POSStore>((set, get) => ({
   },
 
   updateItem: (id, updates) => {
-    set((state) => ({
-      bills: state.bills.map((b) => {
-        if (b.id !== state.activeBillId) return b;
-        return {
-          ...b,
-          items: b.items.map((item) => {
-            if (item.id !== id) return item;
-            const updated = { ...item, ...updates };
-            return calculatePOSItemAmounts(updated);
-          })
-        };
-      })
-    }));
+    set((state) => {
+      const activeBill = state.bills.find(b => b.id === state.activeBillId);
+      const customerStateCode = activeBill?.customer?.stateCode;
+      const businessStateCode = useBusinessStore.getState().profile?.stateCode;
+
+      return {
+        bills: state.bills.map((b) => {
+          if (b.id !== state.activeBillId) return b;
+          return {
+            ...b,
+            items: b.items.map((item) => {
+              if (item.id !== id) return item;
+              const updated = { ...item, ...updates };
+              return calculatePOSItemAmounts(updated, customerStateCode, businessStateCode);
+            })
+          };
+        })
+      };
+    });
   },
 
   updateItemProduct: (id, updates) => {
@@ -391,7 +434,10 @@ export const usePOSStore = create<POSStore>((set, get) => ({
         ...updates,
       };
 
-      const calculatedItem = calculatePOSItemAmounts(updatedItem);
+      const customerStateCode = activeBill.customer?.stateCode;
+      const businessStateCode = useBusinessStore.getState().profile?.stateCode;
+
+      const calculatedItem = calculatePOSItemAmounts(updatedItem, customerStateCode, businessStateCode);
 
       const updatedItems = [...activeBill.items];
       updatedItems[itemIndex] = calculatedItem;
@@ -412,7 +458,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
           const mergedItem = calculatePOSItemAmounts({
             ...existing,
             quantity: newQty,
-          });
+          }, customerStateCode, businessStateCode);
 
           updatedItems[duplicateIndex] = mergedItem;
           selectedIndex = duplicateIndex;
@@ -473,11 +519,23 @@ export const usePOSStore = create<POSStore>((set, get) => ({
   },
 
   setCustomer: (customer) => {
-    set((state) => ({
-      bills: state.bills.map((b) => 
-        b.id === state.activeBillId ? { ...b, customer } : b
-      )
-    }));
+    set((state) => {
+      const businessStateCode = useBusinessStore.getState().profile?.stateCode;
+      
+      return {
+        bills: state.bills.map((b) => {
+          if (b.id !== state.activeBillId) return b;
+          
+          // Re-calculate taxes for all items because customer changed
+          const customerStateCode = customer?.stateCode;
+          const updatedItems = b.items.map(item => 
+            calculatePOSItemAmounts(item, customerStateCode, businessStateCode)
+          );
+          
+          return { ...b, customer, items: updatedItems };
+        })
+      };
+    });
   },
 
   setPaymentMode: (mode) => {

@@ -171,16 +171,11 @@ function POSRightPanelContent() {
         : activeBill.paymentMode === "Bank"
           ? "upi"
           : activeBill.paymentMode.toLowerCase();
-      const splitLineTax = (taxAmount: number) => {
-        const cgst = Number((taxAmount / 2).toFixed(2));
-        return { cgst, sgst: Number((taxAmount - cgst).toFixed(2)), igst: 0 };
-      };
       const taxTotals = currentItems.reduce((totals, item) => {
-        const split = splitLineTax(item.taxAmount || 0);
         return {
-          totalCgst: totals.totalCgst + split.cgst,
-          totalSgst: totals.totalSgst + split.sgst,
-          totalIgst: totals.totalIgst + split.igst,
+          totalCgst: totals.totalCgst + (item.cgstAmount || 0),
+          totalSgst: totals.totalSgst + (item.sgstAmount || 0),
+          totalIgst: totals.totalIgst + (item.igstAmount || 0),
         };
       }, { totalCgst: 0, totalSgst: 0, totalIgst: 0 });
 
@@ -190,7 +185,6 @@ function POSRightPanelContent() {
           const base = i.quantity * i.pricePerUnit;
           const discountAmount = base * (i.discount / 100);
           const taxableAmount = i.isInclusive ? Math.max(0, i.total - i.taxAmount) : Math.max(0, base - discountAmount);
-          const split = splitLineTax(i.taxAmount || 0);
           const isInventory = i.itemType === "inventory";
           const productId = isInventory ? i.productId : null;
 
@@ -218,12 +212,12 @@ function POSRightPanelContent() {
             taxableAmount,
             taxAmount: i.taxAmount,
             totalAmount: i.total,
-            cgst: split.cgst,
-            cgstAmount: split.cgst,
-            sgst: split.sgst,
-            sgstAmount: split.sgst,
-            igst: split.igst,
-            igstAmount: split.igst,
+            cgst: i.cgstAmount || 0,
+            cgstAmount: i.cgstAmount || 0,
+            sgst: i.sgstAmount || 0,
+            sgstAmount: i.sgstAmount || 0,
+            igst: i.igstAmount || 0,
+            igstAmount: i.igstAmount || 0,
             hsn: isInventory ? i.product?.hsnCode || "" : "",
             incomeLedger: i.itemType === "service" ? i.incomeLedger || null : null,
             total: i.total,
@@ -624,10 +618,17 @@ function FullBreakupModal({ open, onClose }: FullBreakupModalProps) {
   const roundOff = Math.round(grandTotal) - grandTotal;
   const finalTotal = Math.round(grandTotal);
 
+  const totalCgst = realItems.reduce((s, i) => s + (i.cgstAmount || 0), 0);
+  const totalSgst = realItems.reduce((s, i) => s + (i.sgstAmount || 0), 0);
+  const totalIgst = realItems.reduce((s, i) => s + (i.igstAmount || 0), 0);
+  
   const rows = [
     { label: "Sub Total", value: subtotal },
     { label: "Discount", value: -discountTotal },
-    { label: "Item Tax", value: itemTax },
+    ...(totalCgst > 0 ? [{ label: "CGST", value: totalCgst }] : []),
+    ...(totalSgst > 0 ? [{ label: "SGST", value: totalSgst }] : []),
+    ...(totalIgst > 0 ? [{ label: "IGST", value: totalIgst }] : []),
+    ...(totalCgst === 0 && totalSgst === 0 && totalIgst === 0 && itemTax > 0 ? [{ label: "Item Tax", value: itemTax }] : []),
     { label: "Round Off", value: roundOff },
   ];
 

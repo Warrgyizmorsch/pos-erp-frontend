@@ -2,6 +2,7 @@
 import type { BusinessProfile, Customer, Sale } from "@/types";
 import { asNumber, printCurrency, printDate, printGSTIN, printQty, showValue } from "../printUtils";
 import { PrintAuthorizedSignature } from "./PrintBranding";
+import { QRCodeSVG } from "qrcode.react";
 
 const getItemName = (item: Sale["items"][number]) => item.itemName || item.name || (typeof item.product === "object" ? item.product?.name : "") || "Custom Item";
 const getItemRate = (item: Sale["items"][number]) => item.rate ?? item.unitPrice ?? 0;
@@ -15,9 +16,30 @@ export function A4InvoiceTemplate({ sale, business }: { sale: Sale; business: Bu
       <header className="flex justify-between border-b-2 border-indigo-600 pb-5">
         <div className="flex gap-4">
           {business.logo && <img src={business.logo} alt="" className="h-16 w-16 object-contain" />}
-          <div><h1 className="print-business-name text-2xl font-bold uppercase" style={{ color: "#3730a3" }}>{showValue(business.businessName)}</h1><p className="max-w-[85mm] text-xs text-slate-500">{business.address}</p><p className="text-xs text-slate-500">{business.phone} {business.gstin && ` | GSTIN: ${printGSTIN(business.gstin)}`}</p></div>
+          <div>
+            <h1 className="print-business-name text-2xl font-bold uppercase" style={{ color: "#3730a3" }}>{showValue(business.businessName)}</h1>
+            <p className="max-w-[85mm] text-xs text-slate-500">{business.address}</p>
+            <p className="text-xs text-slate-500">{business.phone} {business.gstin && ` | GSTIN: ${printGSTIN(business.gstin)}`}</p>
+            {sale.irn && (
+              <div className="mt-2 space-y-0.5">
+                <p className="text-[10px] text-slate-600 font-mono"><strong>IRN:</strong> {sale.irn}</p>
+                {sale.ewayBillNumber && <p className="text-[10px] text-slate-600 font-mono"><strong>E-Way Bill:</strong> {sale.ewayBillNumber}</p>}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="text-right"><div className="rounded bg-indigo-600 px-3 py-1 text-xs font-bold text-white">TAX INVOICE</div><p className="mt-3 text-sm font-bold">#{sale.invoiceNumber}</p><p className="text-xs text-slate-500">{printDate(sale.createdAt)}</p></div>
+        <div className="flex gap-4 text-right items-start">
+          {sale.qrCode && (
+            <div className="p-1 bg-white border border-slate-200 rounded">
+              <QRCodeSVG value={sale.qrCode} size={64} level="M" />
+            </div>
+          )}
+          <div>
+            <div className="rounded bg-indigo-600 px-3 py-1 text-xs font-bold text-white mb-3 inline-block">TAX INVOICE</div>
+            <p className="text-sm font-bold">#{sale.invoiceNumber}</p>
+            <p className="text-xs text-slate-500">{printDate(sale.createdAt)}</p>
+          </div>
+        </div>
       </header>
       <section className="my-6 grid grid-cols-2 gap-6 rounded-lg bg-slate-50 p-4 text-sm">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bill To</p><p className="mt-1 font-bold">{sale.customerName || "Walk-in Customer"}</p>{customer?.phone && <p>{customer.phone}</p>}{customer?.address && <p>{customer.address}</p>}{customer?.gstNumber && <p>GSTIN: {printGSTIN(customer.gstNumber)}</p>}</div>

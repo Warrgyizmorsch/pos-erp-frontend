@@ -69,3 +69,86 @@ export function formatReportValue(key: string, value: unknown): ExportValue {
   if (/amount|total|tax|price|revenue|profit|cost|value|payment/i.test(key) && typeof value === "number") return pdfCurrency(value);
   return typeof value === "object" ? JSON.stringify(value) : String(value);
 }
+
+export function exportGSTR1Json(data: any, context: ExportContext) {
+  const gstin = context.business?.gstin || "URP";
+  const dateObj = new Date();
+  const fp = `${String(dateObj.getMonth() + 1).padStart(2, '0')}${dateObj.getFullYear()}`;
+  
+  const formatDateForGST = (isoStr: string) => {
+    try {
+      const d = new Date(isoStr);
+      return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+    } catch {
+      return isoStr;
+    }
+  };
+
+  const b2b = (data.b2b || []).map((inv: any) => {
+    const rate = inv.taxableAmount > 0 ? Math.round((inv.totalTax / inv.taxableAmount) * 100) : 0;
+    return {
+      ctin: inv.customerGSTIN,
+      inv: [{
+        inum: inv.invoiceNo,
+        idt: formatDateForGST(inv.date),
+        val: inv.invoiceTotal,
+        pos: inv.stateOfSupply?.substring(0, 2) || "08",
+        rchrg: "N",
+        pro_ass: "N",
+        itms: [{
+          num: 1,
+          itm_det: {
+            txval: inv.taxableAmount,
+            rt: rate,
+            cgst: inv.cgst || 0,
+            sgst: inv.sgst || 0,
+            igst: inv.igst || 0
+          }
+        }]
+      }]
+    };
+  });
+
+  const b2cs = (data.b2c || []).map((inv: any) => {
+    const rate = inv.taxableAmount > 0 ? Math.round((inv.totalTax / inv.taxableAmount) * 100) : 0;
+    return {
+      sply_ty: "INTRA",
+      rt: rate,
+      typ: "OE",
+      pos: inv.stateOfSupply?.substring(0, 2) || "08",
+      txval: inv.taxableAmount,
+      cgst: inv.cgst || 0,
+      sgst: inv.sgst || 0,
+      igst: inv.igst || 0
+    };
+  });
+
+  const hsn = {
+    data: (data.hsnSummary || []).map((h: any, idx: number) => ({
+      num: idx + 1,
+      hsn_sc: h.hsn,
+      desc: h.description,
+      uqc: (h.unit || "OTH").substring(0, 3).toUpperCase(),
+      qty: h.quantity,
+      val: h.totalValue,
+      txval: h.taxableValue,
+      rt: h.taxRate,
+      cgst: h.cgst || 0,
+      sgst: h.sgst || 0,
+      igst: h.igst || 0
+    }))
+  };
+
+  const payload = {
+    gstin,
+    fp,
+    version: "GST3.0.0",
+    hash: "hash",
+    b2b,
+    b2cs,
+    hsn
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  download(blob, `${context.filename}.json`, "application/json");
+}

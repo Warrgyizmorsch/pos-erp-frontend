@@ -145,7 +145,7 @@ export function SalesAnalyticsDashboard({
           loading={loading}
         >
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <LineChart data={data?.charts?.salesTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
@@ -186,7 +186,7 @@ export function SalesAnalyticsDashboard({
           loading={loading}
         >
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={data?.charts?.revenueTrend || []}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -235,7 +235,7 @@ export function SalesAnalyticsDashboard({
           loading={loading}
         >
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={data?.charts?.categoryWiseSales || []}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
@@ -277,7 +277,7 @@ export function SalesAnalyticsDashboard({
           loading={loading}
         >
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart
                 data={(data?.charts?.topSellingProducts || []).slice(0, 5)}
                 layout="vertical"
