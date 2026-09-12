@@ -113,14 +113,22 @@ export function OfflineSyncManager() {
 
   // Online/offline event listeners
   useEffect(() => {
+    let onlineSyncTimeout: NodeJS.Timeout;
+
     const handleOnline = () => {
       setIsOnline(true);
-      toast.success("Back online! Syncing data...");
-      syncData();
+      toast.success("Back online! Syncing in a few seconds...");
+      
+      // Wait 5 seconds to let the internet connection and DNS stabilize
+      // before attempting to push data, preventing immediate Network Errors.
+      onlineSyncTimeout = setTimeout(() => {
+        syncData();
+      }, 5000);
     };
 
     const handleOffline = () => {
       setIsOnline(false);
+      if (onlineSyncTimeout) clearTimeout(onlineSyncTimeout);
       toast.error("You are offline. Operating in offline mode.");
     };
 
