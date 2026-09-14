@@ -399,9 +399,117 @@ class _SaleFormViewState extends State<SaleFormView> {
                         borderRadius: AppRadius.md,
                         border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
                       ),
-                      child: Column(
-                        children: [
-                          Row(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isItemMobile = constraints.maxWidth < 650;
+
+                          if (isItemMobile) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 11,
+                                      backgroundColor: AppColors.primary.withAlpha(30),
+                                      child: Text('${index + 1}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        item.product?.name ?? 'Item ${index + 1}',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (items.length > 1)
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () => _removeItem(index),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  initialValue: item.product?.id,
+                                  hint: const Text('Select Product...', style: TextStyle(fontSize: 12)),
+                                  dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    border: OutlineInputBorder(borderRadius: AppRadius.sm),
+                                  ),
+                                  items: availableProducts.map((p) => DropdownMenuItem<String>(
+                                    value: p.id,
+                                    child: Text('${p.name} (₹${p.salesPrice.toStringAsFixed(2)})', style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
+                                  )).toList(),
+                                  onChanged: (pId) {
+                                    final p = availableProducts.firstWhereOrNull((x) => x.id == pId);
+                                    if (p != null) {
+                                      setState(() {
+                                        item.product = p;
+                                        item.nameCtrl.text = p.name;
+                                        item.rateCtrl.text = p.salesPrice.toStringAsFixed(2);
+                                        item.taxRate = p.taxRate;
+                                      });
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: AppTextField(
+                                        controller: item.qtyCtrl,
+                                        label: 'Qty',
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 4,
+                                      child: AppTextField(
+                                        controller: item.rateCtrl,
+                                        label: 'Rate (₹)',
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 3,
+                                      child: AppTextField(
+                                        controller: item.discountCtrl,
+                                        label: 'Disc %',
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Tax: ${item.taxRate.toStringAsFixed(0)}% (₹${item.taxAmount.toStringAsFixed(2)})',
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                    Text(
+                                      'Total: ₹${item.totalAmount.toStringAsFixed(2)}',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
+
+                          return Row(
                             children: [
                               CircleAvatar(
                                 radius: 12,
@@ -486,8 +594,8 @@ class _SaleFormViewState extends State<SaleFormView> {
                                   onPressed: () => _removeItem(index),
                                 ),
                             ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     );
                   }),
@@ -497,75 +605,136 @@ class _SaleFormViewState extends State<SaleFormView> {
             const SizedBox(height: 16),
 
             // 3. Payment & Totals Summary
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: AppCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('PAYMENT & SETTLEMENT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          initialValue: paymentMethod,
-                          dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-                          decoration: InputDecoration(
-                            labelText: 'Payment Mode',
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: AppRadius.md),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                            DropdownMenuItem(value: 'bank', child: Text('Bank Transfer / NEFT')),
-                            DropdownMenuItem(value: 'upi', child: Text('UPI / QR')),
-                            DropdownMenuItem(value: 'card', child: Text('Credit / Debit Card')),
-                            DropdownMenuItem(value: 'credit', child: Text('Credit (Customer Ledger)')),
-                          ],
-                          onChanged: (val) => setState(() => paymentMethod = val ?? 'cash'),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
+
+                final paymentCard = AppCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('PAYMENT & SETTLEMENT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: paymentMethod,
+                        dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                        decoration: InputDecoration(
+                          labelText: 'Payment Mode',
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: AppRadius.md),
                         ),
-                        const SizedBox(height: 12),
-                        AppTextField(
-                          controller: paidAmountCtrl,
-                          label: 'Paid Amount (₹)',
-                          keyboardType: TextInputType.number,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 12),
-                        AppTextField(
-                          controller: notesCtrl,
-                          label: 'Notes / Remarks',
-                          hintText: 'Optional notes for this invoice',
-                        ),
-                      ],
-                    ),
+                        items: const [
+                          DropdownMenuItem(value: 'cash', child: Text('Cash', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem(value: 'bank', child: Text('Bank Transfer / NEFT', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem(value: 'upi', child: Text('UPI / QR', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem(value: 'card', child: Text('Credit / Debit Card', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem(value: 'credit', child: Text('Credit (Customer Ledger)', overflow: TextOverflow.ellipsis)),
+                        ],
+                        onChanged: (val) => setState(() => paymentMethod = val ?? 'cash'),
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        controller: paidAmountCtrl,
+                        label: 'Paid Amount (₹)',
+                        keyboardType: TextInputType.number,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        controller: notesCtrl,
+                        label: 'Notes / Remarks',
+                        hintText: 'Optional notes for this invoice',
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 5,
-                  child: AppCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        _buildSummaryRow('Subtotal (Taxable):', '₹${subtotal.toStringAsFixed(2)}'),
-                        const SizedBox(height: 6),
-                        _buildSummaryRow('GST Tax Amount:', '₹${totalTax.toStringAsFixed(2)}'),
-                        const Divider(height: 16),
-                        _buildSummaryRow('Grand Total:', '₹${grandTotal.toStringAsFixed(2)}', isBold: true, fontSize: 16),
-                        const SizedBox(height: 6),
-                        _buildSummaryRow('Paid Amount:', '₹${amountPaid.toStringAsFixed(2)}', isBold: true, valueColor: AppColors.success),
-                        const SizedBox(height: 6),
-                        _buildSummaryRow('Balance Due:', '₹${balanceDue.toStringAsFixed(2)}', isBold: true, valueColor: balanceDue > 0 ? AppColors.danger : Colors.grey),
-                      ],
-                    ),
+                );
+
+                final summaryCard = AppCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _buildSummaryRow('Subtotal (Taxable):', '₹${subtotal.toStringAsFixed(2)}'),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('GST Tax Amount:', '₹${totalTax.toStringAsFixed(2)}'),
+                      const Divider(height: 20),
+                      _buildSummaryRow('Grand Total:', '₹${grandTotal.toStringAsFixed(2)}', isBold: true, fontSize: 16),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Paid Amount:', '₹${amountPaid.toStringAsFixed(2)}', isBold: true, valueColor: AppColors.success),
+                      const SizedBox(height: 8),
+                      _buildSummaryRow('Balance Due:', '₹${balanceDue.toStringAsFixed(2)}', isBold: true, valueColor: balanceDue > 0 ? AppColors.danger : Colors.grey),
+                    ],
                   ),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    children: [
+                      paymentCard,
+                      const SizedBox(height: 16),
+                      summaryCard,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 5, child: paymentCard),
+                    const SizedBox(width: 16),
+                    Expanded(flex: 5, child: summaryCard),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : Colors.white,
+          border: Border(
+            top: BorderSide(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(10),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
             ),
           ],
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Grand Total', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(
+                      '₹${grandTotal.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+              ),
+              Obx(
+                () => AppButton(
+                  text: 'Create Invoice',
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  variant: AppButtonVariant.primary,
+                  height: 42,
+                  isLoading: saleController.isSubmitting.value,
+                  onPressed: _submitInvoice,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -575,8 +744,18 @@ class _SaleFormViewState extends State<SaleFormView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: isBold ? null : Colors.grey)),
-        Text(value, style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.w600, color: valueColor)),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: isBold ? null : Colors.grey),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.w600, color: valueColor),
+        ),
       ],
     );
   }
