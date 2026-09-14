@@ -181,6 +181,11 @@ class MoreModulesView extends StatelessWidget {
                     label: 'Transporters',
                     route: '/transporters',
                   ),
+                  _ModuleItem(
+                    icon: Icons.menu_book_rounded,
+                    label: 'Digital Khaata',
+                    route: '/khaata',
+                  ),
                 ]),
                 const SizedBox(height: 16),
               ],
@@ -221,6 +226,16 @@ class MoreModulesView extends StatelessWidget {
                     icon: Icons.playlist_add_check_rounded,
                     label: 'Opening Stock Manager',
                     route: '/opening-stock',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.store_mall_directory_rounded,
+                    label: 'Stores / Godowns',
+                    route: '/inventory/godowns',
+                  ),
+                  _ModuleItem(
+                    icon: Icons.sync_alt_rounded,
+                    label: 'Stock Transfer',
+                    route: '/inventory/stock-transfer',
                   ),
                 ]),
                 const SizedBox(height: 16),

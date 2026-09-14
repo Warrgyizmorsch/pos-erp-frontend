@@ -15,6 +15,7 @@ import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/supplier_controller.dart';
 import '../models/supplier.dart';
 import '../widgets/supplier_dialog.dart';
+import 'supplier_detail_view.dart';
 
 class SupplierListView extends GetView<SupplierController> {
   const SupplierListView({super.key});
@@ -323,10 +324,23 @@ class SupplierListView extends GetView<SupplierController> {
                                             ),
                                           ),
 
-                                          // Actions (Edit & Delete Buttons)
+                                          // Actions (View, Edit & Delete Buttons)
                                           DataCell(
                                             Row(
                                               children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.remove_red_eye_outlined,
+                                                    size: 18,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                  tooltip: 'View Ledger Statement',
+                                                  onPressed: () =>
+                                                      SupplierDetailView.show(
+                                                        context,
+                                                        s,
+                                                      ),
+                                                ),
                                                 IconButton(
                                                   icon: const Icon(
                                                     Icons.edit_outlined,
@@ -392,9 +406,9 @@ class SupplierListView extends GetView<SupplierController> {
                                   ? AppStatusChipType.danger
                                   : AppStatusChipType.success,
                               leadIcon: Icons.storefront_rounded,
-                              onTap: () => SupplierDialog.show(
+                              onTap: () => SupplierDetailView.show(
                                 context,
-                                supplier: supplier,
+                                supplier,
                               ),
                               popupMenu: PopupMenuButton<String>(
                                 icon: const Icon(
@@ -403,7 +417,12 @@ class SupplierListView extends GetView<SupplierController> {
                                 ),
                                 padding: EdgeInsets.zero,
                                 onSelected: (val) {
-                                  if (val == 'edit') {
+                                  if (val == 'view') {
+                                    SupplierDetailView.show(
+                                      context,
+                                      supplier,
+                                    );
+                                  } else if (val == 'edit') {
                                     SupplierDialog.show(
                                       context,
                                       supplier: supplier,
@@ -413,6 +432,20 @@ class SupplierListView extends GetView<SupplierController> {
                                   }
                                 },
                                 itemBuilder: (ctx) => [
+                                  const PopupMenuItem(
+                                    value: 'view',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.remove_red_eye_outlined,
+                                          size: 18,
+                                          color: AppColors.primary,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('View Statement'),
+                                      ],
+                                    ),
+                                  ),
                                   const PopupMenuItem(
                                     value: 'edit',
                                     child: Row(

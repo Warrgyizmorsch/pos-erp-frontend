@@ -56,4 +56,13 @@ class SaleRepository {
       throw AppException(message: 'Failed to repost accounting voucher.');
     }
   }
+
+  Future<Sale> createSale(Map<String, dynamic> data) async {
+    try {
+      return await _service.create(data);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to create sale invoice.');
+    }
+  }
 }

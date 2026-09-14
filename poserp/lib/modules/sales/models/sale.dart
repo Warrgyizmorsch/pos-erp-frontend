@@ -89,6 +89,32 @@ class Sale {
 
   double get balanceDue =>
       (totalAmount - amountPaid).clamp(0.0, double.infinity);
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'id': id,
+      'invoiceNumber': invoiceNumber,
+      'customer': customer is Customer ? (customer as Customer).toJson() : customer,
+      'customerName': customerName,
+      'items': items.map((i) => i.toJson()).toList(),
+      'subtotal': subtotal,
+      'taxAmount': taxAmount,
+      'discountAmount': discountAmount,
+      'totalAmount': totalAmount,
+      'amountPaid': amountPaid,
+      'changeAmount': changeAmount,
+      'status': status,
+      'paymentStatus': paymentStatus,
+      'paymentMethod': paymentMethod,
+      'notes': notes,
+      'cashBankAccountId': cashBankAccountId,
+      'accountingStatus': accountingStatus,
+      'accountingError': accountingError,
+      'accountingVoucherId': accountingVoucherId,
+      'createdAt': createdAt,
+    };
+  }
 }
 
 class SaleTotals {

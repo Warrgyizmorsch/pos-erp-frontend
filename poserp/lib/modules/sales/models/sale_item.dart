@@ -91,4 +91,28 @@ class SaleItem {
       total: totVal,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product': product,
+      'productId': productId,
+      'itemType': itemType,
+      'affectsInventory': affectsInventory,
+      'itemName': itemName,
+      'name': name ?? itemName,
+      'description': description,
+      'sku': sku,
+      'quantity': quantity,
+      'rate': rate,
+      'unitPrice': unitPrice,
+      'purchasePrice': purchasePrice,
+      'discount': discount,
+      'taxRate': taxRate,
+      'gstRate': gstRate,
+      'taxableAmount': taxableAmount,
+      'taxAmount': taxAmount,
+      'totalAmount': totalAmount,
+      'total': total,
+    };
+  }
 }

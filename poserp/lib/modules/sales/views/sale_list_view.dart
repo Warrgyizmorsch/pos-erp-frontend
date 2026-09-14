@@ -13,7 +13,6 @@ import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/sale_controller.dart';
 import '../models/sale.dart';
-import '../widgets/sale_detail_dialog.dart';
 
 class SaleListView extends GetView<SaleController> {
   const SaleListView({super.key});
@@ -26,8 +25,13 @@ class SaleListView extends GetView<SaleController> {
         subtitle: 'Manage customer invoices & sales transactions',
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_shopping_cart_rounded, size: 24),
-            tooltip: 'Create Sale (POS)',
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 24),
+            tooltip: 'New B2B Invoice',
+            onPressed: () => Get.toNamed('/sales/create'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.point_of_sale_rounded, size: 24),
+            tooltip: 'Fast POS Terminal',
             onPressed: () => Get.toNamed('/pos'),
           ),
           const SizedBox(width: 8),
@@ -222,13 +226,17 @@ class SaleListView extends GetView<SaleController> {
                           statusText: sale.paymentMethod.toUpperCase(),
                           statusType: AppStatusChipType.info,
                           leadIcon: Icons.receipt_rounded,
-                          onTap: () => SaleDetailDialog.show(context, sale),
+                          onTap: () {
+                            controller.selectedSale.value = sale;
+                            Get.toNamed('/sales/${sale.id}');
+                          },
                           popupMenu: PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert_rounded, size: 20),
                             padding: EdgeInsets.zero,
                             onSelected: (val) {
                               if (val == 'view') {
-                                SaleDetailDialog.show(context, sale);
+                                controller.selectedSale.value = sale;
+                                Get.toNamed('/sales/${sale.id}');
                               } else if (val == 'delete') {
                                 _showDeleteConfirm(context, sale);
                               }

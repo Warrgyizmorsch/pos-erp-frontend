@@ -82,4 +82,11 @@ class SaleService {
   Future<void> repostAccounting(String id) async {
     await _apiClient.post('/accounting/repost/sale/$id');
   }
+
+  Future<Sale> create(Map<String, dynamic> data) async {
+    final response = await _apiClient.post(ApiEndpoints.sales, data: data);
+    final body = response.data as Map<String, dynamic>;
+    final resData = body['data'] ?? body;
+    return Sale.fromJson(resData as Map<String, dynamic>);
+  }
 }

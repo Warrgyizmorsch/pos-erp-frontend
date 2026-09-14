@@ -61,6 +61,8 @@ import '../../modules/loans/bindings/loan_binding.dart';
 import '../../modules/loans/views/loan_list_view.dart';
 import '../../modules/notifications/bindings/notification_binding.dart';
 import '../../modules/notifications/views/notification_view.dart';
+import '../../modules/khaata/bindings/khaata_binding.dart';
+import '../../modules/khaata/views/khaata_view.dart';
 import '../../modules/parties/customers/bindings/customer_binding.dart';
 import '../../modules/parties/customers/views/customer_list_view.dart';
 import '../../modules/parties/suppliers/bindings/supplier_binding.dart';
@@ -74,6 +76,9 @@ import '../../modules/pos/views/pos_view.dart';
 import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
+import '../../modules/products/godowns/bindings/godown_binding.dart';
+import '../../modules/products/godowns/views/godown_list_view.dart';
+import '../../modules/products/godowns/views/stock_transfer_view.dart';
 import '../../modules/products/inventory/bindings/stock_binding.dart';
 import '../../modules/products/inventory/views/inventory_view.dart';
 import '../../modules/products/opening_stock/bindings/opening_stock_binding.dart';
@@ -97,6 +102,8 @@ import '../../modules/sales/payment_in/views/payment_in_list_view.dart';
 import '../../modules/sales/return/bindings/sale_return_binding.dart';
 import '../../modules/sales/return/views/sale_return_form_view.dart';
 import '../../modules/sales/return/views/sale_return_list_view.dart';
+import '../../modules/sales/views/sale_detail_view.dart';
+import '../../modules/sales/views/sale_form_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
@@ -171,6 +178,18 @@ class AppPages {
       binding: StockBinding(),
       middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),
+    GetPage(
+      name: Routes.godowns,
+      page: () => const GodownListView(),
+      binding: GodownBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
+    ),
+    GetPage(
+      name: Routes.stockTransfer,
+      page: () => const StockTransferView(),
+      binding: GodownBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
+    ),
 
     // Parties Master (Admin, Manager, Cashier)
     GetPage(
@@ -191,6 +210,12 @@ class AppPages {
       binding: TransporterBinding(),
       middlewares: [RoleMiddleware(PermissionService.partiesRoles)],
     ),
+    GetPage(
+      name: Routes.khaata,
+      page: () => const KhaataView(),
+      binding: KhaataBinding(),
+      middlewares: [RoleMiddleware(PermissionService.partiesRoles)],
+    ),
 
     // Sales & POS Billing (Admin, Manager, Cashier)
     GetPage(
@@ -208,6 +233,18 @@ class AppPages {
     GetPage(
       name: Routes.sales,
       page: () => const SaleListView(),
+      binding: SaleBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
+    ),
+    GetPage(
+      name: Routes.saleCreate,
+      page: () => const SaleFormView(),
+      binding: SaleBinding(),
+      middlewares: [RoleMiddleware(PermissionService.salesRoles)],
+    ),
+    GetPage(
+      name: Routes.saleDetail,
+      page: () => const SaleDetailView(),
       binding: SaleBinding(),
       middlewares: [RoleMiddleware(PermissionService.salesRoles)],
     ),

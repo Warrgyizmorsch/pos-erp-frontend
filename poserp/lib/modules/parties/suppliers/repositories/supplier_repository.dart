@@ -58,4 +58,24 @@ class SupplierRepository {
       throw AppException(message: 'Failed to delete supplier.');
     }
   }
+
+  Future<Supplier> getSupplierById(String id) async {
+    try {
+      final res = await _service.getById(id);
+      if (res.data != null) return res.data!;
+      throw AppException(message: 'Supplier not found.');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch supplier details.');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSupplierLedger(String partyId) async {
+    try {
+      final res = await _service.getLedger(partyId);
+      return res.data ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

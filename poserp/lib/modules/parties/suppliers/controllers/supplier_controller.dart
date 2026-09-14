@@ -12,6 +12,8 @@ class SupplierController extends GetxController {
 
   SupplierController(this._repository);
 
+  SupplierRepository get repository => _repository;
+
   final RxList<Supplier> suppliers = <Supplier>[].obs;
   final RxBool isLoading = true.obs;
   final RxBool isSubmitting = false.obs;

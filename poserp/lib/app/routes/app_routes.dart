@@ -10,12 +10,17 @@ abstract class Routes {
   static const products = '/products';
   static const openingStock = '/opening-stock';
   static const inventory = '/inventory';
+  static const godowns = '/inventory/godowns';
+  static const stockTransfer = '/inventory/stock-transfer';
   static const customers = '/customers';
   static const suppliers = '/suppliers';
   static const transporters = '/transporters';
+  static const khaata = '/khaata';
   static const pos = '/pos';
   static const checkout = '/checkout';
   static const sales = '/sales';
+  static const saleCreate = '/sales/create';
+  static const saleDetail = '/sales/:id';
   static const paymentIn = '/sales/payment-in';
   static const saleReturn = '/sales/return';
   static const saleReturnCreate = '/sales/return/create';

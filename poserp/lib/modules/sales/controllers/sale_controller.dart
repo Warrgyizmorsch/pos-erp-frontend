@@ -140,7 +140,9 @@ class SaleController extends GetxController {
     }
   }
 
-  Future<void> repostAccounting(String id) async {
+  Future<Sale?> fetchSaleById(String id) => loadSaleDetails(id);
+
+  Future<bool> repostAccounting(String id) async {
     try {
       isSubmitting.value = true;
       await _repository.repostAccounting(id);
@@ -152,11 +154,37 @@ class SaleController extends GetxController {
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
       );
-      loadSaleDetails(id);
+      await loadSaleDetails(id);
+      return true;
     } catch (e) {
       showErrorSnackbar(
         e is AppException ? e.message : 'Failed to repost accounting voucher',
       );
+      return false;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  Future<Sale?> createSaleInvoice(Map<String, dynamic> data) async {
+    try {
+      isSubmitting.value = true;
+      final sale = await _repository.createSale(data);
+      Get.snackbar(
+        'Success',
+        'Invoice #${sale.invoiceNumber} created successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      await loadSales();
+      return sale;
+    } catch (e) {
+      showErrorSnackbar(
+        e is AppException ? e.message : 'Failed to create sale invoice',
+      );
+      return null;
     } finally {
       isSubmitting.value = false;
     }
