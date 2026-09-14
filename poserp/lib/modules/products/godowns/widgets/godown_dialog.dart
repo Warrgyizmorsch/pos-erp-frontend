@@ -77,35 +77,35 @@ class _GodownDialogState extends State<GodownDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
       child: Container(
-        width: 420,
-        padding: const EdgeInsets.all(20),
+        constraints: const BoxConstraints(maxWidth: 420),
+        padding: const EdgeInsets.all(18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(25),
-                        borderRadius: AppRadius.md,
-                      ),
-                      child: const Icon(Icons.warehouse_rounded, color: AppColors.primary, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      isEdit ? 'Edit Godown / Store' : 'Add New Godown / Store',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(25),
+                    borderRadius: AppRadius.md,
+                  ),
+                  child: const Icon(Icons.warehouse_rounded, color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isEdit ? 'Edit Godown / Store' : 'Add New Godown / Store',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -151,15 +151,32 @@ class _GodownDialogState extends State<GodownDialog> {
             ),
             const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Checkbox(
-                  value: isDefault,
-                  activeColor: AppColors.primary,
-                  onChanged: (val) => setState(() => isDefault = val ?? false),
+            InkWell(
+              borderRadius: AppRadius.sm,
+              onTap: () => setState(() => isDefault = !isDefault),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: isDefault,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) => setState(() => isDefault = val ?? false),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Set as Default Store for Sales & POS',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
                 ),
-                const Text('Set as Default Store for Sales & POS', style: TextStyle(fontSize: 13)),
-              ],
+              ),
             ),
             const SizedBox(height: 20),
 
