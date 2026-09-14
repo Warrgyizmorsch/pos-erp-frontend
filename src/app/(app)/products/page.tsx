@@ -817,10 +817,21 @@ export default function ProductsPage() {
                     </div>
                     <h3 className="font-bold text-sm">Tax Information</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground">
-                        GST Tax Rate (%)
+                        HSN / SAC Code
+                      </Label>
+                      <Input
+                        value={form.hsnCode}
+                        onChange={(e) => setForm({ ...form, hsnCode: e.target.value })}
+                        placeholder="e.g. 8517"
+                        className="h-10"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                        GST Slab (%)
                       </Label>
                       <Select
                         value={form.taxRate}
@@ -830,11 +841,11 @@ export default function ProductsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="0">GST@0%</SelectItem>
-                          <SelectItem value="5">GST@5%</SelectItem>
-                          <SelectItem value="12">GST@12%</SelectItem>
-                          <SelectItem value="18">GST@18%</SelectItem>
-                          <SelectItem value="28">GST@28%</SelectItem>
+                          <SelectItem value="0">0% (Exempt)</SelectItem>
+                          <SelectItem value="5">GST @ 5%</SelectItem>
+                          <SelectItem value="12">GST @ 12%</SelectItem>
+                          <SelectItem value="18">GST @ 18%</SelectItem>
+                          <SelectItem value="28">GST @ 28%</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

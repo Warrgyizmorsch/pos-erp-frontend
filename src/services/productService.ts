@@ -1,5 +1,6 @@
 import api from "./api";
 import type { Product, ApiResponse, Pagination, ProductPriceOptionsResponse } from "@/types";
+import { db } from "@/lib/db";
 
 export const productService = {
   getAll: async (params?: {
@@ -11,8 +12,46 @@ export const productService = {
     sortOrder?: string;
     lowStock?: boolean;
   }): Promise<{ data: Product[]; pagination: Pagination }> => {
-    const { data } = await api.get<ApiResponse<Product[]>>("/products", { params });
-    return { data: data.data, pagination: data.pagination! };
+    try {
+      const { data } = await api.get<ApiResponse<Product[]>>("/products", { params });
+      
+      // Cache to IndexedDB asynchronously
+      if (data.data && data.data.length > 0 && !params?.search && !params?.category) {
+        // Only cache the full list (or first big chunk) when there are no filters
+        db.products.bulkPut(data.data).catch(console.error);
+      }
+      
+      return { data: data.data, pagination: data.pagination! };
+    } catch (error: any) {
+      // If offline, fetch from Dexie
+      if (error.code === 'ERR_NETWORK' || !navigator.onLine) {
+        console.log("Offline mode: Fetching products from local DB");
+        let query = db.products.toCollection();
+        
+        if (params?.search) {
+          const searchLower = params.search.toLowerCase();
+          query = db.products.filter(p => 
+            p.name.toLowerCase().includes(searchLower) || 
+            (p.barcode || "").toLowerCase().includes(searchLower) || 
+            (p.sku || "").toLowerCase().includes(searchLower)
+          );
+        } else if (params?.category) {
+          query = db.products.filter(p => p.category === params.category);
+        }
+        
+        const localProducts = await query.toArray();
+        return { 
+          data: localProducts, 
+          pagination: { 
+            total: localProducts.length, 
+            page: 1, 
+            limit: localProducts.length, 
+            pages: 1 
+          } 
+        };
+      }
+      throw error;
+    }
   },
 
   getById: async (id: string): Promise<Product> => {
@@ -21,8 +60,19 @@ export const productService = {
   },
 
   getByBarcode: async (barcode: string): Promise<Product> => {
-    const { data } = await api.get<ApiResponse<Product>>(`/products/barcode/${barcode}`);
-    return data.data;
+    try {
+      const { data } = await api.get<ApiResponse<Product>>(`/products/barcode/${barcode}`);
+      if (data.data) {
+        db.products.put(data.data).catch(console.error);
+      }
+      return data.data;
+    } catch (error: any) {
+      if (error.code === 'ERR_NETWORK' || !navigator.onLine) {
+        const localProduct = await db.products.where('barcode').equals(barcode).first();
+        if (localProduct) return localProduct;
+      }
+      throw error;
+    }
   },
 
   getPriceOptions: async (id: string): Promise<ProductPriceOptionsResponse> => {

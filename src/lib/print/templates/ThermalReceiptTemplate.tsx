@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Stored business logos must render inside isolated print frames. */
 import type { BusinessProfile, Sale } from "@/types";
 import { asNumber, printCurrency, printDateTime, printGSTIN, printQty, showValue, type ThermalWidth } from "../printUtils";
+import { QRCodeSVG } from "qrcode.react";
 
 interface Props { sale: Sale; business: BusinessProfile; width: ThermalWidth; }
 
@@ -57,6 +58,17 @@ export function ThermalReceiptTemplate({ sale, business, width }: Props) {
       <footer className="mt-4 border-t border-dashed border-black pt-3 text-center">
         <p className="font-bold">THANK YOU, VISIT AGAIN</p>
         {sale.notes && <p className="mt-1 break-words">{sale.notes}</p>}
+        {sale.irn && (
+          <div className="mt-3 text-left">
+            <p className="text-[9px] break-all"><strong>IRN:</strong> {sale.irn}</p>
+            {sale.ewayBillNumber && <p className="text-[9px]"><strong>E-Way Bill:</strong> {sale.ewayBillNumber}</p>}
+          </div>
+        )}
+        {sale.qrCode && (
+          <div className="mt-2 flex justify-center">
+            <QRCodeSVG value={sale.qrCode} size={90} level="M" />
+          </div>
+        )}
       </footer>
     </section>
   );

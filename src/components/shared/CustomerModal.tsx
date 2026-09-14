@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { customerService } from "@/services/customerService";
 import { toast } from "sonner";
 import type { Customer } from "@/types";
+import { GST_STATE_CODES } from "@/lib/gstUtils";
 
 interface CustomerModalProps {
   open: boolean;
@@ -148,7 +149,17 @@ export function CustomerModal({ open, onOpenChange, customer, onSuccess }: Custo
                 placeholder="GSTIN (Optional)" 
                 className="h-11 font-mono uppercase text-xs"
                 value={form.gstNumber} 
-                onChange={(e) => setForm({ ...form, gstNumber: e.target.value.toUpperCase() })} 
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase();
+                  const updates = { gstNumber: val };
+                  if (val.length >= 2) {
+                    const code = val.substring(0, 2);
+                    if (/^\d{2}$/.test(code)) {
+                      (updates as any).stateCode = code;
+                    }
+                  }
+                  setForm({ ...form, ...updates });
+                }} 
               />
             </div>
             <div className="space-y-1">
@@ -192,13 +203,22 @@ export function CustomerModal({ open, onOpenChange, customer, onSuccess }: Custo
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">State Code</Label>
-                      <Input
-                        value={form.stateCode}
-                        onChange={(e) => setForm({ ...form, stateCode: e.target.value })}
-                        placeholder="E.g. 27"
-                        className="h-10"
-                      />
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">State / Region</Label>
+                      <Select 
+                        value={form.stateCode || ""} 
+                        onValueChange={(code) => setForm({ ...form, stateCode: code })}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Select State" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {Object.entries(GST_STATE_CODES).map(([code, name]) => (
+                            <SelectItem key={code} value={code}>
+                              {code} - {name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   

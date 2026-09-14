@@ -216,6 +216,8 @@ export default function SettingsPage() {
         </motion.div>
       )}
 
+
+
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: isAdmin ? 0.4 : 0.2 }}>
         <Card>
           <CardHeader>

@@ -52,26 +52,15 @@ const monthNames = [
   "Dec",
 ];
 
+import { useQuery } from "@tanstack/react-query";
+
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await saleService.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Failed to load dashboard stats:", error);
-        toast.error("Failed to load dashboard stats");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadStats();
-  }, []);
+  const { data: stats, isLoading: loading } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: () => saleService.getDashboardStats(),
+  });
 
   // Helper for permission checks
   const hasPermission = (module: string) => {
@@ -110,25 +99,25 @@ export default function DashboardPage() {
 
       {showSales && (
         <div>
-          <SalesSection stats={stats} />
+          <SalesSection stats={stats || null} />
         </div>
       )}
 
       {showInventory && (
         <div className="pt-6 border-t border-border/50">
-          <InventorySection stats={stats} />
+          <InventorySection stats={stats || null} />
         </div>
       )}
 
       {showAccounting && (
         <div className="pt-6 border-t border-border/50">
-          <AccountingSection stats={stats} />
+          <AccountingSection stats={stats || null} />
         </div>
       )}
 
       {showCashier && (
         <div className="pt-6 border-t border-border/50">
-          <CashierSection stats={stats} />
+          <CashierSection stats={stats || null} />
         </div>
       )}
 

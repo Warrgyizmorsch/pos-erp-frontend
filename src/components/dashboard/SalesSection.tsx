@@ -141,7 +141,7 @@ export function SalesSection({ stats }: { stats: DashboardStats | null }) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart
                     data={
                       salesChartData.length > 0
@@ -195,7 +195,7 @@ export function SalesSection({ stats }: { stats: DashboardStats | null }) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart
                     data={
                       dailyChartData.length > 0

@@ -25,6 +25,7 @@ import { useBusinessStore } from "@/store/businessStore";
 import { uploadService } from "@/services/uploadService";
 import type { BusinessProfile } from "@/types";
 import { useRef } from "react";
+import { GST_STATE_CODES } from "@/lib/gstUtils";
 
 export default function BusinessProfilePage() {
   const { profile: storeProfile, fetchProfile, updateProfile, loading: storeLoading } = useBusinessStore();
@@ -368,16 +369,22 @@ export default function BusinessProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[11px] font-semibold text-muted-foreground">State / Region</Label>
-                <Select value={localProfile.state} onValueChange={(v) => setLocalProfile({...localProfile, state: v})}>
+                <Select 
+                  value={localProfile.stateCode || ""} 
+                  onValueChange={(code) => {
+                    const stateName = GST_STATE_CODES[code] || "";
+                    setLocalProfile({...localProfile, stateCode: code, state: stateName});
+                  }}
+                >
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select State" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                    <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                    <SelectItem value="Gujarat">Gujarat</SelectItem>
-                    <SelectItem value="Delhi">Delhi</SelectItem>
-                    <SelectItem value="Karnataka">Karnataka</SelectItem>
+                  <SelectContent className="max-h-[300px]">
+                    {Object.entries(GST_STATE_CODES).map(([code, name]) => (
+                      <SelectItem key={code} value={code}>
+                        {code} - {name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

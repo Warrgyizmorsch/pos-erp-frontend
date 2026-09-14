@@ -55,6 +55,7 @@ import {
   exportReportCsv,
   exportReportExcel,
   exportReportPdf,
+  exportGSTR1Json,
   formatReportValue,
   type ExportRow,
 } from "@/lib/print/exportUtils";
@@ -75,7 +76,7 @@ export type GSTReportKind =
 const meta: Record<GSTReportKind, { title: string; description: string; icon: typeof BadgeIndianRupee }> = {
   summary: { title: "GST Summary", description: "Output GST, input GST, returns, and net payable.", icon: BadgeIndianRupee },
   output: { title: "Output GST", description: "GST collected on sales invoices.", icon: ReceiptText },
-  input: { title: "Input GST", description: "GST paid on purchase bills and available ITC.", icon: FileSpreadsheet },
+  input: { title: "GSTR-2 (Inward)", description: "GST paid on purchase bills and available ITC.", icon: FileSpreadsheet },
   payable: { title: "GST Payable / ITC", description: "GST liability and excess ITC by tax head.", icon: Landmark },
   "hsn-summary": { title: "HSN Summary", description: "HSN-wise quantity, taxable value, and tax.", icon: FileSpreadsheet },
   gstr1: { title: "GSTR-1 Style", description: "Internal sales breakup for B2B, B2C, credit notes, and HSN.", icon: BookOpen },
@@ -370,7 +371,7 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
 
   const prepareCurrentReport = () => data ? prepareGSTReport(kind, data, info, startDate, endDate) : null;
 
-  const handleExport = async (format: "csv" | "excel" | "pdf" | "print") => {
+  const handleExport = async (format: "csv" | "excel" | "pdf" | "print" | "json") => {
     const prepared = prepareCurrentReport();
     if (!prepared) {
       toast.error("Load GST report data before exporting");
@@ -397,6 +398,7 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
       if (format === "csv") exportReportCsv(prepared.rows, context);
       if (format === "excel") await exportReportExcel(prepared.rows, context);
       if (format === "pdf") await exportReportPdf(prepared.rows, context);
+      if (format === "json" && kind === "gstr1") exportGSTR1Json(data, context);
       toast.success(`${prepared.title} exported as ${format.toUpperCase()}`);
     } catch (error) {
       toast.error(getAccountingErrorMessage(error, "Failed to export GST report"));
@@ -421,6 +423,7 @@ export function GSTReportPage({ kind }: { kind: GSTReportKind }) {
             <DropdownMenuItem onClick={() => void handleExport("excel")}><Sheet className="mr-2 h-4 w-4" /> Excel (.xlsx)</DropdownMenuItem>
             <DropdownMenuItem onClick={() => void handleExport("pdf")}><FileText className="mr-2 h-4 w-4" /> PDF</DropdownMenuItem>
             <DropdownMenuItem onClick={() => void handleExport("csv")}><File className="mr-2 h-4 w-4" /> CSV</DropdownMenuItem>
+            {kind === "gstr1" && <DropdownMenuItem onClick={() => void handleExport("json")}><FileText className="mr-2 h-4 w-4" /> GST Portal JSON</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
         <Button variant="outline" disabled={loading || !data} onClick={() => void handleExport("print")}><Printer className="h-4 w-4" /> Print</Button>

@@ -41,6 +41,8 @@ import {
   X,
   Zap,
   Boxes,
+  Plug,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -49,6 +51,7 @@ import { useBusinessStore } from "@/store/businessStore";
 import { useThemeStore } from "@/store/themeStore";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 interface NavLink {
   label: string;
@@ -80,6 +83,11 @@ const navEntries: NavEntry[] = [
     ],
   },
   {
+    label: "Digital Khaata",
+    icon: BookOpen,
+    href: "/khaata",
+  },
+  {
     label: "Inventory Master",
     icon: Package,
     children: [
@@ -88,6 +96,7 @@ const navEntries: NavEntry[] = [
       { label: "Subcategories", href: "/subcategories", icon: Layers },
       { label: "Opening Stock", href: "/inventory/opening-stock", icon: Boxes },
       { label: "Inventory Manager", href: "/inventory", icon: Warehouse },
+      { label: "Stores / Godowns", href: "/inventory/godowns", icon: Building },
     ],
   },
   {
@@ -158,7 +167,7 @@ const navEntries: NavEntry[] = [
       { label: "GST Reports", href: "/accounting/gst", icon: Receipt },
       { label: "GST Summary", href: "/accounting/gst/summary", icon: IndianRupee },
       { label: "Output GST", href: "/accounting/gst/output", icon: FileText },
-      { label: "Input GST", href: "/accounting/gst/input", icon: FileText },
+      { label: "GSTR-2 (Inward)", href: "/accounting/gst/input", icon: FileText },
       { label: "HSN Summary", href: "/accounting/gst/hsn-summary", icon: Tags },
       { label: "GSTR-1 Style", href: "/accounting/gst/gstr1", icon: BookOpen },
       { label: "GSTR-3B Summary", href: "/accounting/gst/gstr3b", icon: BookOpen },
@@ -204,6 +213,16 @@ const navEntries: NavEntry[] = [
     label: "Settings",
     icon: Settings,
     href: "/settings",
+  },
+  {
+    label: "Marketing",
+    icon: Megaphone,
+    href: "/marketing",
+  },
+  {
+    label: "Integrations",
+    icon: Plug,
+    href: "/integrations",
   },
 ];
 
@@ -351,14 +370,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           />
         )}
 
-        <item.icon
-          className={cn(
-            "h-[18px] w-[18px] shrink-0 transition-colors",
-            isActive
-              ? "text-primary dark:text-primary-foreground group-hover:text-primary dark:group-hover:text-primary-foreground"
-              : "text-muted-foreground group-hover:text-primary",
-          )}
-        />
+        <item.icon className="h-[18px] w-[18px] shrink-0 transition-colors" />
 
         <AnimatePresence>
           {!sidebarCollapsed && (
@@ -393,14 +405,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               : "",
           )}
         >
-          <group.icon
-            className={cn(
-              "h-[18px] w-[18px] shrink-0 transition-colors",
-              isOpen && !isAnyChildActive
-                ? "text-primary dark:text-primary-foreground"
-                : "text-muted-foreground group-hover:text-primary",
-            )}
-          />
+          <group.icon className="h-[18px] w-[18px] shrink-0 transition-colors" />
 
           <AnimatePresence>
             {!sidebarCollapsed && (
@@ -492,7 +497,8 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         {visibleNavEntries.map((entry) => (isGroup(entry) ? renderGroup(entry) : renderLink(entry)))}
       </nav>
 
-      <div className="border-t border-border/70 bg-card px-4 pb-4 pt-4">
+      <div className="border-t border-border/70 bg-card px-4 pb-4 pt-4 space-y-3">
+        {!sidebarCollapsed && <InstallPrompt />}
         <Link
           href="/settings/profile"
           className={cn(

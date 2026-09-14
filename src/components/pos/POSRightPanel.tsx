@@ -6,10 +6,11 @@ import { saleService } from "@/services/saleService";
 import { cashBankService } from "@/services/cashBankService";
 import { customerService } from "@/services/customerService";
 import { formatCurrency, formatNumberInputValue, cn } from "@/lib/utils";
-import type { BankAccount, Customer, Sale } from "@/types";
+import type { BankAccount, Customer, Sale, Godown } from "@/types";
 import { toast } from "sonner";
 import { PrintSaleDialog } from "@/components/sales/PrintSaleDialog";
 import { CustomerModal } from "@/components/shared/CustomerModal";
+import { godownService } from "@/services/godownService";
 
 type POSBankAccount = BankAccount & {
   accountType?: string;
@@ -40,8 +41,10 @@ function POSRightPanelContent() {
   // Modal states
   const [showFullBreakup, setShowFullBreakup] = useState(false);
   const [showMultiPay, setShowMultiPay] = useState(false);
+  const [sendWhatsapp, setSendWhatsapp] = useState(true);
   const [printSaleData, setPrintSaleData] = useState<Sale | null>(null);
   const [bankAccounts, setBankAccounts] = useState<POSBankAccount[]>([]);
+  const [godowns, setGodowns] = useState<Godown[]>([]);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   
   // Mobile-responsive states for customer & date
@@ -55,8 +58,10 @@ function POSRightPanelContent() {
   const [isAmountEdited, setIsAmountEdited] = useState(false);
   const [showPaymentDD, setShowPaymentDD] = useState(false);
   const [showBankDD, setShowBankDD] = useState(false);
+  const [showGodownDD, setShowGodownDD] = useState(false);
   const paymentRef = useRef<HTMLDivElement>(null);
   const bankRef = useRef<HTMLDivElement>(null);
+  const godownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     cashBankService.getAccounts()
@@ -68,11 +73,25 @@ function POSRightPanelContent() {
       })
       .catch(err => console.error("Failed to load bank accounts:", err));
     
-    // Load customers for mobile view
     customerService.getAll({ limit: 200 })
       .then(res => {
         if (res.data) {
           setCustomers(res.data);
+        }
+      })
+      .catch(() => {});
+      
+    godownService.getAllGodowns()
+      .then((res) => {
+        if (res.success && res.data) {
+          const activeGodowns = res.data.filter((g) => g.isActive);
+          setGodowns(activeGodowns);
+          if (activeGodowns.length > 0 && !store.getActiveBill()?.godownId) {
+            const defaultGodown = activeGodowns.find((g) => g.isDefault) || activeGodowns[0];
+            if (defaultGodown) {
+              store.updateBillField("godownId", defaultGodown._id);
+            }
+          }
         }
       })
       .catch(() => {});
@@ -83,6 +102,7 @@ function POSRightPanelContent() {
     const h = (e: MouseEvent) => {
       if (paymentRef.current && !paymentRef.current.contains(e.target as Node)) setShowPaymentDD(false);
       if (bankRef.current && !bankRef.current.contains(e.target as Node)) setShowBankDD(false);
+      if (godownRef.current && !godownRef.current.contains(e.target as Node)) setShowGodownDD(false);
       if (customerDDRef.current && !customerDDRef.current.contains(e.target as Node)) setShowCustomerDD(false);
     };
     document.addEventListener("mousedown", h);
@@ -116,6 +136,10 @@ function POSRightPanelContent() {
     const currentItems = activeBill.items.filter(i => i.itemName !== "");
     const currentGrandTotal = currentItems.reduce((s, i) => s + i.total, 0);
     if (currentItems.length === 0) { toast.error("Add items first"); return; }
+    if (!activeBill.godownId) {
+      toast.error("Please select a Godown to deduct stock from.");
+      return;
+    }
     setSaving(true);
     try {
       for (const item of currentItems) {
@@ -170,16 +194,11 @@ function POSRightPanelContent() {
         : activeBill.paymentMode === "Bank"
           ? "upi"
           : activeBill.paymentMode.toLowerCase();
-      const splitLineTax = (taxAmount: number) => {
-        const cgst = Number((taxAmount / 2).toFixed(2));
-        return { cgst, sgst: Number((taxAmount - cgst).toFixed(2)), igst: 0 };
-      };
       const taxTotals = currentItems.reduce((totals, item) => {
-        const split = splitLineTax(item.taxAmount || 0);
         return {
-          totalCgst: totals.totalCgst + split.cgst,
-          totalSgst: totals.totalSgst + split.sgst,
-          totalIgst: totals.totalIgst + split.igst,
+          totalCgst: totals.totalCgst + (item.cgstAmount || 0),
+          totalSgst: totals.totalSgst + (item.sgstAmount || 0),
+          totalIgst: totals.totalIgst + (item.igstAmount || 0),
         };
       }, { totalCgst: 0, totalSgst: 0, totalIgst: 0 });
 
@@ -189,7 +208,6 @@ function POSRightPanelContent() {
           const base = i.quantity * i.pricePerUnit;
           const discountAmount = base * (i.discount / 100);
           const taxableAmount = i.isInclusive ? Math.max(0, i.total - i.taxAmount) : Math.max(0, base - discountAmount);
-          const split = splitLineTax(i.taxAmount || 0);
           const isInventory = i.itemType === "inventory";
           const productId = isInventory ? i.productId : null;
 
@@ -217,12 +235,12 @@ function POSRightPanelContent() {
             taxableAmount,
             taxAmount: i.taxAmount,
             totalAmount: i.total,
-            cgst: split.cgst,
-            cgstAmount: split.cgst,
-            sgst: split.sgst,
-            sgstAmount: split.sgst,
-            igst: split.igst,
-            igstAmount: split.igst,
+            cgst: i.cgstAmount || 0,
+            cgstAmount: i.cgstAmount || 0,
+            sgst: i.sgstAmount || 0,
+            sgstAmount: i.sgstAmount || 0,
+            igst: i.igstAmount || 0,
+            igstAmount: i.igstAmount || 0,
             hsn: isInventory ? i.product?.hsnCode || "" : "",
             incomeLedger: i.itemType === "service" ? i.incomeLedger || null : null,
             total: i.total,
@@ -238,6 +256,8 @@ function POSRightPanelContent() {
         amountPaid: receivedAmount,
         status: "completed", paymentStatus: paidInFull ? "paid" : "partial", paymentMethod, notes: activeBill.remarks,
         cashBankAccountId: (activeBill.paymentMode !== "Cash" && activeBill.paymentMode !== "Wallet" && activeBill.paymentMode !== "Partial") ? activeBill.cashBankAccountId : undefined,
+        godownId: activeBill.godownId,
+        sendWhatsapp: sendWhatsapp,
       };
 
       let savedSale;
@@ -384,8 +404,50 @@ function POSRightPanelContent() {
         </div>
       </div>
 
-      {/* Payment Mode + Amount */}
-      <div className="p-4 flex-1 space-y-4 overflow-y-auto overflow-x-visible no-scrollbar bg-background dark:bg-background">
+      {/* Payment Mode + Godown + Amount */}
+      <div className="p-4 flex-1 space-y-4 overflow-visible no-scrollbar bg-background dark:bg-background">
+        {/* Godown Selection */}
+        <div className="space-y-2">
+          <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground pl-1">Godown (Store)</label>
+          <div className="relative" ref={godownRef}>
+            <button
+              type="button"
+              onClick={() => setShowGodownDD(!showGodownDD)}
+              className="w-full h-11 pl-4 pr-8 text-sm font-semibold text-left bg-card dark:bg-card border border-border/50 dark:border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 dark:focus:ring-primary/30 cursor-pointer transition-all hover:border-border dark:hover:border-border/50 truncate"
+            >
+              {bill.godownId
+                ? (godowns.find(g => g._id === bill.godownId)?.name || "Select Godown")
+                : "Select Godown"}
+            </button>
+            <ChevronDown className={cn(
+              "absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-transform",
+              showGodownDD && "rotate-180"
+            )} />
+            {showGodownDD && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-[1000] max-h-48 overflow-y-auto no-scrollbar bg-card dark:bg-card border border-border/50 dark:border-border/30 rounded-lg shadow-xl">
+                {godowns.map((g) => (
+                  <button
+                    key={g._id}
+                    type="button"
+                    onClick={() => {
+                      store.updateBillField("godownId", g._id);
+                      setShowGodownDD(false);
+                    }}
+                    className={cn(
+                      "w-full px-4 py-2.5 text-left text-sm font-semibold transition-colors border-b border-border/10 last:border-0",
+                      bill.godownId === g._id
+                        ? "bg-primary/10 dark:bg-primary/15 text-primary"
+                        : "text-foreground hover:bg-muted/50 dark:hover:bg-muted/30"
+                    )}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground pl-1">Payment Mode</label>
@@ -402,7 +464,7 @@ function POSRightPanelContent() {
                 showPaymentDD && "rotate-180"
               )} />
               {showPaymentDD && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 z-1000 max-h-40 overflow-y-auto no-scrollbar bg-card dark:bg-card border border-border/50 dark:border-border/30 rounded-lg shadow-xl">
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-10000 max-h-40 overflow-y-auto no-scrollbar bg-card dark:bg-card border border-border/50 dark:border-border/30 rounded-lg shadow-xl">
                   {modes.map(m => (
                     <button
                       key={m}
@@ -503,12 +565,28 @@ function POSRightPanelContent() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border/50 dark:border-border/30 space-y-3 bg-card dark:bg-card">
+      <div className="p-4 border-t border-border/50 z-1 dark:border-border/30 space-y-3 bg-card dark:bg-card">
         {/* Change */}
         <div className="flex items-center justify-between px-2 py-2 bg-success/10 dark:bg-success/15 rounded-lg border border-success/20 dark:border-success/30">
           <span className="text-xs font-bold text-foreground">{paymentBalanceLabel}</span>
           <span className="text-lg font-black text-success tabular-nums">{formatCurrency(paymentBalance)}</span>
         </div>
+
+        {/* WhatsApp Toggle */}
+        {bill?.customer?._id && bill?.customer?.phone && (
+          <div className="flex items-center justify-between px-2 py-1">
+            <label htmlFor="send-wa" className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+              Send WhatsApp Receipt
+            </label>
+            <input 
+              type="checkbox" 
+              id="send-wa" 
+              checked={sendWhatsapp} 
+              onChange={(e) => setSendWhatsapp(e.target.checked)} 
+              className="accent-primary"
+            />
+          </div>
+        )}
 
         {/* Save */}
         <button
@@ -606,10 +684,17 @@ function FullBreakupModal({ open, onClose }: FullBreakupModalProps) {
   const roundOff = Math.round(grandTotal) - grandTotal;
   const finalTotal = Math.round(grandTotal);
 
+  const totalCgst = realItems.reduce((s, i) => s + (i.cgstAmount || 0), 0);
+  const totalSgst = realItems.reduce((s, i) => s + (i.sgstAmount || 0), 0);
+  const totalIgst = realItems.reduce((s, i) => s + (i.igstAmount || 0), 0);
+  
   const rows = [
     { label: "Sub Total", value: subtotal },
     { label: "Discount", value: -discountTotal },
-    { label: "Item Tax", value: itemTax },
+    ...(totalCgst > 0 ? [{ label: "CGST", value: totalCgst }] : []),
+    ...(totalSgst > 0 ? [{ label: "SGST", value: totalSgst }] : []),
+    ...(totalIgst > 0 ? [{ label: "IGST", value: totalIgst }] : []),
+    ...(totalCgst === 0 && totalSgst === 0 && totalIgst === 0 && itemTax > 0 ? [{ label: "Item Tax", value: itemTax }] : []),
     { label: "Round Off", value: roundOff },
   ];
 
