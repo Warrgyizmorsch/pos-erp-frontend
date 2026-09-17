@@ -64,9 +64,16 @@ class SaleController extends GetxController {
       );
 
       sales.assignAll(result.data);
-      totalAmount.value = result.totals.totalAmount;
-      amountPaid.value = result.totals.amountPaid;
-      balanceAmount.value = result.totals.balanceAmount;
+
+      if (result.totals.totalAmount > 0) {
+        totalAmount.value = result.totals.totalAmount;
+        amountPaid.value = result.totals.amountPaid;
+        balanceAmount.value = result.totals.balanceAmount;
+      } else {
+        totalAmount.value = sales.fold(0.0, (sum, s) => sum + s.totalAmount);
+        amountPaid.value = sales.fold(0.0, (sum, s) => sum + s.amountPaid);
+        balanceAmount.value = sales.fold(0.0, (sum, s) => sum + s.balanceAmount);
+      }
 
       if (result.pagination != null) {
         totalPages.value = result.pagination!.pages;

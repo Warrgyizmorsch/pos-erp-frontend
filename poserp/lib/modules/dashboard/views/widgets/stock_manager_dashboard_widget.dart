@@ -7,7 +7,9 @@ import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/app_stat_card.dart';
 import '../../../../core/widgets/app_status_chip.dart';
 
-class StockManagerDashboardWidget extends StatelessWidget {
+import '../../controllers/dashboard_controller.dart';
+
+class StockManagerDashboardWidget extends GetView<DashboardController> {
   const StockManagerDashboardWidget({super.key});
 
   @override
@@ -18,31 +20,37 @@ class StockManagerDashboardWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Stock Overview Grid
-          Row(
-            children: [
-              Expanded(
-                child: AppStatCard(
-                  title: 'Total Catalog Products',
-                  value: '148 Items',
-                  subtitle: '12 Categories',
-                  icon: Icons.inventory_2_outlined,
-                  color: AppColors.primary,
-                  onTap: () => Get.toNamed('/products'),
+          Obx(() {
+            final s = controller.summary.value;
+            final totalProds = s?.totalProducts ?? 0;
+            final lowStock = s?.lowStockCount ?? 0;
+
+            return Row(
+              children: [
+                Expanded(
+                  child: AppStatCard(
+                    title: 'Total Catalog Products',
+                    value: '$totalProds Items',
+                    subtitle: 'Inventory Catalog',
+                    icon: Icons.inventory_2_outlined,
+                    color: AppColors.primary,
+                    onTap: () => Get.toNamed('/products'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppStatCard(
-                  title: 'Low Stock Alerts',
-                  value: '4 Products',
-                  subtitle: 'Needs reorder',
-                  icon: Icons.warning_amber_rounded,
-                  color: AppColors.danger,
-                  onTap: () => Get.toNamed('/inventory'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppStatCard(
+                    title: 'Low Stock Alerts',
+                    value: '$lowStock Products',
+                    subtitle: lowStock > 0 ? 'Needs reorder' : 'All stock healthy',
+                    icon: Icons.warning_amber_rounded,
+                    color: lowStock > 0 ? AppColors.danger : AppColors.success,
+                    onTap: () => Get.toNamed('/inventory'),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
           const SizedBox(height: 16),
 
           // Inventory Manager Quick Actions

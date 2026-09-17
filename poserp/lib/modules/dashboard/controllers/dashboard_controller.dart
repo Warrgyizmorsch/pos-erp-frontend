@@ -17,12 +17,15 @@ class DashboardController extends GetxController {
     loadDashboard();
   }
 
-  Future<void> loadDashboard() async {
+  Future<void> loadDashboard({bool showLoading = true}) async {
     try {
-      isLoading.value = true;
+      if (showLoading && summary.value == null) {
+        isLoading.value = true;
+      }
       final data = await _repository.fetchSummary();
       summary.value = data;
     } catch (_) {
+      // Preserve existing summary on network hiccup/error
     } finally {
       isLoading.value = false;
     }

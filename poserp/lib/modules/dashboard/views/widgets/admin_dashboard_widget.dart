@@ -21,12 +21,14 @@ class AdminDashboardWidget extends GetView<DashboardController> {
           // Business Overview KPI Grid
           Obx(() {
             final s = controller.summary.value;
-            final sales = s?.todaySales ?? 18450.0;
-            final purchases = s?.todayPurchases ?? 6200.0;
-            final receivables = s?.totalReceivables ?? 42500.0;
-            final payables = s?.totalPayables ?? 18900.0;
-            final cashBank = s?.cashBankBalance ?? 124800.0;
-            final lowStock = s?.lowStockCount ?? 4;
+            final isLoading = controller.isLoading.value && s == null;
+
+            final sales = s?.todaySales ?? 0.0;
+            final purchases = s?.todayPurchases ?? 0.0;
+            final receivables = s?.totalReceivables ?? 0.0;
+            final payables = s?.totalPayables ?? 0.0;
+            final cashBank = s?.cashBankBalance ?? 0.0;
+            final lowStock = s?.lowStockCount ?? 0;
 
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -43,50 +45,50 @@ class AdminDashboardWidget extends GetView<DashboardController> {
                   children: [
                     AppStatCard(
                       title: "Today's Sales",
-                      value: '₹${sales.toStringAsFixed(2)}',
-                      subtitle: '+12% from yesterday',
+                      value: isLoading ? '...' : '₹${sales.toStringAsFixed(2)}',
+                      subtitle: "Today's revenue",
                       icon: Icons.trending_up_rounded,
                       color: AppColors.success,
                       onTap: () => Get.toNamed('/sales'),
                     ),
                     AppStatCard(
                       title: "Today's Purchases",
-                      value: '₹${purchases.toStringAsFixed(2)}',
-                      subtitle: '3 Bills recorded',
+                      value: isLoading ? '...' : '₹${purchases.toStringAsFixed(2)}',
+                      subtitle: "Today's bills",
                       icon: Icons.shopping_bag_outlined,
                       color: AppColors.primary,
                       onTap: () => Get.toNamed('/purchases'),
                     ),
                     AppStatCard(
                       title: 'Receivables',
-                      value: '₹${receivables.toStringAsFixed(2)}',
-                      subtitle: '8 Outstanding parties',
+                      value: isLoading ? '...' : '₹${receivables.toStringAsFixed(2)}',
+                      subtitle: 'To receive (Customers)',
                       icon: Icons.call_received_rounded,
                       color: AppColors.info,
                       onTap: () => Get.toNamed('/customers'),
                     ),
                     AppStatCard(
                       title: 'Payables',
-                      value: '₹${payables.toStringAsFixed(2)}',
-                      subtitle: '4 Vendor bills pending',
+                      value: isLoading ? '...' : '₹${payables.toStringAsFixed(2)}',
+                      subtitle: 'To pay (Suppliers)',
                       icon: Icons.call_made_rounded,
                       color: AppColors.warning,
                       onTap: () => Get.toNamed('/suppliers'),
                     ),
                     AppStatCard(
                       title: 'Cash & Bank',
-                      value: '₹${cashBank.toStringAsFixed(2)}',
-                      subtitle: 'Liquid funds available',
+                      value: isLoading ? '...' : '₹${cashBank.toStringAsFixed(2)}',
+                      subtitle: 'Total liquid balance',
                       icon: Icons.account_balance_wallet_outlined,
                       color: AppColors.primary,
                       onTap: () => Get.toNamed('/cash-bank'),
                     ),
                     AppStatCard(
                       title: 'Low Stock Items',
-                      value: '$lowStock Products',
-                      subtitle: 'Requires reorder',
+                      value: isLoading ? '...' : '$lowStock Products',
+                      subtitle: lowStock > 0 ? 'Requires reorder' : 'All stock healthy',
                       icon: Icons.warning_amber_rounded,
-                      color: AppColors.danger,
+                      color: lowStock > 0 ? AppColors.danger : AppColors.success,
                       onTap: () => Get.toNamed('/inventory'),
                     ),
                   ],
