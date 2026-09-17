@@ -46,8 +46,6 @@ class Sale {
     this.createdAt,
   });
 
-  double get balanceAmount => (totalAmount - amountPaid).clamp(0.0, double.infinity);
-
   factory Sale.fromJson(Map<String, dynamic> json) {
     dynamic cust;
     if (json['customer'] != null) {
