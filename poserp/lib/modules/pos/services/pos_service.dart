@@ -78,4 +78,12 @@ class POSService {
       (json) => json as Map<String, dynamic>,
     );
   }
+
+  Future<ApiResponse<Map<String, dynamic>>> getSaleById(String id) async {
+    final response = await _apiClient.get('${ApiEndpoints.sales}/$id');
+    return ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data,
+      (json) => json as Map<String, dynamic>,
+    );
+  }
 }

@@ -18,6 +18,18 @@ class _POSViewState extends State<POSView> {
   int _mobileTabIndex = 0; // 0 for Cart & Items, 1 for Pay & Checkout
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = Get.arguments;
+      if (args is Map && args['editSaleId'] != null) {
+        final editSaleId = args['editSaleId'].toString();
+        Get.find<POSController>().loadSaleForEditing(editSaleId);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = Get.find<POSController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -35,16 +47,21 @@ class _POSViewState extends State<POSView> {
                 children: [
                   ...controller.bills.map((bill) {
                     final isActive = controller.activeBillId.value == bill.id;
+                    final isEditing = bill.editingId != null;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6.0),
                       child: ActionChip(
                         avatar: Icon(
-                          Icons.receipt_rounded,
+                          isEditing
+                              ? Icons.edit_note_rounded
+                              : Icons.receipt_rounded,
                           size: 16,
                           color: isActive ? Colors.white : AppColors.primary,
                         ),
                         label: Text(
-                          'Bill #${bill.billNo}',
+                          isEditing
+                              ? 'Edit #${bill.billNo}'
+                              : 'Bill #${bill.billNo}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

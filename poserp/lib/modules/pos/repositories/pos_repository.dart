@@ -1,6 +1,7 @@
 import '../../../../core/api/api_exceptions.dart';
 import '../../parties/customers/models/customer.dart';
 import '../../products/models/product.dart';
+import '../../sales/models/sale.dart';
 import '../models/pos_sale_payload.dart';
 import '../services/pos_service.dart';
 
@@ -35,6 +36,19 @@ class POSRepository {
       return res.data ?? [];
     } catch (e) {
       return [];
+    }
+  }
+
+  Future<Sale> fetchSaleById(String id) async {
+    try {
+      final res = await _service.getSaleById(id);
+      if (res.data != null) {
+        return Sale.fromJson(res.data!);
+      }
+      throw AppException(message: 'Sale details not found.');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch sale details for POS.');
     }
   }
 

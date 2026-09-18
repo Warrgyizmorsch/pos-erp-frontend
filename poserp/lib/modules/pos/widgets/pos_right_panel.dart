@@ -334,8 +334,13 @@ class POSRightPanel extends StatelessWidget {
 
             // ═══ Action Buttons ═══
             AppButton(
-              text: 'SAVE & PRINT BILL',
-              icon: const Icon(Icons.print, size: 18),
+              text: bill.editingId != null
+                  ? 'UPDATE SALE & PRINT'
+                  : 'SAVE & PRINT BILL',
+              icon: Icon(
+                bill.editingId != null ? Icons.save_as_rounded : Icons.print,
+                size: 18,
+              ),
               isLoading: controller.isSubmitting.value,
               width: double.infinity,
               height: 48,

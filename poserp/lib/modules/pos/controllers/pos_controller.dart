@@ -6,6 +6,7 @@ import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../parties/customers/models/customer.dart';
 import '../../products/models/product.dart';
+import '../../sales/models/sale.dart';
 import '../models/pos_bill.dart';
 import '../models/pos_item.dart';
 import '../models/pos_sale_payload.dart';
@@ -29,6 +30,7 @@ class POSController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
   final RxBool isAmountEdited = false.obs;
+  String? _loadedEditSaleId;
 
   // Print modal data state
   final Rxn<Map<String, dynamic>> lastSavedSale = Rxn<Map<String, dynamic>>();
@@ -37,7 +39,12 @@ class POSController extends GetxController {
   void onInit() {
     super.onInit();
     _initInitialBill();
-    loadInitialData();
+    loadInitialData().then((_) {
+      final args = Get.arguments;
+      if (args is Map && args['editSaleId'] != null) {
+        loadSaleForEditing(args['editSaleId'].toString());
+      }
+    });
   }
 
   void _initInitialBill() {
@@ -90,6 +97,142 @@ class POSController extends GetxController {
       bankAccounts.assignAll(banks);
     } catch (e) {
       // Non-blocking log
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadSaleForEditing(String saleId) async {
+    if (_loadedEditSaleId == saleId) return;
+    _loadedEditSaleId = saleId;
+
+    try {
+      isLoading.value = true;
+      if (availableProducts.isEmpty || availableCustomers.isEmpty) {
+        await loadInitialData();
+      }
+
+      final Sale sale = await _repository.fetchSaleById(saleId);
+
+      final List<POSItem> items = sale.items.map((item) {
+        final pId = item.productId ?? item.product;
+        final prodMatch =
+            availableProducts.firstWhereOrNull((p) => p.id == pId);
+        final displayName = (item.name != null && item.name!.isNotEmpty)
+            ? item.name!
+            : (item.itemName.isNotEmpty
+                ? item.itemName
+                : (prodMatch?.name ?? 'Custom Item'));
+
+        final posItem = POSItem(
+          id: Random().nextInt(9999999).toString(),
+          productId: pId,
+          product: prodMatch,
+          itemType: item.itemType.isNotEmpty
+              ? item.itemType
+              : (pId != null ? 'inventory' : 'non_stock_product'),
+          affectsInventory: item.affectsInventory,
+          itemCode: (item.sku != null && item.sku!.isNotEmpty)
+              ? item.sku!
+              : (prodMatch?.sku ?? ''),
+          itemName: displayName,
+          description: item.description,
+          customItem: pId == null,
+          quantity: item.quantity > 0 ? item.quantity : 1,
+          unit: prodMatch?.unit ?? 'Pcs',
+          pricePerUnit: item.rate > 0 ? item.rate : item.unitPrice,
+          rate: item.rate > 0 ? item.rate : item.unitPrice,
+          purchasePrice: item.purchasePrice > 0
+              ? item.purchasePrice
+              : (prodMatch?.purchasePrice ?? 0),
+          taxPercent: item.taxRate > 0
+              ? item.taxRate
+              : (item.gstRate > 0 ? item.gstRate : (prodMatch?.taxRate ?? 0)),
+          discount: item.discount,
+          isInclusive: prodMatch?.salesTaxType == 'with',
+        );
+        return POSItem.calculateAmounts(posItem);
+      }).toList();
+
+      items.add(_createPlaceholderItem());
+
+      Customer cust = walkInCustomer;
+      if (sale.customer is Customer) {
+        cust = sale.customer as Customer;
+      } else if (sale.customer != null) {
+        final match = availableCustomers.firstWhereOrNull(
+          (c) => c.id == sale.customer.toString(),
+        );
+        if (match != null) {
+          cust = match;
+        } else if (sale.customerName.isNotEmpty &&
+            sale.customerName != 'Walk-in Customer') {
+          cust = Customer(
+            id: sale.customer.toString(),
+            name: sale.customerName,
+            phone: '',
+            email: '',
+            address: '',
+          );
+        }
+      } else if (sale.customerName.isNotEmpty &&
+          sale.customerName != 'Walk-in Customer') {
+        cust = Customer(
+          id: 'cust_${sale.id}',
+          name: sale.customerName,
+          phone: '',
+          email: '',
+          address: '',
+        );
+      }
+
+      String mode = 'Cash';
+      final pm = sale.paymentMethod.toLowerCase();
+      if (pm == 'card') {
+        mode = 'Card';
+      } else if (pm == 'upi') {
+        mode = 'UPI';
+      } else if (pm == 'bank') {
+        mode = 'Bank';
+      } else if (pm == 'wallet') {
+        mode = 'Wallet';
+      }
+
+      final active = activeBill;
+      final billId = active?.id ??
+          (activeBillId.value.isNotEmpty ? activeBillId.value : '1');
+      final billNo = active?.billNo ?? 1;
+
+      final updatedBill = POSBill(
+        id: billId,
+        editingId: sale.id,
+        billNo: billNo,
+        customer: cust,
+        items: items,
+        selectedRowIndex: items.length > 1 ? items.length - 2 : 0,
+        paymentMode: mode,
+        amountReceived: sale.amountPaid,
+        remarks: sale.notes ?? '',
+        cashBankAccountId: sale.cashBankAccountId,
+      );
+
+      final billIdx = bills.indexWhere((b) => b.id == updatedBill.id);
+      if (billIdx >= 0) {
+        bills[billIdx] = updatedBill;
+      } else {
+        bills.add(updatedBill);
+        activeBillId.value = updatedBill.id;
+      }
+      isAmountEdited.value = sale.amountPaid > 0;
+
+      AppSnackbar.success('Sale ${sale.invoiceNumber} loaded for editing.');
+    } catch (e) {
+      _loadedEditSaleId = null;
+      showErrorSnackbar(
+        e is AppException
+            ? e.message
+            : 'Failed to load sale for editing in POS.',
+      );
     } finally {
       isLoading.value = false;
     }
@@ -420,13 +563,10 @@ class POSController extends GetxController {
       );
       lastSavedSale.value = savedData;
 
-      Get.snackbar(
-        'Success',
-        'Sale saved & receipt generated!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
+      AppSnackbar.success(
+        cur.editingId != null
+            ? 'Sale invoice updated successfully!'
+            : 'Sale saved & receipt generated!',
       );
 
       // Reset bill
@@ -443,6 +583,7 @@ class POSController extends GetxController {
   }
 
   void resetCurrentBill() {
+    _loadedEditSaleId = null;
     final cur = activeBill;
     if (cur == null) return;
     isAmountEdited.value = false;
