@@ -114,7 +114,7 @@ class AdminDashboardWidget extends GetView<DashboardController> {
                   text: 'New Sale Bill',
                   icon: const Icon(Icons.add_rounded, size: 16),
                   variant: AppButtonVariant.secondary,
-                  onPressed: () => Get.toNamed('/checkout'),
+                  onPressed: () => Get.toNamed('/sales/create'),
                 ),
               ),
             ],

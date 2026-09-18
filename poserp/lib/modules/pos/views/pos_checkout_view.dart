@@ -61,50 +61,68 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'Order Summary',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '3 Items',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
+          Obx(() {
+            final items = controller.cartItems;
+            final count = items.length;
+            final qtyTotal = items.fold(0.0, (sum, i) => sum + i.quantity);
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Order Summary',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
-          ),
+                Text(
+                  '$count Items (${qtyTotal.toStringAsFixed(0)} Qty)',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            );
+          }),
           const Divider(height: 20),
-          const ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              'Organic Green Tea (250g)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('2 x ₹500.00'),
-            trailing: Text(
-              '₹1,000.00',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              'Dark Chocolate Bar (100g)',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('1 x ₹250.00'),
-            trailing: Text(
-              '₹250.00',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          Obx(() {
+            final items = controller.cartItems;
+            if (items.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(
+                  child: Text(
+                    'No items in cart',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              );
+            }
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(height: 12),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    item.itemName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${item.quantity.toStringAsFixed(0)} x ₹${item.rate.toStringAsFixed(2)}',
+                  ),
+                  trailing: Text(
+                    '₹${item.total.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                );
+              },
+            );
+          }),
           const Divider(height: 20),
           Obx(
             () => Column(
@@ -114,7 +132,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                   children: [
                     const Text('Subtotal', style: TextStyle(fontSize: 13)),
                     Text(
-                      '₹${controller.grandTotal.value.toStringAsFixed(2)}',
+                      '₹${controller.subtotal.value.toStringAsFixed(2)}',
                       style: const TextStyle(fontSize: 13),
                     ),
                   ],
@@ -122,9 +140,26 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('Taxes & Discounts', style: TextStyle(fontSize: 13)),
-                    Text('₹0.00', style: TextStyle(fontSize: 13)),
+                  children: [
+                    const Text('Taxes', style: TextStyle(fontSize: 13)),
+                    Text(
+                      '₹${controller.taxAmount.value.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Discounts', style: TextStyle(fontSize: 13)),
+                    Text(
+                      '-₹${controller.discountAmount.value.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.success,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),

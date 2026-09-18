@@ -74,6 +74,16 @@ class AppSnackbar {
     );
   }
 
+  static void warning(String message, {String title = 'Warning'}) {
+    show(
+      title: title,
+      message: message,
+      isError: false,
+      backgroundColor: AppColors.warning,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
   static void info(String message, {String title = 'Info'}) {
     show(
       title: title,

@@ -74,6 +74,24 @@ class POSBill {
     return validItems.fold(0.0, (sum, item) => sum + item.total);
   }
 
+  double get subtotal {
+    final validItems = items.where((i) => i.itemName.isNotEmpty);
+    return validItems.fold(
+      0.0,
+      (sum, item) => sum + (item.rate * item.quantity),
+    );
+  }
+
+  double get totalTax {
+    final validItems = items.where((i) => i.itemName.isNotEmpty);
+    return validItems.fold(0.0, (sum, item) => sum + item.taxAmount);
+  }
+
+  double get totalDiscount {
+    final validItems = items.where((i) => i.itemName.isNotEmpty);
+    return validItems.fold(0.0, (sum, item) => sum + item.discount);
+  }
+
   int get totalItems {
     return items.where((i) => i.itemName.isNotEmpty).length;
   }

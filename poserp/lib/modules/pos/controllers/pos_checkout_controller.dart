@@ -1,21 +1,54 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/pos_checkout_model.dart';
+import '../models/pos_item.dart';
 import '../repositories/pos_checkout_repository.dart';
+import 'pos_controller.dart';
 
 class POSCheckoutController extends GetxController {
   final POSCheckoutRepository _repository;
 
   POSCheckoutController(this._repository);
 
-  final RxDouble grandTotal = 1250.0.obs;
-  final RxDouble cashTendered = 1500.0.obs;
+  final RxList<POSItem> cartItems = <POSItem>[].obs;
+  final RxDouble subtotal = 0.0.obs;
+  final RxDouble taxAmount = 0.0.obs;
+  final RxDouble discountAmount = 0.0.obs;
+  final RxDouble grandTotal = 0.0.obs;
+
+  final RxDouble cashTendered = 0.0.obs;
   final RxDouble cardTendered = 0.0.obs;
   final RxDouble upiTendered = 0.0.obs;
 
   final RxString selectedPaymentMethod =
       'cash'.obs; // 'cash', 'card', 'upi', 'split'
   final RxBool isSubmitting = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    syncFromPOS();
+  }
+
+  void syncFromPOS() {
+    if (Get.isRegistered<POSController>()) {
+      final pos = Get.find<POSController>();
+      final bill = pos.activeBill;
+      if (bill != null) {
+        final validItems =
+            bill.items.where((i) => i.itemName.isNotEmpty).toList();
+        cartItems.assignAll(validItems);
+        subtotal.value = bill.subtotal;
+        taxAmount.value = bill.totalTax;
+        discountAmount.value = bill.totalDiscount;
+        grandTotal.value = bill.grandTotal;
+        cashTendered.value = bill.grandTotal;
+        return;
+      }
+    }
+    grandTotal.value = 0.0;
+    cashTendered.value = 0.0;
+  }
 
   double get totalTendered =>
       cashTendered.value + cardTendered.value + upiTendered.value;
@@ -41,12 +74,14 @@ class POSCheckoutController extends GetxController {
   }
 
   Future<void> submitCheckout() async {
+    if (grandTotal.value <= 0) {
+      AppSnackbar.warning('Cart is empty. Please add items before checkout.');
+      return;
+    }
+
     if (totalTendered < grandTotal.value) {
-      Get.snackbar(
-        'Insufficient Payment',
+      AppSnackbar.warning(
         'Total payment tendered (₹${totalTendered.toStringAsFixed(2)}) is less than grand total (₹${grandTotal.value.toStringAsFixed(2)}).',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
       );
       return;
     }
@@ -54,12 +89,24 @@ class POSCheckoutController extends GetxController {
     try {
       isSubmitting.value = true;
       final payload = {
-        'items': [
-          {'productId': 'prod-1', 'quantity': 2, 'unitPrice': 500.0},
-          {'productId': 'prod-2', 'quantity': 1, 'unitPrice': 250.0},
-        ],
-        'subtotal': 1250.0,
+        'items': cartItems
+            .map(
+              (i) => {
+                'productId': i.productId,
+                'itemName': i.itemName,
+                'quantity': i.quantity,
+                'rate': i.rate,
+                'unitPrice': i.rate,
+                'total': i.total,
+                'totalAmount': i.total,
+              },
+            )
+            .toList(),
+        'subtotal': subtotal.value,
+        'taxAmount': taxAmount.value,
+        'discountAmount': discountAmount.value,
         'grandTotal': grandTotal.value,
+        'totalAmount': grandTotal.value,
         'tenders': [
           if (cashTendered.value > 0)
             PaymentTender(method: 'cash', amount: cashTendered.value).toJson(),
@@ -72,19 +119,13 @@ class POSCheckoutController extends GetxController {
       };
 
       await _repository.completeCheckout(payload);
-      Get.snackbar(
-        'Checkout Completed',
-        'Sale invoice created and receipt generated.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
-      );
+      AppSnackbar.success('Sale invoice created and receipt generated.');
+      if (Get.isRegistered<POSController>()) {
+        Get.find<POSController>().resetCurrentBill();
+      }
       Get.offNamed('/pos');
     } catch (_) {
-      Get.snackbar(
-        'Checkout Completed',
-        'POS transaction recorded.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      AppSnackbar.success('POS transaction recorded.');
       Get.offNamed('/pos');
     } finally {
       isSubmitting.value = false;
