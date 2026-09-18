@@ -33,7 +33,7 @@ To maintain stability and zero-regression architecture, the fixes are grouped in
 
 ---
 
-### Step 1: Dashboard State Retention & Metric Calculations (Bug 1) — ✅ COMPLETED
+### Step 1: Dashboard State Retention & Metric Calculations (Bug 1) — 
 - **Goal:** Dashboard financial KPI cards must reflect real backend data, retain their state after navigating away and pressing Back, and not flash fake mock numbers.
 - **Implemented Fixes:**
   1. Removed misleading hardcoded fallback constants (`?? 18450.0`, `?? 6200.0`, etc.) in [`admin_dashboard_widget.dart`](file:///D:/git/pos-erp-frontend/poserp/lib/modules/dashboard/views/widgets/admin_dashboard_widget.dart) and [`stock_manager_dashboard_widget.dart`](file:///D:/git/pos-erp-frontend/poserp/lib/modules/dashboard/views/widgets/stock_manager_dashboard_widget.dart).
@@ -44,7 +44,7 @@ To maintain stability and zero-regression architecture, the fixes are grouped in
 
 ---
 
-### Step 2: Sales Invoice Summary Aggregates (Bug 2) — ✅ COMPLETED
+### Step 2: Sales Invoice Summary Aggregates (Bug 2) — 
 - **Goal:** The top cards in Sales Invoices (`Total Sales`, `Received`, `Balance Due`) must accurately display the sum of historical invoices.
 - **Implemented Fixes:**
   1. In [`sale_list_view.dart`](file:///D:/git/pos-erp-frontend/poserp/lib/modules/sales/views/sale_list_view.dart#L48-L125), restored the commented-out `Obx()` wrapper around the summary cards row so the widgets reactively listen and rebuild whenever reactive totals update.
@@ -54,7 +54,7 @@ To maintain stability and zero-regression architecture, the fixes are grouped in
 
 ---
 
-### Step 3: Connect POS Terminal, Search & Checkout Lifecycle (Bugs 3, 4, 5 & UI 6, 8) — ✅ COMPLETED
+### Step 3: Connect POS Terminal, Search & Checkout Lifecycle (Bugs 3, 4, 5 & UI 6, 8) — 
 - **Goal:** Real POS cart flow from start to finish without hardcoded mock items or silent finishes.
 - **Implemented Fixes:**
   1. **Dashboard Shortcut (Bug 3):** Re-routed `+ New Sale Bill` in [`admin_dashboard_widget.dart`](file:///D:/git/pos-erp-frontend/poserp/lib/modules/dashboard/views/widgets/admin_dashboard_widget.dart) to `/sales/create` (B2B invoice form).
