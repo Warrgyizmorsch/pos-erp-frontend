@@ -12,6 +12,7 @@ export function OfflineSyncManager() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const isSyncingRef = useRef(false);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const refreshPendingCount = useCallback(async () => {
@@ -27,9 +28,10 @@ export function OfflineSyncManager() {
 
   const syncData = useCallback(async () => {
     if (!navigator.onLine) return;
-    if (isSyncing) return;
+    if (isSyncingRef.current) return;
 
     setIsSyncing(true);
+    isSyncingRef.current = true;
     let syncedCount = 0;
     let failedCount = 0;
 
@@ -107,9 +109,10 @@ export function OfflineSyncManager() {
       console.error("[OfflineSync] Sync process encountered an error:", error);
     } finally {
       setIsSyncing(false);
+      isSyncingRef.current = false;
       await refreshPendingCount();
     }
-  }, [isSyncing, refreshPendingCount]);
+  }, [refreshPendingCount]);
 
   // Online/offline event listeners
   useEffect(() => {

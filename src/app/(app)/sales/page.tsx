@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ShoppingCart, Eye, Receipt, Plus, Edit, Trash2, Printer } from "lucide-react";
+import { ShoppingCart, Eye, Receipt, Plus, Edit, Trash2, Printer, MoreVertical } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
@@ -19,11 +20,18 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { saleService } from "@/services/saleService";
+import api from "@/services/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { Sale } from "@/types";
+import type { Sale, Customer } from "@/types";
 import { getSocket } from "@/lib/socket";
 import { PrintSaleDialog } from "@/components/sales/PrintSaleDialog";
 
@@ -223,16 +231,45 @@ export default function SalesPage() {
                     </td>
                     <td className="p-4 text-sm text-right font-semibold">{formatCurrency(sale.totalAmount)}</td>
                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => viewSale(sale._id)} title="View">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => router.push(`/pos?editSale=${sale._id}`)} title="Edit">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => { setDeleteId(sale._id); setDeleteOpen(true); }} title="Delete">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                      <div className="flex items-center justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm">
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              const customer = sale.customer as Customer;
+                              if (!customer?.phone) {
+                                toast.error("Customer does not have a phone number.");
+                                return;
+                              }
+                              toast.promise(
+                                api.post('/whatsapp/send-invoice', { 
+                                  saleId: sale._id, 
+                                  phone: (sale.customer as Customer).phone 
+                                }),
+                                {
+                                  loading: 'Sending invoice via WhatsApp...',
+                                  success: 'Invoice sent via WhatsApp!',
+                                  error: (err: any) => err?.response?.data?.message || 'Failed to send WhatsApp message'
+                                }
+                              );
+                            }}>
+                              <FaWhatsapp className="h-4 w-4 mr-2 text-emerald-600" /> Send on WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => viewSale(sale._id)}>
+                              <Eye className="h-4 w-4 mr-2" /> View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/pos?editSale=${sale._id}`)}>
+                              <Edit className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setDeleteId(sale._id); setDeleteOpen(true); }} className="text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </motion.tr>
@@ -313,7 +350,34 @@ export default function SalesPage() {
                   )}
                   {selectedSale.irn && <Badge variant="secondary" className="flex items-center gap-1"><Receipt className="h-3 w-3" /> E-Invoice Generated</Badge>}
                 </div>
-                <Button className="gap-2" onClick={() => { setDetailOpen(false); setPrintOpen(true); }}><Printer className="h-4 w-4" /> Print / PDF Invoice</Button>
+                <div className="flex gap-2">
+                  <Button 
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" 
+                    onClick={() => {
+                      const customer = selectedSale.customer as Customer;
+                      if (!customer?.phone) {
+                        toast.error("Customer does not have a phone number.");
+                        return;
+                      }
+                      toast.promise(
+                        api.post('/whatsapp/send-invoice', { 
+                          saleId: selectedSale._id, 
+                          phone: (selectedSale.customer as Customer).phone 
+                        }),
+                        {
+                          loading: 'Sending invoice via WhatsApp...',
+                          success: 'Invoice sent via WhatsApp!',
+                          error: (err: any) => err?.response?.data?.message || 'Failed to send WhatsApp message'
+                        }
+                      );
+                    }}
+                  >
+                    <FaWhatsapp className="h-4 w-4" /> Send on WhatsApp
+                  </Button>
+                  <Button className="gap-2" onClick={() => { setDetailOpen(false); setPrintOpen(true); }}>
+                    <Printer className="h-4 w-4" /> Print / PDF Invoice
+                  </Button>
+                </div>
               </div>
             </div>
           )}

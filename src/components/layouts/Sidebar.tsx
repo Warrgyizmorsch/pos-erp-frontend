@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { FaWhatsapp } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -210,6 +212,11 @@ const navEntries: NavEntry[] = [
     ],
   },
   {
+    label: "WhatsApp",
+    icon: FaWhatsapp,
+    href: "/whatsapp",
+  },
+  {
     label: "Settings",
     icon: Settings,
     href: "/settings",
@@ -233,7 +240,7 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const { sidebarCollapsed, toggleSidebar } = useThemeStore();
+  const { sidebarCollapsed, toggleSidebar, theme } = useThemeStore();
   const { user } = useAuthStore();
   const { profile, fetchProfile } = useBusinessStore();
   const { accountingEnabled, fetchAccountingPreference } = useAccountingPreferenceStore();
@@ -456,8 +463,14 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     <div className="flex h-full flex-col bg-card">
       <div className="flex h-[88px] items-center justify-between px-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft ring-1 ring-primary/15">
-            <Zap className="h-5 w-5 text-primary" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft ring-1 ring-primary/15 overflow-hidden p-1">
+            <Image
+              src={theme === "dark" ? "/logo/warr_logo_dark.webp" : "/logo/warr_logo_light.webp"}
+              alt="Logo"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </div>
 
           <AnimatePresence>

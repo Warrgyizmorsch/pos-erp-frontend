@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { PrintSaleDialog } from "@/components/sales/PrintSaleDialog";
 import { CustomerModal } from "@/components/shared/CustomerModal";
 import { godownService } from "@/services/godownService";
+import api from "@/services/api";
 
 type POSBankAccount = BankAccount & {
   accountType?: string;
@@ -81,13 +82,14 @@ function POSRightPanelContent() {
       })
       .catch(() => {});
       
-    godownService.getAllGodowns()
+      godownService.getAllGodowns()
       .then((res) => {
         if (res.success && res.data) {
           const activeGodowns = res.data.filter((g) => g.isActive);
           setGodowns(activeGodowns);
           if (activeGodowns.length > 0 && !store.getActiveBill()?.godownId) {
-            const defaultGodown = activeGodowns.find((g) => g.isDefault) || activeGodowns[0];
+            const mainStore = activeGodowns.find((g) => g.name.toLowerCase().includes('main store'));
+            const defaultGodown = mainStore || activeGodowns.find((g) => g.isDefault) || activeGodowns[0];
             if (defaultGodown) {
               store.updateBillField("godownId", defaultGodown._id);
             }
@@ -96,6 +98,17 @@ function POSRightPanelContent() {
       })
       .catch(() => {});
   }, []);
+
+  // Auto-select default Godown whenever a new bill is created or reset
+  useEffect(() => {
+    if (godowns.length > 0 && bill && !bill.godownId) {
+      const mainStore = godowns.find((g) => g.name.toLowerCase().includes('main store'));
+      const defaultGodown = mainStore || godowns.find((g) => g.isDefault) || godowns[0];
+      if (defaultGodown) {
+        store.updateBillField("godownId", defaultGodown._id);
+      }
+    }
+  }, [bill?.godownId, godowns, store]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -273,6 +286,21 @@ function POSRightPanelContent() {
         toast.success(savedSale?.accountingPosted ? "Sale saved and accounting voucher posted." : "Sale saved!");
       }
       
+      // Attempt to send WhatsApp if checked and customer has phone
+      if (sendWhatsapp && savedSale && savedSale.customer?.phone) {
+        toast.promise(
+          api.post('/whatsapp/send-invoice', { 
+            saleId: savedSale._id, 
+            phone: savedSale.customer.phone 
+          }),
+          {
+            loading: 'Sending invoice via WhatsApp...',
+            success: 'Invoice sent via WhatsApp!',
+            error: (err: any) => err?.response?.data?.message || 'Failed to send WhatsApp message'
+          }
+        );
+      }
+
       setPrintSaleData(savedSale);
       store.resetActiveBill();
     } catch (error: unknown) {

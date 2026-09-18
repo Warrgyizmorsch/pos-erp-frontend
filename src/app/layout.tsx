@@ -19,7 +19,7 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "POS ERP - Modern Point of Sale System",
+  title: "Warrgyizmorsch POS - Modern Point of Sale System",
   description: "A premium POS and Accounting ERP system for modern businesses",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      // { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
     ],
     shortcut: "/favicon.ico",
     apple: "/icon-192x192.png",

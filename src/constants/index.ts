@@ -8,6 +8,7 @@ export const SIDEBAR_ITEMS = [
   { label: "Customers", href: "/customers", icon: "Users" },
   { label: "Sales", href: "/sales", icon: "ShoppingCart" },
   { label: "Reports", href: "/reports", icon: "BarChart3" },
+  { label: "WhatsApp", href: "/whatsapp", icon: "MessageCircle" },
   { label: "Settings", href: "/settings", icon: "Settings" },
 ] as const;
 

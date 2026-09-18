@@ -197,7 +197,7 @@ export const calculatePOSItemAmounts = (
   };
 };
 
-const createEmptyBill = (id: string, billNo: number): POSBill => ({
+const createEmptyBill = (id: string, billNo: number, godownId?: string): POSBill => ({
   id,
   billNo,
   customer: WALK_IN_CUSTOMER,
@@ -209,6 +209,7 @@ const createEmptyBill = (id: string, billNo: number): POSBill => ({
   additionalCharges: 0,
   remarks: '',
   cashBankAccountId: '',
+  godownId,
 });
 
 export const usePOSStore = create<POSStore>((set, get) => ({
@@ -220,7 +221,8 @@ export const usePOSStore = create<POSStore>((set, get) => ({
   createNewBill: () => {
     set((state) => {
       const id = crypto.randomUUID();
-      const newBill = createEmptyBill(id, state.nextBillNo);
+      const defaultGodownId = state.bills[0]?.godownId;
+      const newBill = createEmptyBill(id, state.nextBillNo, defaultGodownId);
       return {
         bills: [...state.bills, newBill],
         activeBillId: id,
@@ -234,8 +236,9 @@ export const usePOSStore = create<POSStore>((set, get) => ({
       const newBills = state.bills.filter((b) => b.id !== id);
       if (newBills.length === 0) {
         const newId = crypto.randomUUID();
+        const defaultGodownId = state.bills[0]?.godownId;
         return {
-          bills: [createEmptyBill(newId, state.nextBillNo)],
+          bills: [createEmptyBill(newId, state.nextBillNo, defaultGodownId)],
           activeBillId: newId,
           nextBillNo: state.nextBillNo + 1,
         };

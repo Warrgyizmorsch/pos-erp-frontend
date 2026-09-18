@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plug, MessageCircle, Mail, Loader2, Save } from "lucide-react";
+import { Plug, Mail, Loader2, Save } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -90,7 +91,7 @@ export default function IntegrationsPage() {
       <Tabs defaultValue="whatsapp" className="w-full flex flex-col md:flex-row gap-6">
         <TabsList className="flex flex-row md:flex-col justify-start h-auto w-full md:w-64 bg-muted/50 p-2 space-x-2 md:space-x-0 md:space-y-2">
           <TabsTrigger value="whatsapp" className="w-full justify-start gap-2 px-4 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <MessageCircle className="h-4 w-4" />
+            <FaWhatsapp className="h-4 w-4" />
             WhatsApp
           </TabsTrigger>
           <TabsTrigger value="email" className="w-full justify-start gap-2 px-4 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm">
