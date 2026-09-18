@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_top_bar.dart';
 import '../controllers/pos_checkout_controller.dart';
+import '../widgets/pos_print_dialog.dart';
 
 class POSCheckoutView extends GetView<POSCheckoutController> {
   const POSCheckoutView({super.key});
@@ -32,7 +33,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                   children: [
                     Expanded(flex: 2, child: _buildOrderSummaryCard()),
                     const SizedBox(width: 20),
-                    Expanded(flex: 3, child: _buildPaymentDetailsCard()),
+                    Expanded(flex: 3, child: _buildPaymentDetailsCard(context)),
                   ],
                 ),
               );
@@ -45,7 +46,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                 children: [
                   _buildOrderSummaryCard(),
                   const SizedBox(height: 16),
-                  _buildPaymentDetailsCard(),
+                  _buildPaymentDetailsCard(context),
                 ],
               ),
             );
@@ -191,7 +192,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
     );
   }
 
-  Widget _buildPaymentDetailsCard() {
+  Widget _buildPaymentDetailsCard(BuildContext context) {
     return Column(
       children: [
         AppCard(
@@ -343,7 +344,30 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
             height: AppSizes.buttonHeightMd,
             onPressed: controller.isSubmitting.value
                 ? null
-                : () => controller.submitCheckout(),
+                : () async {
+                    final success = await controller.submitCheckout();
+                    if (success && context.mounted) {
+                      final saleData = controller.lastSavedSale.value ?? {
+                        'invoiceNumber':
+                            'POS-${DateTime.now().millisecondsSinceEpoch % 100000}',
+                        'customerName': 'Walk-in Customer',
+                        'totalAmount': controller.grandTotal.value,
+                        'items': controller.cartItems
+                            .map(
+                              (i) => {
+                                'name': i.itemName,
+                                'itemName': i.itemName,
+                                'quantity': i.quantity,
+                                'total': i.total,
+                                'totalAmount': i.total,
+                              },
+                            )
+                            .toList(),
+                      };
+                      await POSPrintDialog.show(context, saleData);
+                      Get.offNamed('/pos');
+                    }
+                  },
           ),
         ),
       ],

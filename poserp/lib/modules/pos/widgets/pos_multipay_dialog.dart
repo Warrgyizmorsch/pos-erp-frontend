@@ -5,6 +5,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../controllers/pos_controller.dart';
+import 'pos_print_dialog.dart';
 
 class POSMultiPayDialog extends StatefulWidget {
   const POSMultiPayDialog({super.key});
@@ -172,11 +173,20 @@ class _POSMultiPayDialogState extends State<POSMultiPayDialog> {
                   const SizedBox(width: 12),
                   AppButton(
                     text: 'Apply & Save',
-                    onPressed: () {
+                    onPressed: () async {
                       controller.setPaymentMode('Partial');
                       controller.setAmountReceived(totalReceived);
                       Get.back();
-                      controller.submitSale();
+                      final success = await controller.submitSale();
+                      if (success &&
+                          controller.lastSavedSale.value != null &&
+                          Get.context != null &&
+                          Get.context!.mounted) {
+                        POSPrintDialog.show(
+                          Get.context!,
+                          controller.lastSavedSale.value!,
+                        );
+                      }
                     },
                   ),
                 ],

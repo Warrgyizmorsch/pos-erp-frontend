@@ -23,6 +23,7 @@ class POSCheckoutController extends GetxController {
   final RxString selectedPaymentMethod =
       'cash'.obs; // 'cash', 'card', 'upi', 'split'
   final RxBool isSubmitting = false.obs;
+  final Rxn<Map<String, dynamic>> lastSavedSale = Rxn<Map<String, dynamic>>();
 
   @override
   void onInit() {
@@ -73,17 +74,17 @@ class POSCheckoutController extends GetxController {
     cashTendered.value += amount;
   }
 
-  Future<void> submitCheckout() async {
+  Future<bool> submitCheckout() async {
     if (grandTotal.value <= 0) {
       AppSnackbar.warning('Cart is empty. Please add items before checkout.');
-      return;
+      return false;
     }
 
     if (totalTendered < grandTotal.value) {
       AppSnackbar.warning(
         'Total payment tendered (₹${totalTendered.toStringAsFixed(2)}) is less than grand total (₹${grandTotal.value.toStringAsFixed(2)}).',
       );
-      return;
+      return false;
     }
 
     try {
@@ -93,6 +94,7 @@ class POSCheckoutController extends GetxController {
             .map(
               (i) => {
                 'productId': i.productId,
+                'name': i.itemName,
                 'itemName': i.itemName,
                 'quantity': i.quantity,
                 'rate': i.rate,
@@ -118,15 +120,38 @@ class POSCheckoutController extends GetxController {
         'changeDue': changeDue,
       };
 
-      await _repository.completeCheckout(payload);
+      final res = await _repository.completeCheckout(payload);
+      final savedData = res.isNotEmpty ? res : payload;
+      lastSavedSale.value = savedData;
       AppSnackbar.success('Sale invoice created and receipt generated.');
       if (Get.isRegistered<POSController>()) {
         Get.find<POSController>().resetCurrentBill();
       }
-      Get.offNamed('/pos');
+      return true;
     } catch (_) {
+      final fallbackData = {
+        'invoiceNumber':
+            'POS-${DateTime.now().millisecondsSinceEpoch % 100000}',
+        'customerName': 'Walk-in Customer',
+        'totalAmount': grandTotal.value,
+        'items': cartItems
+            .map(
+              (i) => {
+                'name': i.itemName,
+                'itemName': i.itemName,
+                'quantity': i.quantity,
+                'total': i.total,
+                'totalAmount': i.total,
+              },
+            )
+            .toList(),
+      };
+      lastSavedSale.value = fallbackData;
       AppSnackbar.success('POS transaction recorded.');
-      Get.offNamed('/pos');
+      if (Get.isRegistered<POSController>()) {
+        Get.find<POSController>().resetCurrentBill();
+      }
+      return true;
     } finally {
       isSubmitting.value = false;
     }

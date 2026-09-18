@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class POSPrintDialog extends StatelessWidget {
   final Map<String, dynamic> saleData;
@@ -206,14 +207,7 @@ class POSPrintDialog extends StatelessWidget {
                     icon: const Icon(Icons.print, size: 18),
                     onPressed: () {
                       Get.back();
-                      Get.snackbar(
-                        'Print Sent',
-                        'Receipt sent to thermal printer.',
-                        snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor: AppColors.primary,
-                        colorText: Colors.white,
-                        margin: const EdgeInsets.all(16),
-                      );
+                      AppSnackbar.success('Receipt sent to thermal printer.');
                     },
                   ),
                 ],
