@@ -21,12 +21,12 @@ class AdminDashboardWidget extends GetView<DashboardController> {
           // Business Overview KPI Grid
           Obx(() {
             final s = controller.summary.value;
-            final sales = s?.todaySales ?? 18450.0;
-            final purchases = s?.todayPurchases ?? 6200.0;
-            final receivables = s?.totalReceivables ?? 42500.0;
-            final payables = s?.totalPayables ?? 18900.0;
-            final cashBank = s?.cashBankBalance ?? 124800.0;
-            final lowStock = s?.lowStockCount ?? 4;
+            final sales = s?.todaySales ?? 0.0;
+            final purchases = s?.todayPurchases ?? 0.0;
+            final receivables = s?.totalReceivables ?? 0.0;
+            final payables = s?.totalPayables ?? 0.0;
+            final cashBank = s?.cashBankBalance ?? 0.0;
+            final lowStock = s?.lowStockCount ?? 0;
 
             return LayoutBuilder(
               builder: (context, constraints) {

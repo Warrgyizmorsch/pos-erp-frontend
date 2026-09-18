@@ -22,8 +22,14 @@ class DashboardController extends GetxController {
     try {
       isLoading.value = true;
       final data = await _repository.fetchSummary();
-      summary.value = data;
+      if (summary.value == null ||
+          data.todaySales > 0 ||
+          data.totalProducts > 0 ||
+          data.cashBankBalance > 0) {
+        summary.value = data;
+      }
     } catch (_) {
+      // Retain existing summary.value on failure
     } finally {
       isLoading.value = false;
     }
