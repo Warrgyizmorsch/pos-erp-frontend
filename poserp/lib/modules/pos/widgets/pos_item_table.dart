@@ -17,6 +17,7 @@ class POSItemTable extends StatefulWidget {
 
 class _POSItemTableState extends State<POSItemTable> {
   final FocusNode _searchFocusNode = FocusNode();
+  FocusNode? _autocompleteFocusNode;
   TextEditingController? _activeTextController;
 
   // Hardware barcode scanner buffer logic for HID scanners (< 50ms keystrokes)
@@ -101,6 +102,7 @@ class _POSItemTableState extends State<POSItemTable> {
               fieldViewBuilder:
                   (context, textController, focusNode, onFieldSubmitted) {
                     _activeTextController = textController;
+                    _autocompleteFocusNode = focusNode;
                     return TextField(
                       controller: textController,
                       focusNode: focusNode,
@@ -189,7 +191,7 @@ class _POSItemTableState extends State<POSItemTable> {
                   scrollDirection: Axis.horizontal,
                   child: SingleChildScrollView(
                     child: DataTable(
-                      columnSpacing: 20,
+                      columnSpacing: 16,
                       headingRowColor: WidgetStateProperty.all(
                         isDark ? AppColors.cardDark : Colors.grey[100],
                       ),
@@ -217,14 +219,18 @@ class _POSItemTableState extends State<POSItemTable> {
                                   style: const TextStyle(color: Colors.grey),
                                 ),
                               ),
-                              const DataCell(
-                                Text(
+                              DataCell(
+                                const Text(
                                   'Search / Scan to add product...',
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
+                                onTap: () {
+                                  _autocompleteFocusNode?.requestFocus();
+                                  _searchFocusNode.requestFocus();
+                                },
                               ),
                               const DataCell(Text('—')),
                               const DataCell(Text('—')),

@@ -1,9 +1,7 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../../../core/utils/app_snackbar.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../parties/customers/models/customer.dart';
 import '../../products/models/product.dart';
 import '../../sales/models/sale.dart';
@@ -349,13 +347,15 @@ class POSController extends GetxController {
   Future<bool> onScanBarcode(String barcodeQuery) async {
     final query = barcodeQuery.trim();
     if (query.isEmpty) return false;
+    final lower = query.toLowerCase();
 
-    // 1. Search local cached products first
+    // 1. Search local cached products first (barcode, SKU, exact ID, or name match)
     Product? match = availableProducts.firstWhereOrNull(
       (p) =>
           p.barcode == query ||
-          p.sku.toLowerCase() == query.toLowerCase() ||
-          p.id == query,
+          p.sku.toLowerCase() == lower ||
+          p.id == query ||
+          p.name.toLowerCase().contains(lower),
     );
 
     // 2. If not found in local cache, query API
@@ -366,7 +366,8 @@ class POSController extends GetxController {
             results.firstWhereOrNull(
               (p) =>
                   p.barcode == query ||
-                  p.sku.toLowerCase() == query.toLowerCase(),
+                  p.sku.toLowerCase() == lower ||
+                  p.name.toLowerCase().contains(lower),
             ) ??
             (results.isNotEmpty ? results.first : null);
       } catch (_) {}
@@ -374,19 +375,10 @@ class POSController extends GetxController {
 
     if (match != null) {
       addItemFromProduct(match);
-      Get.snackbar(
-        'Scanned Successfully',
-        'Added "${match.name}" to cart.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Added "${match.name}" to cart.');
       return true;
     } else {
-      showErrorSnackbar('Product not found for barcode: $query');
-
+      showErrorSnackbar('Product not found: $query');
       return false;
     }
   }
