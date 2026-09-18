@@ -4,7 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/loading_indicator.dart';
+import '../../../../core/widgets/app_skeleton.dart';
 import '../../../authentication/controllers/auth_controller.dart';
 import '../controllers/accounting_dashboard_controller.dart';
 import '../models/accounting_dashboard.dart';
@@ -26,9 +26,8 @@ class AccountingDashboardView extends GetView<AccountingDashboardController> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(16.0),
             child: Obx(() {
-              if (controller.isLoading.value &&
-                  controller.dashboard.value == null) {
-                return const SizedBox(height: 400, child: LoadingIndicator());
+              if (controller.dashboard.value == null) {
+                return _buildSkeletonDashboard();
               }
 
               final dash = controller.dashboard.value!;
@@ -76,6 +75,35 @@ class AccountingDashboardView extends GetView<AccountingDashboardController> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonDashboard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const AppSkeleton(height: 36, width: 220),
+        const SizedBox(height: 16),
+        const AppSkeleton(height: 120),
+        const SizedBox(height: 20),
+        Row(
+          children: const [
+            Expanded(child: AppSkeleton(height: 90)),
+            SizedBox(width: 12),
+            Expanded(child: AppSkeleton(height: 90)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: const [
+            Expanded(child: AppSkeleton(height: 90)),
+            SizedBox(width: 12),
+            Expanded(child: AppSkeleton(height: 90)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        const AppSkeleton(height: 160),
+      ],
     );
   }
 

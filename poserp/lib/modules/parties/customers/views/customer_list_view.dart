@@ -49,7 +49,7 @@ class CustomerListView extends GetView<CustomerController> {
               AppCard(
                 padding: const EdgeInsets.all(12),
                 child: AppSearchField(
-                  hintText: 'Search customers by name, phone, email...',
+                  hintText: 'Search by name or phone...',
                   onChanged: (val) => controller.onSearchChanged(val),
                 ),
               ),

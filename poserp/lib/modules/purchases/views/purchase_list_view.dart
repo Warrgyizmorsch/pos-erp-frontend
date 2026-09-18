@@ -48,7 +48,7 @@ class PurchaseListView extends GetView<PurchaseController> {
                 child: Column(
                   children: [
                     AppSearchField(
-                      hintText: 'Search by purchase bill number or supplier...',
+                      hintText: 'Search bill # or supplier...',
                       onChanged: (val) => controller.searchQuery.value = val,
                     ),
                     const SizedBox(height: 8),

@@ -20,6 +20,48 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
         title: 'POS Payment & Checkout',
         subtitle: 'Multi-tender payment, change calculation & receipt',
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Obx(
+            () => AppButton(
+              text: controller.isSubmitting.value
+                  ? 'Processing Sale...'
+                  : 'Complete Sale & Print Receipt',
+              icon: const Icon(Icons.print_rounded, size: 18),
+              variant: AppButtonVariant.primary,
+              width: double.infinity,
+              height: AppSizes.buttonHeightMd,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : () async {
+                      final success = await controller.submitCheckout();
+                      if (success && context.mounted) {
+                        final saleData = controller.lastSavedSale.value ?? {
+                          'invoiceNumber':
+                              'POS-${DateTime.now().millisecondsSinceEpoch % 100000}',
+                          'customerName': 'Walk-in Customer',
+                          'totalAmount': controller.grandTotal.value,
+                          'items': controller.cartItems
+                              .map(
+                                (i) => {
+                                  'name': i.itemName,
+                                  'itemName': i.itemName,
+                                  'quantity': i.quantity,
+                                  'total': i.total,
+                                  'totalAmount': i.total,
+                                },
+                              )
+                              .toList(),
+                        };
+                        await POSPrintDialog.show(context, saleData);
+                        Get.offNamed('/pos');
+                      }
+                    },
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -33,7 +75,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                   children: [
                     Expanded(flex: 2, child: _buildOrderSummaryCard()),
                     const SizedBox(width: 20),
-                    Expanded(flex: 3, child: _buildPaymentDetailsCard(context)),
+                    Expanded(flex: 3, child: _buildPaymentDetailsCard()),
                   ],
                 ),
               );
@@ -46,7 +88,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                 children: [
                   _buildOrderSummaryCard(),
                   const SizedBox(height: 16),
-                  _buildPaymentDetailsCard(context),
+                  _buildPaymentDetailsCard(),
                 ],
               ),
             );
@@ -192,7 +234,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
     );
   }
 
-  Widget _buildPaymentDetailsCard(BuildContext context) {
+  Widget _buildPaymentDetailsCard() {
     return Column(
       children: [
         AppCard(
@@ -211,7 +253,7 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                 children: [
                   Expanded(
                     child: AppButton(
-                      text: 'Exact Amount',
+                      text: 'Exact',
                       height: 42,
                       variant: AppButtonVariant.outline,
                       onPressed: () => controller.setExactPayment(),
@@ -328,46 +370,6 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Complete Checkout Action Button
-        Obx(
-          () => AppButton(
-            text: controller.isSubmitting.value
-                ? 'Processing Sale...'
-                : 'Complete Sale & Print Receipt',
-            icon: const Icon(Icons.print_rounded, size: 18),
-            variant: AppButtonVariant.primary,
-            width: double.infinity,
-            height: AppSizes.buttonHeightMd,
-            onPressed: controller.isSubmitting.value
-                ? null
-                : () async {
-                    final success = await controller.submitCheckout();
-                    if (success && context.mounted) {
-                      final saleData = controller.lastSavedSale.value ?? {
-                        'invoiceNumber':
-                            'POS-${DateTime.now().millisecondsSinceEpoch % 100000}',
-                        'customerName': 'Walk-in Customer',
-                        'totalAmount': controller.grandTotal.value,
-                        'items': controller.cartItems
-                            .map(
-                              (i) => {
-                                'name': i.itemName,
-                                'itemName': i.itemName,
-                                'quantity': i.quantity,
-                                'total': i.total,
-                                'totalAmount': i.total,
-                              },
-                            )
-                            .toList(),
-                      };
-                      await POSPrintDialog.show(context, saleData);
-                      Get.offNamed('/pos');
-                    }
-                  },
           ),
         ),
       ],

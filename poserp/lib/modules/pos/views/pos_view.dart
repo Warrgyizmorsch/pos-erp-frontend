@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_top_bar.dart';
 import '../controllers/pos_controller.dart';
 import '../widgets/pos_item_table.dart';
@@ -191,7 +192,9 @@ class _POSViewState extends State<POSView> {
                             'Checkout',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          onPressed: () => setState(() => _mobileTabIndex = 1),
+                          onPressed: count == 0
+                              ? null
+                              : () => setState(() => _mobileTabIndex = 1),
                         ),
                       ],
                     ),
@@ -201,7 +204,19 @@ class _POSViewState extends State<POSView> {
               BottomNavigationBar(
                 currentIndex: _mobileTabIndex,
                 selectedItemColor: AppColors.primary,
-                onTap: (index) => setState(() => _mobileTabIndex = index),
+                onTap: (index) {
+                  if (index == 1) {
+                    final bill = controller.activeBill;
+                    final count = bill?.totalItems ?? 0;
+                    if (count == 0) {
+                      AppSnackbar.warning(
+                        'Cart is empty. Add products before proceeding to checkout.',
+                      );
+                      return;
+                    }
+                  }
+                  setState(() => _mobileTabIndex = index);
+                },
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.shopping_cart_outlined),

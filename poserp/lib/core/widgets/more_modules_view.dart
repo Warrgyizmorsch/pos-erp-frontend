@@ -20,7 +20,7 @@ class MoreModulesView extends StatelessWidget {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: AppTopBar(
-        title: 'More System Modules',
+        title: 'System Modules',
         subtitle: 'Access all enterprise ERP capabilities & tools',
         showBackButton: false,
         userRole: userRole,
