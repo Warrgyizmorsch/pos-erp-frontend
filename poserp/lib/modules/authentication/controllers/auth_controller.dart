@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_snackbar.dart';
 import '../../../data/models/user.dart';
 import '../../../data/repositories/auth_repository.dart';
 
@@ -40,16 +39,11 @@ class AuthController extends GetxController {
       final response = await _authRepository.login(email, password);
       if (response.success && response.data != null) {
         currentUser.value = response.data;
-        Get.snackbar(
-          'Welcome back!',
-          'Logged in as ${response.data!.name}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 3),
-        );
         Get.offAllNamed('/dashboard');
+        AppSnackbar.success(
+          'Logged in as ${response.data!.name}',
+          title: 'Welcome back!',
+        );
       } else {
         showErrorSnackbar(
           response.message ?? 'Login failed. Invalid credentials.',
@@ -81,16 +75,11 @@ class AuthController extends GetxController {
       );
       if (response.success && response.data != null) {
         currentUser.value = response.data;
-        Get.snackbar(
-          'Account created!',
-          'Welcome to POS ERP',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 3),
-        );
         Get.offAllNamed('/dashboard');
+        AppSnackbar.success(
+          'Welcome to POS ERP',
+          title: 'Account created!',
+        );
       } else {
         showErrorSnackbar(response.message ?? 'Registration failed.');
       }
@@ -115,14 +104,6 @@ class AuthController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Authentication Failed',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      duration: const Duration(seconds: 4),
-    );
+    AppSnackbar.error(message, title: 'Authentication Failed');
   }
 }

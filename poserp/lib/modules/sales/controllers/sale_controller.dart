@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/sale.dart';
 import '../repositories/sale_repository.dart';
 
@@ -107,7 +106,6 @@ class SaleController extends GetxController {
 
   Future<Sale?> loadSaleDetails(String id) async {
     try {
-      isLoading.value = true;
       final sale = await _repository.getSaleById(id);
       selectedSale.value = sale;
       return sale;
@@ -116,22 +114,13 @@ class SaleController extends GetxController {
         e is AppException ? e.message : 'Failed to load sale details',
       );
       return null;
-    } finally {
-      isLoading.value = false;
     }
   }
 
   Future<void> deleteSale(String id) async {
     try {
       await _repository.deleteSale(id);
-      Get.snackbar(
-        'Success',
-        'Sale invoice deleted successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Sale invoice deleted successfully.');
       loadSales();
     } catch (e) {
       showErrorSnackbar(
@@ -146,14 +135,7 @@ class SaleController extends GetxController {
     try {
       isSubmitting.value = true;
       await _repository.repostAccounting(id);
-      Get.snackbar(
-        'Success',
-        'Accounting voucher posted successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Accounting voucher posted successfully.');
       await loadSaleDetails(id);
       return true;
     } catch (e) {
@@ -170,14 +152,7 @@ class SaleController extends GetxController {
     try {
       isSubmitting.value = true;
       final sale = await _repository.createSale(data);
-      Get.snackbar(
-        'Success',
-        'Invoice #${sale.invoiceNumber} created successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Invoice #${sale.invoiceNumber} created successfully.');
       await loadSales();
       return sale;
     } catch (e) {
@@ -191,13 +166,6 @@ class SaleController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

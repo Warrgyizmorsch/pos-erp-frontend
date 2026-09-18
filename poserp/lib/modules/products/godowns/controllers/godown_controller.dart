@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/godown.dart';
 import '../repositories/godown_repository.dart';
 
@@ -60,24 +59,10 @@ class GodownController extends GetxController {
 
       if (id != null && id.isNotEmpty) {
         await _repository.updateGodown(id, payload);
-        Get.snackbar(
-          'Success',
-          'Godown updated successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-        );
+        AppSnackbar.success('Godown updated successfully');
       } else {
         await _repository.createGodown(payload);
-        Get.snackbar(
-          'Success',
-          'Godown created successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-        );
+        AppSnackbar.success('Godown created successfully');
       }
 
       await loadGodowns();
@@ -96,14 +81,7 @@ class GodownController extends GetxController {
     try {
       isSubmitting.value = true;
       await _repository.deleteGodown(id);
-      Get.snackbar(
-        'Success',
-        'Godown deleted successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Godown deleted successfully');
       await loadGodowns();
     } catch (e) {
       showErrorSnackbar(
@@ -142,14 +120,7 @@ class GodownController extends GetxController {
         notes: notes,
       );
 
-      Get.snackbar(
-        'Success',
-        'Stock transferred successfully between godowns',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Stock transferred successfully between godowns');
       return true;
     } catch (e) {
       showErrorSnackbar(
@@ -162,13 +133,6 @@ class GodownController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

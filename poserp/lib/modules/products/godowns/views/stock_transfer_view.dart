@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -39,17 +40,21 @@ class _StockTransferViewState extends State<StockTransferView> {
 
   String? sourceGodownId;
   String? destinationGodownId;
-  bool isLoadingProducts = false;
+  bool isLoadingProducts = true;
 
   @override
   void initState() {
     super.initState();
-    _loadProducts();
     _addItem();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProducts();
+    });
   }
 
   Future<void> _loadProducts() async {
-    setState(() => isLoadingProducts = true);
+    if (!isLoadingProducts && mounted) {
+      setState(() => isLoadingProducts = true);
+    }
     try {
       final res = await apiClient.get(
         ApiEndpoints.products,
@@ -98,13 +103,15 @@ class _StockTransferViewState extends State<StockTransferView> {
 
   Future<void> _submit() async {
     if (sourceGodownId == null || destinationGodownId == null) {
-      Get.snackbar('Error', 'Please select source and destination godowns', backgroundColor: AppColors.danger, colorText: Colors.white);
+      AppSnackbar.error('Please select source and destination godowns');
       return;
     }
 
-    final validItems = transferItems.where((it) => it.product != null && it.quantity > 0).toList();
+    final validItems = transferItems
+        .where((it) => it.product != null && it.quantity > 0)
+        .toList();
     if (validItems.isEmpty) {
-      Get.snackbar('Error', 'Please add at least one product with quantity > 0', backgroundColor: AppColors.danger, colorText: Colors.white);
+      AppSnackbar.error('Please add at least one product with quantity > 0');
       return;
     }
 

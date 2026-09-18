@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/api/api_exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/khaata_party.dart';
 import '../repositories/khaata_repository.dart';
 
@@ -88,13 +87,9 @@ class KhaataController extends GetxController {
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
-      Get.snackbar(
-        'WhatsApp Reminder',
+      AppSnackbar.success(
         'Opened WhatsApp reminder for ${party.name}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
+        title: 'WhatsApp Reminder',
       );
       loadBalances();
     } else {
@@ -124,15 +119,10 @@ class KhaataController extends GetxController {
         notes: notes,
       );
 
-      Get.snackbar(
-        'Success',
+      AppSnackbar.success(
         type == 'payment_in'
             ? 'Payment received and posted to ledger successfully.'
             : 'Payment made and posted to ledger successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
       );
 
       await loadBalances();
@@ -148,13 +138,6 @@ class KhaataController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

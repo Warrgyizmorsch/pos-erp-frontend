@@ -38,11 +38,15 @@ class _SupplierDetailViewState extends State<SupplierDetailView> {
   @override
   void initState() {
     super.initState();
-    _loadLedger();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLedger();
+    });
   }
 
   Future<void> _loadLedger() async {
-    setState(() => isLoading = true);
+    if (!isLoading && mounted) {
+      setState(() => isLoading = true);
+    }
     final entries = await controller.repository.getSupplierLedger(
       widget.supplier.id,
     );

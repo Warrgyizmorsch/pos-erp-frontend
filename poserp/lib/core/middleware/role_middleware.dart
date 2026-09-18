@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../app/routes/app_routes.dart';
 import '../../modules/authentication/controllers/auth_controller.dart';
-import '../constants/app_colors.dart';
+import '../utils/app_snackbar.dart';
 
 class RoleMiddleware extends GetMiddleware {
   final List<String> allowedRoles;
@@ -23,17 +23,10 @@ class RoleMiddleware extends GetMiddleware {
     }
 
     if (!allowedRoles.contains(user.role)) {
-      Future.microtask(() {
-        Get.snackbar(
-          'Access Denied',
-          'Your role (${user.role.toUpperCase()}) is not authorized to access this section.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.danger,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-          margin: const EdgeInsets.all(16),
-        );
-      });
+      AppSnackbar.error(
+        'Your role (${user.role.toUpperCase()}) is not authorized to access this section.',
+        title: 'Access Denied',
+      );
       return const RouteSettings(name: Routes.dashboard);
     }
 

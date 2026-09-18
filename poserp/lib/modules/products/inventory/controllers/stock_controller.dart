@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../models/product.dart';
 import '../models/stock_adjustment.dart';
 import '../models/stock_movement.dart';
@@ -139,14 +138,7 @@ class StockController extends GetxController {
         notes: notes?.trim(),
       );
 
-      Get.snackbar(
-        'Success',
-        'Stock adjustment recorded successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Stock adjustment recorded successfully.');
 
       loadCurrentStock();
       if (activeTab.value == 'history') loadMovements();
@@ -163,13 +155,6 @@ class StockController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

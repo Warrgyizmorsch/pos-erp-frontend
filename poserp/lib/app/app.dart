@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../core/constants/app_config.dart';
 import '../core/theme/app_theme.dart';
+import '../core/utils/app_snackbar.dart';
 import '../modules/authentication/controllers/auth_controller.dart';
 import 'bindings/initial_binding.dart';
 import 'routes/app_pages.dart';
@@ -15,6 +16,7 @@ class PosErpApp extends StatelessWidget {
     return GetMaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: AppSnackbar.scaffoldMessengerKey,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,

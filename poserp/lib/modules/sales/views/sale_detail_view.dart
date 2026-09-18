@@ -21,20 +21,31 @@ class SaleDetailView extends StatefulWidget {
 
 class _SaleDetailViewState extends State<SaleDetailView> {
   final SaleController controller = Get.find<SaleController>();
+  final ScrollController horizontalScrollController = ScrollController();
   bool isLoading = true;
   Sale? sale;
   bool isReposting = false;
 
   @override
+  void dispose() {
+    horizontalScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
-    _loadSale();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSale();
+    });
   }
 
   Future<void> _loadSale() async {
     final id = Get.parameters['id'] ?? controller.selectedSale.value?.id;
     if (id != null && id.isNotEmpty) {
-      setState(() => isLoading = true);
+      if (!isLoading && mounted) {
+        setState(() => isLoading = true);
+      }
       final fetched = await controller.fetchSaleById(id);
       if (mounted) {
         setState(() {
@@ -43,10 +54,12 @@ class _SaleDetailViewState extends State<SaleDetailView> {
         });
       }
     } else {
-      setState(() {
-        sale = controller.selectedSale.value;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          sale = controller.selectedSale.value;
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -311,12 +324,32 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('LINE ITEMS & TAX BREAKDOWN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.inventory_2_outlined, size: 18, color: AppColors.primary),
+                            SizedBox(width: 8),
+                            Text(
+                              'LINE ITEMS & TAX BREAKDOWN',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${curSale.items.length} ${curSale.items.length == 1 ? "item" : "items"}',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     Scrollbar(
+                      controller: horizontalScrollController,
                       thumbVisibility: true,
                       trackVisibility: true,
                       child: SingleChildScrollView(
+                        controller: horizontalScrollController,
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           columnSpacing: 20,
@@ -359,51 +392,93 @@ class _SaleDetailViewState extends State<SaleDetailView> {
               const SizedBox(height: 16),
 
               // Financial Summary & Notes
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 5,
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('INVOICE NOTES & REMARKS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 8),
-                          Text(
-                            (curSale.notes != null && curSale.notes!.isNotEmpty) ? curSale.notes! : 'No notes recorded for this invoice.',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 5,
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildSummaryRow('Subtotal:', '₹${curSale.subtotal.toStringAsFixed(2)}'),
-                          const SizedBox(height: 6),
-                          _buildSummaryRow('Total Tax (GST):', '₹${curSale.taxAmount.toStringAsFixed(2)}'),
-                          if (curSale.discountAmount > 0) ...[
-                            const SizedBox(height: 6),
-                            _buildSummaryRow('Total Discount:', '-₹${curSale.discountAmount.toStringAsFixed(2)}', valueColor: AppColors.danger),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 650;
+
+                  final notesCard = AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.notes_rounded, size: 16, color: Colors.grey),
+                            SizedBox(width: 6),
+                            Text(
+                              'INVOICE NOTES & REMARKS',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
                           ],
-                          const Divider(height: 16),
-                          _buildSummaryRow('Grand Total:', '₹${curSale.totalAmount.toStringAsFixed(2)}', isBold: true, fontSize: 16),
-                          const SizedBox(height: 6),
-                          _buildSummaryRow('Amount Paid:', '₹${curSale.amountPaid.toStringAsFixed(2)}', isBold: true, valueColor: AppColors.success),
-                          const SizedBox(height: 6),
-                          _buildSummaryRow('Balance Due:', '₹${(curSale.totalAmount - curSale.amountPaid).clamp(0.0, double.infinity).toStringAsFixed(2)}', isBold: true, valueColor: AppColors.danger),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          (curSale.notes != null && curSale.notes!.isNotEmpty)
+                              ? curSale.notes!
+                              : 'No notes recorded for this invoice.',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  );
+
+                  final summaryCard = AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.primary),
+                            SizedBox(width: 6),
+                            Text(
+                              'PAYMENT & TOTALS BREAKDOWN',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildSummaryRow('Subtotal:', '₹${curSale.subtotal.toStringAsFixed(2)}'),
+                        const SizedBox(height: 6),
+                        _buildSummaryRow('Total Tax (GST):', '₹${curSale.taxAmount.toStringAsFixed(2)}'),
+                        if (curSale.discountAmount > 0) ...[
+                          const SizedBox(height: 6),
+                          _buildSummaryRow('Total Discount:', '-₹${curSale.discountAmount.toStringAsFixed(2)}', valueColor: AppColors.danger),
+                        ],
+                        const Divider(height: 16),
+                        _buildSummaryRow('Grand Total:', '₹${curSale.totalAmount.toStringAsFixed(2)}', isBold: true, fontSize: 16),
+                        const SizedBox(height: 6),
+                        _buildSummaryRow('Amount Paid:', '₹${curSale.amountPaid.toStringAsFixed(2)}', isBold: true, valueColor: AppColors.success),
+                        if (curSale.changeAmount > 0) ...[
+                          const SizedBox(height: 6),
+                          _buildSummaryRow('Change Returned:', '₹${curSale.changeAmount.toStringAsFixed(2)}', isBold: true, valueColor: AppColors.primary),
+                        ],
+                        const SizedBox(height: 6),
+                        _buildSummaryRow('Balance Due:', '₹${(curSale.totalAmount - curSale.amountPaid).clamp(0.0, double.infinity).toStringAsFixed(2)}', isBold: true, valueColor: AppColors.danger),
+                      ],
+                    ),
+                  );
+
+                  if (isMobile) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        summaryCard,
+                        const SizedBox(height: 16),
+                        notesCard,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: notesCard),
+                      const SizedBox(width: 16),
+                      Expanded(flex: 5, child: summaryCard),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -416,8 +491,25 @@ class _SaleDetailViewState extends State<SaleDetailView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: isBold ? null : Colors.grey)),
-        Text(value, style: TextStyle(fontSize: fontSize, fontWeight: isBold ? FontWeight.bold : FontWeight.w600, color: valueColor)),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: isBold ? null : Colors.grey,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            color: valueColor,
+          ),
+        ),
       ],
     );
   }

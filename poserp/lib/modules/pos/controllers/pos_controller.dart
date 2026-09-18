@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../parties/customers/models/customer.dart';
 import '../../products/models/product.dart';
@@ -242,6 +243,7 @@ class POSController extends GetxController {
       return true;
     } else {
       showErrorSnackbar('Product not found for barcode: $query');
+
       return false;
     }
   }
@@ -455,13 +457,6 @@ class POSController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

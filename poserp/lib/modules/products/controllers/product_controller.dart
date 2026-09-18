@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/app_snackbar.dart';
 import '../categories/models/category.dart';
 import '../categories/repositories/category_repository.dart';
 import '../models/product.dart';
@@ -135,23 +134,15 @@ class ProductController extends GetxController {
 
       if (editProduct != null) {
         await _productRepository.updateProduct(editProduct.id, payload);
-        Get.snackbar(
-          'Updated successfully',
+        AppSnackbar.success(
           'Product "$name" was updated.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
+          title: 'Updated successfully',
         );
       } else {
         await _productRepository.createProduct(payload);
-        Get.snackbar(
-          'Created successfully',
+        AppSnackbar.success(
           'Product "$name" was added.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.success,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
+          title: 'Created successfully',
         );
       }
 
@@ -169,13 +160,9 @@ class ProductController extends GetxController {
   Future<void> deleteProduct(String id) async {
     try {
       await _productRepository.deleteProduct(id);
-      Get.snackbar(
-        'Deleted successfully',
+      AppSnackbar.success(
         'Product removed.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
+        title: 'Deleted successfully',
       );
       await fetchProducts();
     } catch (e) {
@@ -192,13 +179,6 @@ class ProductController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

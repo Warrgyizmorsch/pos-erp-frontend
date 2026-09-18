@@ -39,18 +39,24 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
   @override
   void initState() {
     super.initState();
-    _loadLedger();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLedger();
+    });
   }
 
   Future<void> _loadLedger() async {
-    setState(() => isLoading = true);
+    if (!isLoading && mounted) {
+      setState(() => isLoading = true);
+    }
     final entries = await controller.repository.getCustomerLedger(
       widget.customer.id,
     );
-    setState(() {
-      ledgerEntries = entries;
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        ledgerEntries = entries;
+        isLoading = false;
+      });
+    }
   }
 
   @override

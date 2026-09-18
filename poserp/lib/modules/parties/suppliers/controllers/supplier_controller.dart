@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/supplier.dart';
 import '../models/supplier_payload.dart';
 import '../repositories/supplier_repository.dart';
@@ -89,14 +88,7 @@ class SupplierController extends GetxController {
     try {
       isSubmitting.value = true;
       await _repository.createSupplier(payload);
-      Get.snackbar(
-        'Success',
-        'Supplier created successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Supplier created successfully.');
       loadSuppliers();
       return true;
     } catch (e) {
@@ -113,14 +105,7 @@ class SupplierController extends GetxController {
     try {
       isSubmitting.value = true;
       await _repository.updateSupplier(id, payload);
-      Get.snackbar(
-        'Success',
-        'Supplier updated successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Supplier updated successfully.');
       loadSuppliers();
       return true;
     } catch (e) {
@@ -136,14 +121,7 @@ class SupplierController extends GetxController {
   Future<void> deleteSupplier(String id) async {
     try {
       await _repository.deleteSupplier(id);
-      Get.snackbar(
-        'Success',
-        'Supplier deleted successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-      );
+      AppSnackbar.success('Supplier deleted successfully.');
       loadSuppliers();
     } catch (e) {
       showErrorSnackbar(
@@ -153,13 +131,6 @@ class SupplierController extends GetxController {
   }
 
   void showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.danger,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
+    AppSnackbar.error(message);
   }
 }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -51,7 +52,7 @@ class _SaleFormViewState extends State<SaleFormView> {
 
   final List<Customer> availableCustomers = [];
   final List<Product> availableProducts = [];
-  bool isLoadingData = false;
+  bool isLoadingData = true;
 
   Customer? selectedCustomer;
   final TextEditingController invoiceDateCtrl = TextEditingController(
@@ -74,12 +75,16 @@ class _SaleFormViewState extends State<SaleFormView> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
     _addItem();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   Future<void> _loadInitialData() async {
-    setState(() => isLoadingData = true);
+    if (!isLoadingData && mounted) {
+      setState(() => isLoadingData = true);
+    }
     try {
       final custRes = await apiClient.get(
         ApiEndpoints.customers,
@@ -150,13 +155,15 @@ class _SaleFormViewState extends State<SaleFormView> {
 
   Future<void> _submitInvoice() async {
     if (items.isEmpty) {
-      Get.snackbar('Error', 'Please add at least one line item', backgroundColor: AppColors.danger, colorText: Colors.white);
+      AppSnackbar.error('Please add at least one line item');
       return;
     }
 
-    final validItems = items.where((it) => it.product != null || it.nameCtrl.text.trim().isNotEmpty).toList();
+    final validItems = items
+        .where((it) => it.product != null || it.nameCtrl.text.trim().isNotEmpty)
+        .toList();
     if (validItems.isEmpty) {
-      Get.snackbar('Error', 'Please select products for the invoice items', backgroundColor: AppColors.danger, colorText: Colors.white);
+      AppSnackbar.error('Please select products for the invoice items');
       return;
     }
 
