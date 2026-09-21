@@ -245,17 +245,25 @@ export default function SalesPage() {
                                 toast.error("Customer does not have a phone number.");
                                 return;
                               }
-                              toast.promise(
-                                api.post('/whatsapp/send-invoice', { 
-                                  saleId: sale._id, 
-                                  phone: (sale.customer as Customer).phone 
-                                }),
-                                {
-                                  loading: 'Sending invoice via WhatsApp...',
-                                  success: 'Invoice sent via WhatsApp!',
-                                  error: (err: any) => err?.response?.data?.message || 'Failed to send WhatsApp message'
+                              const sendWhatsApp = async () => {
+                                const toastId = toast.loading('Sending invoice via WhatsApp...');
+                                try {
+                                  await api.post('/whatsapp/send-invoice', { 
+                                    saleId: sale._id, 
+                                    phone: (sale.customer as Customer).phone 
+                                  });
+                                  toast.success('Invoice sent via WhatsApp!', { id: toastId });
+                                } catch (err: any) {
+                                  const errorMsg = err?.response?.data?.message || 'Failed to send WhatsApp message';
+                                  if (errorMsg.toLowerCase().includes('not connected')) {
+                                    toast.error('Please login to WhatsApp first', { id: toastId });
+                                    router.push('/whatsapp');
+                                  } else {
+                                    toast.error(errorMsg, { id: toastId });
+                                  }
                                 }
-                              );
+                              };
+                              sendWhatsApp();
                             }}>
                               <FaWhatsapp className="h-4 w-4 mr-2 text-emerald-600" /> Send on WhatsApp
                             </DropdownMenuItem>
@@ -359,17 +367,25 @@ export default function SalesPage() {
                         toast.error("Customer does not have a phone number.");
                         return;
                       }
-                      toast.promise(
-                        api.post('/whatsapp/send-invoice', { 
-                          saleId: selectedSale._id, 
-                          phone: (selectedSale.customer as Customer).phone 
-                        }),
-                        {
-                          loading: 'Sending invoice via WhatsApp...',
-                          success: 'Invoice sent via WhatsApp!',
-                          error: (err: any) => err?.response?.data?.message || 'Failed to send WhatsApp message'
+                      const sendWhatsAppDetail = async () => {
+                        const toastId = toast.loading('Sending invoice via WhatsApp...');
+                        try {
+                          await api.post('/whatsapp/send-invoice', { 
+                            saleId: selectedSale._id, 
+                            phone: (selectedSale.customer as Customer).phone 
+                          });
+                          toast.success('Invoice sent successfully!', { id: toastId });
+                        } catch (err: any) {
+                          const errorMsg = err?.response?.data?.message || 'Failed to send invoice via WhatsApp.';
+                          if (errorMsg.toLowerCase().includes('not connected')) {
+                            toast.error('Please login to WhatsApp first', { id: toastId });
+                            router.push('/whatsapp');
+                          } else {
+                            toast.error(errorMsg, { id: toastId });
+                          }
                         }
-                      );
+                      };
+                      sendWhatsAppDetail();
                     }}
                   >
                     <FaWhatsapp className="h-4 w-4" /> Send on WhatsApp
