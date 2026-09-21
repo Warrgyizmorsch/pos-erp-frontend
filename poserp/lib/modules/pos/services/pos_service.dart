@@ -2,6 +2,7 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../data/models/api_response.dart';
 import '../../parties/customers/models/customer.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../models/pos_sale_payload.dart';
 
@@ -37,6 +38,16 @@ class POSService {
       response.data,
       (json) => (json as List)
           .map((item) => Customer.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Future<ApiResponse<List<Godown>>> getGodowns() async {
+    final response = await _apiClient.get(ApiEndpoints.godowns);
+    return ApiResponse<List<Godown>>.fromJson(
+      response.data,
+      (json) => (json as List)
+          .map((item) => Godown.fromJson(item as Map<String, dynamic>))
           .toList(),
     );
   }

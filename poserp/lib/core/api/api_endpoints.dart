@@ -20,6 +20,7 @@ class ApiEndpoints {
       '/suppliers/$supplierId/ledger';
 
   // Inventory & Stock
+  static const String godowns = '/godowns';
   static const String inventory = '/inventory';
   static const String inventoryHistory = '/inventory/history';
   static const String inventoryOpeningStock = '/inventory/opening-stock';

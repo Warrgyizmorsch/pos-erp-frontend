@@ -106,6 +106,7 @@ class POSSalePayload {
   final String paymentMethod;
   final String notes;
   final String? cashBankAccountId;
+  final String? godownId;
 
   POSSalePayload({
     this.customer,
@@ -125,6 +126,7 @@ class POSSalePayload {
     required this.paymentMethod,
     this.notes = '',
     this.cashBankAccountId,
+    this.godownId,
   });
 
   Map<String, dynamic> toJson() {
@@ -148,6 +150,8 @@ class POSSalePayload {
       'notes': notes,
       if (cashBankAccountId != null && cashBankAccountId!.isNotEmpty)
         'cashBankAccountId': cashBankAccountId,
+      if (godownId != null && godownId!.isNotEmpty)
+        'godownId': godownId,
     };
   }
 }

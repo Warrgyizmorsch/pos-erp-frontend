@@ -187,6 +187,107 @@ class POSRightPanel extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
+            // ═══ Godown Selection ═══
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.warehouse_outlined,
+                      size: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Godown / Warehouse',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.foregroundDark
+                            : AppColors.foregroundLight,
+                      ),
+                    ),
+                  ],
+                ),
+                if (bill.godownId == null || bill.godownId!.isEmpty)
+                  const Text(
+                    'Required',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.danger,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<String>(
+              key: ValueKey('godown_${bill.id}_${bill.godownId}'),
+              initialValue: bill.godownId,
+              hint: const Text(
+                'Select Godown / Warehouse',
+                style: TextStyle(fontSize: 13),
+              ),
+              dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                filled: true,
+                fillColor: isDark ? AppColors.inputDark : Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.md,
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
+                  ),
+                ),
+              ),
+              items: controller.availableGodowns.map((g) {
+                return DropdownMenuItem<String>(
+                  value: g.id,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        g.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (g.isDefault)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(25),
+                            borderRadius: AppRadius.sm,
+                          ),
+                          child: const Text(
+                            'DEFAULT',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (gId) => controller.setGodown(gId),
+            ),
+            const SizedBox(height: 16),
+
             // ═══ Payment Mode & Amount Received ═══
             Row(
               children: [

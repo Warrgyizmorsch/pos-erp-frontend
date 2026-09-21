@@ -1,4 +1,5 @@
 import '../../../../core/api/api_client.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../models/godown.dart';
 
 class GodownService {
@@ -7,7 +8,7 @@ class GodownService {
   GodownService(this._apiClient);
 
   Future<List<Godown>> getAll() async {
-    final response = await _apiClient.get('/godowns');
+    final response = await _apiClient.get(ApiEndpoints.godowns);
     final body = response.data as Map<String, dynamic>;
     final list = body['data'] as List? ?? [];
     return list.map((e) => Godown.fromJson(e as Map<String, dynamic>)).toList();

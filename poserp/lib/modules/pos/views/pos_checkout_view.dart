@@ -127,6 +127,76 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
               ],
             );
           }),
+          const SizedBox(height: 12),
+          Obx(() {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(
+                          Icons.warehouse_outlined,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Deduct Stock From Godown',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (controller.selectedGodownId.value == null ||
+                        controller.selectedGodownId.value!.isEmpty)
+                      const Text(
+                        'Required',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.danger,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  key: ValueKey('checkout_godown_${controller.selectedGodownId.value}'),
+                  initialValue: controller.selectedGodownId.value,
+                  hint: const Text(
+                    'Select Godown',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  isDense: true,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    filled: true,
+                    border: OutlineInputBorder(borderRadius: AppRadius.md),
+                  ),
+                  items: controller.availableGodowns.map((g) {
+                    return DropdownMenuItem<String>(
+                      value: g.id,
+                      child: Text(
+                        '${g.name}${g.isDefault ? " (Default)" : ""}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    controller.selectedGodownId.value = val;
+                  },
+                ),
+              ],
+            );
+          }),
           const Divider(height: 20),
           Obx(() {
             final items = controller.cartItems;

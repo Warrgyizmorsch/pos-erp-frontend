@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../parties/customers/models/customer.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../../sales/models/sale.dart';
 import '../models/pos_bill.dart';
@@ -22,6 +23,7 @@ class POSController extends GetxController {
 
   final RxList<Product> availableProducts = <Product>[].obs;
   final RxList<Customer> availableCustomers = <Customer>[].obs;
+  final RxList<Godown> availableGodowns = <Godown>[].obs;
   final RxList<Map<String, dynamic>> bankAccounts =
       <Map<String, dynamic>>[].obs;
 
@@ -89,10 +91,21 @@ class POSController extends GetxController {
       final prods = await _repository.fetchProducts();
       final custs = await _repository.fetchCustomers();
       final banks = await _repository.fetchBankAccounts();
+      final godowns = await _repository.fetchGodowns();
 
       availableProducts.assignAll(prods);
       availableCustomers.assignAll(custs);
       bankAccounts.assignAll(banks);
+      availableGodowns.assignAll(godowns);
+
+      if (availableGodowns.isNotEmpty) {
+        final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+            availableGodowns.first;
+        final cur = activeBill;
+        if (cur != null && (cur.godownId == null || cur.godownId!.isEmpty)) {
+          _updateBill(cur.copyWith(godownId: defaultGodown.id));
+        }
+      }
     } catch (e) {
       // Non-blocking log
     } finally {
@@ -212,6 +225,7 @@ class POSController extends GetxController {
         amountReceived: sale.amountPaid,
         remarks: sale.notes ?? '',
         cashBankAccountId: sale.cashBankAccountId,
+        godownId: sale.godownId,
       );
 
       final billIdx = bills.indexWhere((b) => b.id == updatedBill.id);
@@ -238,11 +252,14 @@ class POSController extends GetxController {
 
   void createNewBill() {
     final id = Random().nextInt(9999999).toString();
+    final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+        (availableGodowns.isNotEmpty ? availableGodowns.first : null);
     final newBill = POSBill(
       id: id,
       billNo: nextBillNo.value,
       customer: walkInCustomer,
       items: [_createPlaceholderItem()],
+      godownId: defaultGodown?.id,
     );
     bills.add(newBill);
     activeBillId.value = id;
@@ -272,6 +289,12 @@ class POSController extends GetxController {
     final cur = activeBill;
     if (cur == null) return;
     _updateBill(cur.copyWith(customer: customer ?? walkInCustomer));
+  }
+
+  void setGodown(String? godownId) {
+    final cur = activeBill;
+    if (cur == null) return;
+    _updateBill(cur.copyWith(godownId: godownId));
   }
 
   void setPaymentMode(String mode) {
@@ -454,6 +477,11 @@ class POSController extends GetxController {
     final cur = activeBill;
     if (cur == null) return false;
 
+    if (cur.godownId == null || cur.godownId!.isEmpty) {
+      showErrorSnackbar('Please select a Godown to deduct stock from.');
+      return false;
+    }
+
     final validItems = cur.items.where((i) => i.itemName.isNotEmpty).toList();
     if (validItems.isEmpty) {
       showErrorSnackbar('Please add at least one product item to the cart.');
@@ -545,6 +573,7 @@ class POSController extends GetxController {
       paymentMethod: paymentMethod,
       notes: cur.remarks,
       cashBankAccountId: cur.cashBankAccountId,
+      godownId: cur.godownId,
     );
 
     try {
@@ -579,12 +608,15 @@ class POSController extends GetxController {
     final cur = activeBill;
     if (cur == null) return;
     isAmountEdited.value = false;
+    final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+        (availableGodowns.isNotEmpty ? availableGodowns.first : null);
     _updateBill(
       POSBill(
         id: cur.id,
         billNo: cur.billNo,
         customer: walkInCustomer,
         items: [_createPlaceholderItem()],
+        godownId: cur.godownId ?? defaultGodown?.id,
       ),
     );
   }

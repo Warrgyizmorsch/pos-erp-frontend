@@ -23,6 +23,7 @@ class POSBill {
   final double additionalCharges;
   final String remarks;
   final String? cashBankAccountId;
+  final String? godownId;
 
   POSBill({
     required this.id,
@@ -37,6 +38,7 @@ class POSBill {
     this.additionalCharges = 0,
     this.remarks = '',
     this.cashBankAccountId,
+    this.godownId,
   });
 
   POSBill copyWith({
@@ -52,6 +54,7 @@ class POSBill {
     double? additionalCharges,
     String? remarks,
     String? cashBankAccountId,
+    String? godownId,
   }) {
     return POSBill(
       id: id ?? this.id,
@@ -66,6 +69,7 @@ class POSBill {
       additionalCharges: additionalCharges ?? this.additionalCharges,
       remarks: remarks ?? this.remarks,
       cashBankAccountId: cashBankAccountId ?? this.cashBankAccountId,
+      godownId: godownId ?? this.godownId,
     );
   }
 

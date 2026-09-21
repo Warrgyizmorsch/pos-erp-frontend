@@ -1,5 +1,6 @@
 import '../../../../core/api/api_exceptions.dart';
 import '../../parties/customers/models/customer.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../../sales/models/sale.dart';
 import '../models/pos_sale_payload.dart';
@@ -27,6 +28,15 @@ class POSRepository {
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to fetch customers for POS.');
+    }
+  }
+
+  Future<List<Godown>> fetchGodowns() async {
+    try {
+      final res = await _service.getGodowns();
+      return (res.data ?? []).where((g) => g.isActive).toList();
+    } catch (e) {
+      return [];
     }
   }
 

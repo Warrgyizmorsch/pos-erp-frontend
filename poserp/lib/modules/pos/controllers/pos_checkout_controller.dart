@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../products/godowns/models/godown.dart';
 import '../models/pos_checkout_model.dart';
 import '../models/pos_item.dart';
 import '../repositories/pos_checkout_repository.dart';
@@ -19,6 +20,9 @@ class POSCheckoutController extends GetxController {
   final RxDouble cashTendered = 0.0.obs;
   final RxDouble cardTendered = 0.0.obs;
   final RxDouble upiTendered = 0.0.obs;
+
+  final RxList<Godown> availableGodowns = <Godown>[].obs;
+  final Rxn<String> selectedGodownId = Rxn<String>();
 
   final RxString selectedPaymentMethod =
       'cash'.obs; // 'cash', 'card', 'upi', 'split'
@@ -44,6 +48,8 @@ class POSCheckoutController extends GetxController {
         discountAmount.value = bill.totalDiscount;
         grandTotal.value = bill.grandTotal;
         cashTendered.value = bill.grandTotal;
+        availableGodowns.assignAll(pos.availableGodowns);
+        selectedGodownId.value = bill.godownId;
         return;
       }
     }
@@ -80,6 +86,11 @@ class POSCheckoutController extends GetxController {
       return false;
     }
 
+    if (selectedGodownId.value == null || selectedGodownId.value!.isEmpty) {
+      AppSnackbar.warning('Please select a Godown to deduct stock from.');
+      return false;
+    }
+
     if (totalTendered < grandTotal.value) {
       AppSnackbar.warning(
         'Total payment tendered (₹${totalTendered.toStringAsFixed(2)}) is less than grand total (₹${grandTotal.value.toStringAsFixed(2)}).',
@@ -90,6 +101,7 @@ class POSCheckoutController extends GetxController {
     try {
       isSubmitting.value = true;
       final payload = {
+        'godownId': selectedGodownId.value,
         'items': cartItems
             .map(
               (i) => {
@@ -128,30 +140,9 @@ class POSCheckoutController extends GetxController {
         Get.find<POSController>().resetCurrentBill();
       }
       return true;
-    } catch (_) {
-      final fallbackData = {
-        'invoiceNumber':
-            'POS-${DateTime.now().millisecondsSinceEpoch % 100000}',
-        'customerName': 'Walk-in Customer',
-        'totalAmount': grandTotal.value,
-        'items': cartItems
-            .map(
-              (i) => {
-                'name': i.itemName,
-                'itemName': i.itemName,
-                'quantity': i.quantity,
-                'total': i.total,
-                'totalAmount': i.total,
-              },
-            )
-            .toList(),
-      };
-      lastSavedSale.value = fallbackData;
-      AppSnackbar.success('POS transaction recorded.');
-      if (Get.isRegistered<POSController>()) {
-        Get.find<POSController>().resetCurrentBill();
-      }
-      return true;
+    } catch (e) {
+      AppSnackbar.error(e.toString(), title: 'Checkout Failed');
+      return false;
     } finally {
       isSubmitting.value = false;
     }

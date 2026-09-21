@@ -18,6 +18,7 @@ class Sale {
   final String paymentMethod; // 'cash', 'card', 'upi', 'bank', 'wallet'
   final String? notes;
   final String? cashBankAccountId;
+  final String? godownId;
   final String accountingStatus; // 'posted', 'failed', 'not_posted'
   final String? accountingError;
   final dynamic accountingVoucherId;
@@ -40,6 +41,7 @@ class Sale {
     this.paymentMethod = 'cash',
     this.notes,
     this.cashBankAccountId,
+    this.godownId,
     this.accountingStatus = 'not_posted',
     this.accountingError,
     this.accountingVoucherId,
@@ -63,6 +65,16 @@ class Sale {
           .toList();
     }
 
+    String? gId;
+    if (json['godownId'] != null) {
+      if (json['godownId'] is Map<String, dynamic>) {
+        gId = json['godownId']['_id']?.toString() ??
+            json['godownId']['id']?.toString();
+      } else {
+        gId = json['godownId'].toString();
+      }
+    }
+
     return Sale(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       invoiceNumber: json['invoiceNumber']?.toString() ?? '',
@@ -80,6 +92,7 @@ class Sale {
       paymentMethod: json['paymentMethod']?.toString() ?? 'cash',
       notes: json['notes']?.toString(),
       cashBankAccountId: json['cashBankAccountId']?.toString(),
+      godownId: gId,
       accountingStatus: json['accountingStatus']?.toString() ?? 'not_posted',
       accountingError: json['accountingError']?.toString(),
       accountingVoucherId: json['accountingVoucherId'],
@@ -109,6 +122,7 @@ class Sale {
       'paymentMethod': paymentMethod,
       'notes': notes,
       'cashBankAccountId': cashBankAccountId,
+      if (godownId != null && godownId!.isNotEmpty) 'godownId': godownId,
       'accountingStatus': accountingStatus,
       'accountingError': accountingError,
       'accountingVoucherId': accountingVoucherId,
