@@ -76,7 +76,7 @@ class SupplierService {
   }
 
   Future<ApiResponse<List<Map<String, dynamic>>>> getLedger(String partyId) async {
-    final response = await _apiClient.get('/party-ledger/$partyId');
+    final response = await _apiClient.get(ApiEndpoints.supplierLedger(partyId));
     return ApiResponse<List<Map<String, dynamic>>>.fromJson(
       response.data,
       (json) => (json as List).map((i) => i as Map<String, dynamic>).toList(),

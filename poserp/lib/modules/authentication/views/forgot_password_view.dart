@@ -6,6 +6,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../controllers/auth_controller.dart';
 import '../widgets/auth_layout_wrapper.dart';
 
 class ForgotPasswordView extends StatefulWidget {
@@ -20,20 +21,16 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   final _emailController = TextEditingController();
   bool _isSubmitted = false;
 
-  void _onSendResetLink() {
+  Future<void> _onSendResetLink() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isSubmitted = true;
-      });
-      Get.snackbar(
-        'Password Reset Link Sent',
-        'Check your inbox at ${_emailController.text.trim()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-      );
+      final email = _emailController.text.trim();
+      final authController = Get.find<AuthController>();
+      final success = await authController.forgotPassword(email);
+      if (success && mounted) {
+        setState(() {
+          _isSubmitted = true;
+        });
+      }
     }
   }
 
@@ -117,13 +114,18 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
             const SizedBox(height: 20),
 
             // Send Reset Link Button
-            AppButton(
-              text: _isSubmitted ? 'Resend Reset Link' : 'Send Reset Link',
-              icon: const Icon(Icons.send_rounded, size: 18),
-              width: double.infinity,
-              height: AppSizes.buttonHeightMd,
-              onPressed: _onSendResetLink,
-            ),
+            Obx(() {
+              final authController = Get.find<AuthController>();
+              return AppButton(
+                text: _isSubmitted ? 'Resend Reset Link' : 'Send Reset Link',
+                icon: const Icon(Icons.send_rounded, size: 18),
+                width: double.infinity,
+                height: AppSizes.buttonHeightMd,
+                isLoading: authController.isLoading.value,
+                onPressed:
+                    authController.isLoading.value ? null : _onSendResetLink,
+              );
+            }),
             const SizedBox(height: 20),
 
             // Back to Sign In
@@ -137,7 +139,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   'Back to Sign In',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                onPressed: () => Get.toNamed('/login'),
+                onPressed: () => Get.offNamed('/login'),
               ),
             ),
           ],

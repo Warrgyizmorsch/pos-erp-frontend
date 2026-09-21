@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../models/backup_info.dart';
 import '../repositories/backup_repository.dart';
 
@@ -27,12 +27,7 @@ class BackupController extends GetxController {
       final res = await _repository.fetchBackups();
       backups.assignAll(res);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
-      );
+      AppSnackbar.error(e.toString(), title: 'Error');
     } finally {
       isLoading.value = false;
     }
@@ -43,19 +38,12 @@ class BackupController extends GetxController {
       isExporting.value = true;
       final newBackup = await _repository.generateBackup(type: type);
       backups.insert(0, newBackup);
-      Get.snackbar(
-        'Backup Created',
+      AppSnackbar.success(
         'Data backup snapshot created successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Backup Created',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
-      );
+      AppSnackbar.error(e.toString(), title: 'Error');
     } finally {
       isExporting.value = false;
     }
@@ -65,19 +53,12 @@ class BackupController extends GetxController {
     try {
       isRestoring.value = true;
       await _repository.restoreBackup(id);
-      Get.snackbar(
-        'System Restored',
+      AppSnackbar.success(
         'System state restored successfully from backup.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'System Restored',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
-      );
+      AppSnackbar.error(e.toString(), title: 'Error');
     } finally {
       isRestoring.value = false;
     }

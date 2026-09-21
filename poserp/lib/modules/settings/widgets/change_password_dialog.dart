@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../controllers/settings_controller.dart';
 
@@ -87,23 +88,51 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                     onPressed: () => Get.back(),
                   ),
                   const SizedBox(width: 8),
-                  AppButton(
-                    text: 'Update Password',
-                    onPressed: () {
-                      if (_newController.text != _confirmController.text) {
-                        Get.snackbar(
-                          'Error',
-                          'Passwords do not match',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.red.withAlpha(40),
-                        );
-                        return;
-                      }
-                      controller.changePassword(
-                        currentPassword: _currentController.text,
-                        newPassword: _newController.text,
-                      );
-                    },
+                  Obx(
+                    () => AppButton(
+                      text: 'Update Password',
+                      isLoading: controller.isChangingPassword.value,
+                      onPressed: controller.isChangingPassword.value
+                          ? null
+                          : () {
+                              final current = _currentController.text.trim();
+                              final newPass = _newController.text.trim();
+                              final confirm = _confirmController.text.trim();
+
+                              if (current.isEmpty) {
+                                AppSnackbar.error(
+                                  'Current password is required',
+                                  title: 'Validation Error',
+                                );
+                                return;
+                              }
+                              if (newPass.isEmpty) {
+                                AppSnackbar.error(
+                                  'New password is required',
+                                  title: 'Validation Error',
+                                );
+                                return;
+                              }
+                              if (newPass.length < 6) {
+                                AppSnackbar.error(
+                                  'New password must be at least 6 characters',
+                                  title: 'Validation Error',
+                                );
+                                return;
+                              }
+                              if (newPass != confirm) {
+                                AppSnackbar.error(
+                                  'Passwords do not match',
+                                  title: 'Validation Error',
+                                );
+                                return;
+                              }
+                              controller.changePassword(
+                                currentPassword: current,
+                                newPassword: newPass,
+                              );
+                            },
+                    ),
                   ),
                 ],
               ),

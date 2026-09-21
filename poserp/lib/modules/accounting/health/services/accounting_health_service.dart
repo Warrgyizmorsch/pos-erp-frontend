@@ -19,8 +19,17 @@ class AccountingHealthService {
     String referenceId,
   ) async {
     await _apiClient.post(
-      '/accounting/repost-missing',
+      ApiEndpoints.accountingRepostMissing,
       data: {'module': module, 'referenceId': referenceId},
+    );
+  }
+
+  Future<void> repostMissingAccountingBatch(
+    List<Map<String, String>> items,
+  ) async {
+    await _apiClient.post(
+      ApiEndpoints.accountingRepostMissingBatch,
+      data: {'items': items},
     );
   }
 

@@ -88,7 +88,7 @@ class AccountingSettingsService {
   }
 
   Future<void> restoreDefaultLedgers() async {
-    await _apiClient.post('/accounting/restore-defaults');
+    await _apiClient.post(ApiEndpoints.accountingLedgersRestoreDefaults);
   }
 
   Future<void> linkCashBankLedgers() async {
@@ -100,14 +100,16 @@ class AccountingSettingsService {
   }
 
   Future<void> postOpeningBalances() async {
-    await _apiClient.post('/accounting/opening-balances/post-all');
+    await _apiClient.post(ApiEndpoints.accountingOpeningBalancesPostAll);
   }
 
   Future<void> postCashBankOpeningBalances() async {
-    await _apiClient.post('/accounting/reconciliation/cash-bank/post-opening');
+    await _apiClient.post(
+      ApiEndpoints.accountingOpeningBalancesCashBankPostAll,
+    );
   }
 
   Future<void> fixLedgerReconciliation() async {
-    await _apiClient.post('/accounting/reconciliation/ledgers/fix');
+    await _apiClient.post(ApiEndpoints.accountingReconciliationLedgersFix);
   }
 }

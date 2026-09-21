@@ -26,6 +26,6 @@ class AccountingDashboardService {
   }
 
   Future<void> restoreDefaultLedgers() async {
-    await _apiClient.post('/accounting/ledgers/restore-defaults');
+    await _apiClient.post(ApiEndpoints.accountingLedgersRestoreDefaults);
   }
 }

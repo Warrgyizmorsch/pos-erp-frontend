@@ -70,4 +70,13 @@ class AuthRepository {
   Future<void> logout() async {
     await _storageService.clearSession();
   }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _authService.forgotPassword(email);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to send password reset link.');
+    }
+  }
 }

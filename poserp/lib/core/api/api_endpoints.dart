@@ -4,6 +4,7 @@ class ApiEndpoints {
   static const String me = '/auth/me';
   static const String profile = '/auth/profile';
   static const String changePassword = '/auth/change-password';
+  static const String forgotPassword = '/auth/forgot-password';
 
   // Master Data
   static const String categories = '/categories';
@@ -15,6 +16,8 @@ class ApiEndpoints {
   static const String suppliers = '/suppliers';
   static const String transporters = '/transporters';
   static String partyLedger(String partyId) => '/ledger/$partyId';
+  static String supplierLedger(String supplierId) =>
+      '/suppliers/$supplierId/ledger';
 
   // Inventory & Stock
   static const String inventory = '/inventory';
@@ -28,7 +31,7 @@ class ApiEndpoints {
   // Sales & POS
   static const String sales = '/sales';
   static const String salesReturns = '/sales-returns';
-  static const String paymentIn = '/sales/payment-in';
+  static const String paymentIn = '/payment-in';
 
   // Cash & Bank
   static const String bank = '/bank';
@@ -67,6 +70,15 @@ class ApiEndpoints {
   static const String accountingReportDashboard =
       '/accounting/reports/dashboard';
   static const String accountingLedgers = '/accounting/ledgers';
+  static const String accountingLedgersRestoreDefaults =
+      '/accounting/ledgers/restore-defaults';
+  static const String accountingRepostMissing = '/accounting/repost/missing';
+  static const String accountingRepostMissingBatch =
+      '/accounting/repost/missing/batch';
+  static const String accountingOpeningBalancesPostAll =
+      '/accounting/opening-balances/post-all';
+  static const String accountingOpeningBalancesCashBankPostAll =
+      '/accounting/opening-balances/cash-bank/post-all';
   static const String accountingVouchers = '/accounting/vouchers';
   static const String accountingVoucherTypes = '/accounting/voucher-types';
   static const String accountingJournalDraft = '/accounting/journal/draft';

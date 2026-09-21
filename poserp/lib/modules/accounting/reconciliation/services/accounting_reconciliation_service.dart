@@ -49,7 +49,9 @@ class AccountingReconciliationService {
   }
 
   Future<void> postCashBankOpeningBalances() async {
-    await _apiClient.post('/accounting/reconciliation/cash-bank/post-opening');
+    await _apiClient.post(
+      ApiEndpoints.accountingOpeningBalancesCashBankPostAll,
+    );
   }
 
   Future<List<PartyReconciliationRow>> getPartyReconciliation() async {

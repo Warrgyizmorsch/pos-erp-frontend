@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class ImportExportController extends GetxController {
   final ApiClient _apiClient;
@@ -161,23 +162,17 @@ class ImportExportController extends GetxController {
         ApiEndpoints.importProducts,
         data: {'products': payload},
       );
-      Get.snackbar(
-        'Import Successful',
+      AppSnackbar.success(
         'Imported ${payload.length} products to database.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Import Successful',
       );
       parsedRows.clear();
       selectedFileName.value = '';
-    } catch (_) {
-      Get.snackbar(
-        'Import Completed',
-        'Imported ${parsedRows.length} items to catalogue.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+    } catch (e) {
+      AppSnackbar.error(
+        e.toString(),
+        title: 'Import Failed',
       );
-      parsedRows.clear();
-      selectedFileName.value = '';
     } finally {
       isImporting.value = false;
     }
@@ -193,18 +188,14 @@ class ImportExportController extends GetxController {
           'products': [scannedResult.value],
         },
       );
-      Get.snackbar(
-        'Item Imported',
+      AppSnackbar.success(
         'Successfully imported ${scannedResult.value!['name']}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Item Imported',
       );
-    } catch (_) {
-      Get.snackbar(
-        'Item Imported',
-        'Successfully imported ${scannedResult.value!['name']}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+    } catch (e) {
+      AppSnackbar.error(
+        e.toString(),
+        title: 'Import Failed',
       );
     } finally {
       isImporting.value = false;
@@ -222,18 +213,14 @@ class ImportExportController extends GetxController {
         ApiEndpoints.importProducts,
         data: {'products': selected},
       );
-      Get.snackbar(
-        'Library Import Successful',
+      AppSnackbar.success(
         'Imported ${selected.length} items from standard library.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Library Import Successful',
       );
-    } catch (_) {
-      Get.snackbar(
-        'Library Import Successful',
-        'Imported ${selectedLibraryBarcodes.length} items from standard library.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+    } catch (e) {
+      AppSnackbar.error(
+        e.toString(),
+        title: 'Import Failed',
       );
     } finally {
       isImporting.value = false;
@@ -244,18 +231,14 @@ class ImportExportController extends GetxController {
     try {
       isExporting.value = true;
       await _apiClient.get(ApiEndpoints.exportProducts);
-      Get.snackbar(
-        'Catalog Exported',
+      AppSnackbar.success(
         'Product catalog exported to Excel/CSV format.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Catalog Exported',
       );
-    } catch (_) {
-      Get.snackbar(
-        'Catalog Exported',
-        'Product catalog exported to Excel/CSV format.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+    } catch (e) {
+      AppSnackbar.error(
+        e.toString(),
+        title: 'Export Failed',
       );
     } finally {
       isExporting.value = false;

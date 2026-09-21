@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
+import '../../../core/api/api_exceptions.dart';
+import '../../../core/utils/app_snackbar.dart';
 import '../../authentication/controllers/auth_controller.dart';
 
 class SettingsController extends GetxController {
@@ -36,12 +37,7 @@ class SettingsController extends GetxController {
 
   Future<void> saveProfile() async {
     if (name.value.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Name is required',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withAlpha(40),
-      );
+      AppSnackbar.error('Name is required', title: 'Validation Error');
       return;
     }
     try {
@@ -50,48 +46,45 @@ class SettingsController extends GetxController {
         ApiEndpoints.profile,
         data: {'name': name.value.trim(), 'phone': phone.value.trim()},
       );
-      Get.snackbar(
-        'Saved',
+      if (Get.isRegistered<AuthController>()) {
+        await Get.find<AuthController>().checkSession();
+      }
+      AppSnackbar.success(
         'Profile settings updated successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Saved',
       );
-    } catch (_) {
-      Get.snackbar(
-        'Saved',
-        'Profile settings updated.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
-      );
+    } catch (e) {
+      final msg = e is AppException ? e.message : 'Failed to update profile settings.';
+      AppSnackbar.error(msg, title: 'Save Failed');
     } finally {
       isSaving.value = false;
     }
   }
 
-  Future<void> changePassword({
+  final RxBool isChangingPassword = false.obs;
+
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
     try {
-      await _apiClient.post(
+      isChangingPassword.value = true;
+      await _apiClient.put(
         ApiEndpoints.changePassword,
         data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
       Get.back();
-      Get.snackbar(
-        'Success',
+      AppSnackbar.success(
         'Password changed successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
+        title: 'Success',
       );
-    } catch (_) {
-      Get.back();
-      Get.snackbar(
-        'Success',
-        'Password changed successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withAlpha(40),
-      );
+      return true;
+    } catch (e) {
+      final msg = e is AppException ? e.message : 'Failed to change password.';
+      AppSnackbar.error(msg, title: 'Password Change Failed');
+      return false;
+    } finally {
+      isChangingPassword.value = false;
     }
   }
 }

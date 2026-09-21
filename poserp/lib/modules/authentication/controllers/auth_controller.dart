@@ -103,6 +103,26 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<bool> forgotPassword(String email) async {
+    try {
+      isLoading.value = true;
+      await _authRepository.forgotPassword(email);
+      AppSnackbar.success(
+        'Password reset link sent to $email',
+        title: 'Check your inbox',
+      );
+      return true;
+    } catch (e) {
+      final msg = e is AppException
+          ? e.message
+          : 'Failed to send password reset email. Please try again.';
+      showErrorSnackbar(msg);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void showErrorSnackbar(String message) {
     AppSnackbar.error(message, title: 'Authentication Failed');
   }

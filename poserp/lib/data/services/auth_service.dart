@@ -52,4 +52,11 @@ class AuthService {
       (json) => User.fromJson(json),
     );
   }
+
+  Future<void> forgotPassword(String email) async {
+    await _apiClient.post(
+      ApiEndpoints.forgotPassword,
+      data: {'email': email},
+    );
+  }
 }
