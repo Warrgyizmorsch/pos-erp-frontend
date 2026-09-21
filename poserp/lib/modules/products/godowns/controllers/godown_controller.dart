@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../models/godown.dart';
+import '../models/godown_inventory.dart';
 import '../repositories/godown_repository.dart';
 
 class GodownController extends GetxController {
@@ -13,10 +14,40 @@ class GodownController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isSubmitting = false.obs;
 
+  final RxList<GodownInventoryItem> godownInventory = <GodownInventoryItem>[].obs;
+  final Rxn<Godown> selectedGodown = Rxn<Godown>();
+  final RxBool isLoadingInventory = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     loadGodowns();
+  }
+
+  Future<void> loadGodownDetails(String id) async {
+    try {
+      isLoadingInventory.value = true;
+      // If we already have the godown in list, set it immediately
+      final existing = godowns.firstWhereOrNull((g) => g.id == id);
+      if (existing != null) {
+        selectedGodown.value = existing;
+      }
+
+      // Fetch both godown and inventory in parallel if needed or in sequence
+      final results = await Future.wait([
+        existing == null ? _repository.getGodownById(id) : Future.value(existing),
+        _repository.getGodownInventory(id),
+      ]);
+
+      selectedGodown.value = results[0] as Godown;
+      godownInventory.assignAll(results[1] as List<GodownInventoryItem>);
+    } catch (e) {
+      showErrorSnackbar(
+        e is AppException ? e.message : 'Failed to load godown inventory',
+      );
+    } finally {
+      isLoadingInventory.value = false;
+    }
   }
 
   Future<void> loadGodowns() async {

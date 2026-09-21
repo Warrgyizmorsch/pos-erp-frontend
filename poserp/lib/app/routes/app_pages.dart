@@ -77,6 +77,7 @@ import '../../modules/products/bindings/product_binding.dart';
 import '../../modules/products/categories/bindings/category_binding.dart';
 import '../../modules/products/categories/views/category_list_view.dart';
 import '../../modules/products/godowns/bindings/godown_binding.dart';
+import '../../modules/products/godowns/views/godown_detail_view.dart';
 import '../../modules/products/godowns/views/godown_list_view.dart';
 import '../../modules/products/godowns/views/stock_transfer_view.dart';
 import '../../modules/products/inventory/bindings/stock_binding.dart';
@@ -181,6 +182,12 @@ class AppPages {
     GetPage(
       name: Routes.godowns,
       page: () => const GodownListView(),
+      binding: GodownBinding(),
+      middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
+    ),
+    GetPage(
+      name: Routes.godownDetail,
+      page: () => const GodownDetailView(),
       binding: GodownBinding(),
       middlewares: [RoleMiddleware(PermissionService.inventoryRoles)],
     ),

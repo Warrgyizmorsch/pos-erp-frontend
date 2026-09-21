@@ -11,6 +11,7 @@ abstract class Routes {
   static const openingStock = '/opening-stock';
   static const inventory = '/inventory';
   static const godowns = '/inventory/godowns';
+  static const godownDetail = '/inventory/godowns/:id';
   static const stockTransfer = '/inventory/stock-transfer';
   static const customers = '/customers';
   static const suppliers = '/suppliers';

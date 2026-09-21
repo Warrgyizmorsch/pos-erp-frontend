@@ -1,6 +1,7 @@
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../models/godown.dart';
+import '../models/godown_inventory.dart';
 
 class GodownService {
   final ApiClient _apiClient;
@@ -54,5 +55,20 @@ class GodownService {
         'notes': notes ?? '',
       },
     );
+  }
+
+  Future<List<GodownInventoryItem>> getInventory(String id) async {
+    final response = await _apiClient.get('${ApiEndpoints.godowns}/$id/inventory');
+    final dynamic body = response.data;
+    List list = [];
+    if (body is Map<String, dynamic>) {
+      list = body['data'] as List? ?? [];
+    } else if (body is List) {
+      list = body;
+    }
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => GodownInventoryItem.fromJson(e))
+        .toList();
   }
 }

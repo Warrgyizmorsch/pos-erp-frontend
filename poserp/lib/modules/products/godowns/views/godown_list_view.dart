@@ -177,103 +177,112 @@ class GodownListView extends GetView<GodownController> {
   }
 
   Widget _buildGodownCard(BuildContext context, Godown godown) {
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(25),
-              borderRadius: AppRadius.md,
+    return InkWell(
+      borderRadius: AppRadius.lg,
+      onTap: () => Get.toNamed('/inventory/godowns/${godown.id}'),
+      child: AppCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha(25),
+                borderRadius: AppRadius.md,
+              ),
+              child: const Icon(Icons.warehouse_rounded, color: AppColors.primary, size: 24),
             ),
-            child: const Icon(Icons.warehouse_rounded, color: AppColors.primary, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: [
-                    Text(
-                      godown.name,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(20),
-                        borderRadius: AppRadius.full,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        godown.name,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                       ),
-                      child: Text(
-                        godown.code,
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
-                      ),
-                    ),
-                    if (godown.isDefault)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withAlpha(20),
+                          color: AppColors.primary.withAlpha(20),
                           borderRadius: AppRadius.full,
                         ),
-                        child: const Text(
-                          'DEFAULT',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.success),
+                        child: Text(
+                          godown.code,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  godown.location != null && godown.location!.isNotEmpty
-                      ? 'Location: ${godown.location}'
-                      : 'No specific location specified',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                if (godown.capacity > 0) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Capacity: ${godown.capacity.toStringAsFixed(0)} units',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      if (godown.isDefault)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withAlpha(20),
+                            borderRadius: AppRadius.full,
+                          ),
+                          child: const Text(
+                            'DEFAULT',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.success),
+                          ),
+                        ),
+                    ],
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    godown.location != null && godown.location!.isNotEmpty
+                        ? 'Location: ${godown.location}'
+                        : 'No specific location specified',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  if (godown.capacity > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Capacity: ${godown.capacity.toStringAsFixed(0)} units',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
                 ],
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.inventory_2_outlined, size: 20, color: AppColors.primary),
+                  tooltip: 'View Inventory',
+                  onPressed: () => Get.toNamed('/inventory/godowns/${godown.id}'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.primary),
+                  tooltip: 'Edit Godown',
+                  onPressed: () => GodownDialog.show(context, godown: godown),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.danger),
+                  tooltip: 'Delete Godown',
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => ConfirmDialog(
+                        title: 'Delete Godown',
+                        description: 'Are you sure you want to delete ${godown.name}? Existing inventory records in this location will need to be reallocated.',
+                        confirmLabel: 'Delete Godown',
+                        onConfirm: () {
+                          Navigator.pop(context);
+                          controller.deleteGodown(godown.id);
+                        },
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.primary),
-                tooltip: 'Edit Godown',
-                onPressed: () => GodownDialog.show(context, godown: godown),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.danger),
-                tooltip: 'Delete Godown',
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => ConfirmDialog(
-                      title: 'Delete Godown',
-                      description: 'Are you sure you want to delete ${godown.name}? Existing inventory records in this location will need to be reallocated.',
-                      confirmLabel: 'Delete Godown',
-                      onConfirm: () {
-                        Navigator.pop(context);
-                        controller.deleteGodown(godown.id);
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

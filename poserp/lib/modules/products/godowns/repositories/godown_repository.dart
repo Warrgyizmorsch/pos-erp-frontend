@@ -1,5 +1,6 @@
 import '../../../../core/api/api_exceptions.dart';
 import '../models/godown.dart';
+import '../models/godown_inventory.dart';
 import '../services/godown_service.dart';
 
 class GodownRepository {
@@ -13,6 +14,24 @@ class GodownRepository {
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to fetch warehouse godowns.');
+    }
+  }
+
+  Future<Godown> getGodownById(String id) async {
+    try {
+      return await _service.getById(id);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch warehouse godown details.');
+    }
+  }
+
+  Future<List<GodownInventoryItem>> getGodownInventory(String id) async {
+    try {
+      return await _service.getInventory(id);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch godown inventory breakdown.');
     }
   }
 
