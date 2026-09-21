@@ -130,11 +130,11 @@ export default function PurchaseReturnPage() {
 
   // Load masters & initial lists
   useEffect(() => {
-    supplierService.getAll({ limit: 500 }).then(r => setSuppliers(r.data)).catch(() => {});
+    supplierService.getAll({ limit: 500 }).then(r => setSuppliers(r.data)).catch((err) => console.error("Failed to load data", err));
     bankService.getAll().then(r => {
       setBankAccounts(r.data);
       if (r.data.length > 0) setCashBankAccountId(r.data[0]._id);
-    }).catch(() => {});
+    }).catch((err) => console.error("Failed to load data", err));
   }, []);
 
   const loadReturns = useCallback(async () => {

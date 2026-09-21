@@ -488,23 +488,23 @@ export default function CreatePurchasePage() {
     supplierService
       .getAll({ limit: 200 })
       .then((r) => setSuppliers(r.data))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     transporterService
       .getAll({ limit: 200 })
       .then((r) => setTransporters(r.data))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     productService
       .getAll({ limit: 500 })
       .then((r) => setProducts(r.data))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     categoryService
       .getAll()
       .then((r) => setCategories(r))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     subcategoryService
       .getAll()
       .then((r) => setSubcategories(r))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     businessService
       .getProfile()
       .then((profile) => {
@@ -516,7 +516,7 @@ export default function CreatePurchasePage() {
           );
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
     cashBankService
       .getAccounts()
       .then((res) => {
@@ -541,7 +541,7 @@ export default function CreatePurchasePage() {
           }
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
   }, []);
 
   useEffect(() => {

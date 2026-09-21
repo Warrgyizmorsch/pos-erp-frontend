@@ -36,7 +36,7 @@ export default function CheckoutPage() {
     // Load customers
     customerService.getAll({ limit: 100 })
       .then(res => setCustomers(res.data))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to load data", err));
   }, [cart.items.length, receiptOpen, router]);
 
   const handleCompleteSale = async () => {

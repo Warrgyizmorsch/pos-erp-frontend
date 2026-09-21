@@ -73,13 +73,13 @@ export default function BarcodeGeneratorPage() {
   useEffect(() => {
     productService.getAll({ limit: 1000 }).then(res => {
       setProducts(res.data || []);
-    }).catch(() => {});
+    }).catch((err) => console.error("Failed to load data", err));
 
     businessService.getProfile().then(profile => {
       if (profile && profile.businessName) {
         setBusinessName(profile.businessName);
       }
-    }).catch(() => {});
+    }).catch((err) => console.error("Failed to load data", err));
   }, []);
 
   // Click outside listener for searchable dropdown
