@@ -5,6 +5,7 @@ import '../../../../core/api/api_exceptions.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../parties/suppliers/models/supplier.dart';
 import '../../parties/transporters/models/transporter.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../models/purchase.dart';
 import '../models/purchase_payload.dart';
@@ -65,12 +66,14 @@ class PurchaseController extends GetxController {
   final RxList<Supplier> availableSuppliers = <Supplier>[].obs;
   final RxList<Transporter> availableTransporters = <Transporter>[].obs;
   final RxList<Product> availableProducts = <Product>[].obs;
+  final RxList<Godown> availableGodowns = <Godown>[].obs;
   final RxList<Map<String, dynamic>> bankAccounts =
       <Map<String, dynamic>>[].obs;
 
   // Form Fields
   final Rxn<Supplier> formSupplier = Rxn<Supplier>();
   final Rxn<Transporter> formTransporter = Rxn<Transporter>();
+  final RxnString formGodownId = RxnString();
   final RxString formInvoiceNumber = ''.obs;
   final RxString formPurchaseDate = DateTime.now()
       .toIso8601String()
@@ -139,19 +142,30 @@ class PurchaseController extends GetxController {
       final trans = await _repository.fetchTransporters();
       final prods = await _repository.fetchProducts();
       final banks = await _repository.fetchBankAccounts();
+      final godowns = await _repository.fetchGodowns();
 
       availableSuppliers.assignAll(supps);
       availableTransporters.assignAll(trans);
       availableProducts.assignAll(prods);
       bankAccounts.assignAll(banks);
+      availableGodowns.assignAll(godowns);
+
+      if (formGodownId.value == null && availableGodowns.isNotEmpty) {
+        final def = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+            availableGodowns.first;
+        formGodownId.value = def.id;
+      }
     } catch (e) {
       // Non-blocking
     }
   }
 
   void initNewForm() {
+    final def = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+        (availableGodowns.isNotEmpty ? availableGodowns.first : null);
     formSupplier.value = null;
     formTransporter.value = null;
+    formGodownId.value = def?.id;
     formInvoiceNumber.value = '';
     formPurchaseDate.value = DateTime.now().toIso8601String().split('T')[0];
     formStateOfSupply.value = 'Rajasthan';
@@ -183,7 +197,7 @@ class PurchaseController extends GetxController {
     } else {
       formTransporter.value = null;
     }
-
+    formGodownId.value = purchase.godownId;
     formInvoiceNumber.value = purchase.invoiceNumber ?? '';
     formPurchaseDate.value = purchase.purchaseDate.split('T')[0];
     formStateOfSupply.value = purchase.stateOfSupply ?? 'Rajasthan';
@@ -219,7 +233,14 @@ class PurchaseController extends GetxController {
     formItems.assignAll(
       rows.isNotEmpty
           ? rows
-          : [PurchaseFormItemRow(id: 'item_0', name: '', sku: '', barcode: '')],
+          : [
+              PurchaseFormItemRow(
+                id: 'item_0',
+                name: '',
+                sku: '',
+                barcode: '',
+              ),
+            ],
     );
   }
 
@@ -269,6 +290,10 @@ class PurchaseController extends GetxController {
       showErrorSnackbar('Please select a supplier.');
       return false;
     }
+    if (formGodownId.value == null || formGodownId.value!.isEmpty) {
+      showErrorSnackbar('Please select a receiving godown.');
+      return false;
+    }
     final validItems = formItems
         .where((i) => i.name.trim().isNotEmpty && i.quantity > 0)
         .toList();
@@ -308,6 +333,7 @@ class PurchaseController extends GetxController {
         purchaseDate: formPurchaseDate.value,
         stateOfSupply: formStateOfSupply.value,
         transporter: formTransporter.value?.id,
+        godownId: formGodownId.value,
         items: itemPayloads,
         subtotal: formSubtotal,
         discountAmount: formDiscountAmount.value,

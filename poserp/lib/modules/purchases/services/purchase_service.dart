@@ -4,6 +4,7 @@ import '../../../../data/models/api_response.dart';
 import '../../../../data/models/pagination.dart';
 import '../../parties/suppliers/models/supplier.dart';
 import '../../parties/transporters/models/transporter.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../models/purchase.dart';
 import '../models/purchase_payload.dart';
@@ -168,6 +169,16 @@ class PurchaseService {
       response.data,
       (json) =>
           (json as List).map((item) => item as Map<String, dynamic>).toList(),
+    );
+  }
+
+  Future<ApiResponse<List<Godown>>> getGodowns() async {
+    final response = await _apiClient.get(ApiEndpoints.godowns);
+    return ApiResponse<List<Godown>>.fromJson(
+      response.data,
+      (json) => (json as List)
+          .map((item) => Godown.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

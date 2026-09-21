@@ -1,6 +1,7 @@
 import '../../../../core/api/api_exceptions.dart';
 import '../../parties/suppliers/models/supplier.dart';
 import '../../parties/transporters/models/transporter.dart';
+import '../../products/godowns/models/godown.dart';
 import '../../products/models/product.dart';
 import '../models/purchase.dart';
 import '../models/purchase_payload.dart';
@@ -112,6 +113,15 @@ class PurchaseRepository {
     try {
       final res = await _service.getBankAccounts();
       return res.data ?? [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<Godown>> fetchGodowns() async {
+    try {
+      final res = await _service.getGodowns();
+      return (res.data ?? []).where((g) => g.isActive).toList();
     } catch (e) {
       return [];
     }

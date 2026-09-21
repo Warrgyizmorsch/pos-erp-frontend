@@ -45,6 +45,7 @@ class PurchasePayload {
   final String purchaseDate;
   final String stateOfSupply;
   final String? transporter;
+  final String? godownId;
   final List<PurchaseItemPayload> items;
   final double subtotal;
   final double discountAmount;
@@ -68,6 +69,7 @@ class PurchasePayload {
     required this.purchaseDate,
     required this.stateOfSupply,
     this.transporter,
+    this.godownId,
     required this.items,
     required this.subtotal,
     required this.discountAmount,
@@ -97,6 +99,8 @@ class PurchasePayload {
           transporter != 'none' &&
           transporter!.isNotEmpty)
         'transporter': transporter,
+      if (godownId != null && godownId!.isNotEmpty)
+        'godownId': godownId,
       'items': items.map((i) => i.toJson()).toList(),
       'subtotal': subtotal,
       'discountAmount': discountAmount,

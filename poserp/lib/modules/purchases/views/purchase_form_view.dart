@@ -175,6 +175,81 @@ class PurchaseFormView extends GetView<PurchaseController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
+                              'Receiving Godown *',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Obx(() {
+                              final godownIds = controller.availableGodowns
+                                  .map((g) => g.id)
+                                  .toSet();
+                              final currentGodownId =
+                                  controller.formGodownId.value;
+                              final validGodownId =
+                                  godownIds.contains(currentGodownId)
+                                  ? currentGodownId
+                                  : (controller.availableGodowns.isNotEmpty
+                                        ? controller.availableGodowns.first.id
+                                        : null);
+
+                              return DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                key: ValueKey('purchase_godown_$validGodownId'),
+                                initialValue: validGodownId,
+                                hint: const Text(
+                                  'Select Godown',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                                dropdownColor: isDark
+                                    ? AppColors.cardDark
+                                    : AppColors.cardLight,
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  filled: true,
+                                  fillColor: isDark
+                                      ? AppColors.inputDark
+                                      : Colors.grey[100],
+                                  border: OutlineInputBorder(
+                                    borderRadius: AppRadius.md,
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? AppColors.borderDark
+                                          : AppColors.borderLight,
+                                    ),
+                                  ),
+                                ),
+                                items: controller.availableGodowns
+                                    .map(
+                                      (g) => DropdownMenuItem<String>(
+                                        value: g.id,
+                                        child: Text(
+                                          '${g.name}${g.isDefault ? " (Default)" : ""}',
+                                          style: const TextStyle(fontSize: 13),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (id) {
+                                  controller.formGodownId.value = id;
+                                },
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
                               'Transporter (Optional)',
                               style: TextStyle(
                                 fontSize: 12,

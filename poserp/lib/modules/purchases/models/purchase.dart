@@ -12,6 +12,7 @@ class Purchase {
   final String purchaseDate;
   final String? stateOfSupply;
   final String? transporter;
+  final String? godownId;
   final List<PurchaseItem> items;
   final double subtotal;
   final double discountAmount;
@@ -46,6 +47,7 @@ class Purchase {
     required this.purchaseDate,
     this.stateOfSupply,
     this.transporter,
+    this.godownId,
     required this.items,
     this.subtotal = 0,
     this.discountAmount = 0,
@@ -133,6 +135,16 @@ class Purchase {
         json['invoiceNumber']?.toString() ??
         '';
 
+    String? gId;
+    if (json['godownId'] != null) {
+      if (json['godownId'] is Map<String, dynamic>) {
+        gId = json['godownId']['_id']?.toString() ??
+            json['godownId']['id']?.toString();
+      } else {
+        gId = json['godownId'].toString();
+      }
+    }
+
     return Purchase(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       purchaseNumber: purNo,
@@ -148,6 +160,7 @@ class Purchase {
           DateTime.now().toIso8601String(),
       stateOfSupply: json['stateOfSupply']?.toString(),
       transporter: json['transporter']?.toString(),
+      godownId: gId,
       items: itemList,
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
