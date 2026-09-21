@@ -22,6 +22,10 @@ class Sale {
   final String accountingStatus; // 'posted', 'failed', 'not_posted'
   final String? accountingError;
   final dynamic accountingVoucherId;
+  final String? irn;
+  final String? qrCode;
+  final String? eInvoiceStatus; // 'pending', 'generated', 'failed', 'not_applicable'
+  final String? ewayBillNumber;
   final String? createdAt;
 
   Sale({
@@ -45,6 +49,10 @@ class Sale {
     this.accountingStatus = 'not_posted',
     this.accountingError,
     this.accountingVoucherId,
+    this.irn,
+    this.qrCode,
+    this.eInvoiceStatus,
+    this.ewayBillNumber,
     this.createdAt,
   });
 
@@ -96,6 +104,10 @@ class Sale {
       accountingStatus: json['accountingStatus']?.toString() ?? 'not_posted',
       accountingError: json['accountingError']?.toString(),
       accountingVoucherId: json['accountingVoucherId'],
+      irn: json['irn']?.toString(),
+      qrCode: json['qrCode']?.toString(),
+      eInvoiceStatus: json['eInvoiceStatus']?.toString(),
+      ewayBillNumber: json['ewayBillNumber']?.toString(),
       createdAt: json['createdAt']?.toString(),
     );
   }
@@ -126,6 +138,10 @@ class Sale {
       'accountingStatus': accountingStatus,
       'accountingError': accountingError,
       'accountingVoucherId': accountingVoucherId,
+      if (irn != null && irn!.isNotEmpty) 'irn': irn,
+      if (qrCode != null && qrCode!.isNotEmpty) 'qrCode': qrCode,
+      if (eInvoiceStatus != null && eInvoiceStatus!.isNotEmpty) 'eInvoiceStatus': eInvoiceStatus,
+      if (ewayBillNumber != null && ewayBillNumber!.isNotEmpty) 'ewayBillNumber': ewayBillNumber,
       'createdAt': createdAt,
     };
   }

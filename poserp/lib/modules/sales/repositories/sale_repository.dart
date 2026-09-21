@@ -65,4 +65,13 @@ class SaleRepository {
       throw AppException(message: 'Failed to create sale invoice.');
     }
   }
+
+  Future<Sale> generateEInvoice(String id) async {
+    try {
+      return await _service.generateEInvoice(id);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to generate E-Invoice.');
+    }
+  }
 }

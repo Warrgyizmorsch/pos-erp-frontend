@@ -89,4 +89,14 @@ class SaleService {
     final resData = body['data'] ?? body;
     return Sale.fromJson(resData as Map<String, dynamic>);
   }
+
+  Future<Sale> generateEInvoice(String id) async {
+    final response = await _apiClient.post('${ApiEndpoints.sales}/$id/einvoice');
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      final resData = body['data'] ?? body;
+      return Sale.fromJson(resData as Map<String, dynamic>);
+    }
+    return getById(id);
+  }
 }

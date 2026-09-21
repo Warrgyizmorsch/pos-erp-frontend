@@ -172,6 +172,34 @@ class SaleController extends GetxController {
     }
   }
 
+  final RxBool isGeneratingEInvoice = false.obs;
+
+  Future<bool> generateEInvoice(String id) async {
+    try {
+      isGeneratingEInvoice.value = true;
+      final updatedSale = await _repository.generateEInvoice(id);
+      selectedSale.value = updatedSale;
+
+      final index = sales.indexWhere((s) => s.id == id);
+      if (index != -1) {
+        sales[index] = updatedSale;
+      }
+
+      AppSnackbar.success(
+        'Government E-Invoice generated successfully with signed IRN & QR code.',
+        title: 'E-Invoice Generated',
+      );
+      return true;
+    } catch (e) {
+      showErrorSnackbar(
+        e is AppException ? e.message : 'Failed to generate E-Invoice',
+      );
+      return false;
+    } finally {
+      isGeneratingEInvoice.value = false;
+    }
+  }
+
   void showErrorSnackbar(String message) {
     AppSnackbar.error(message);
   }

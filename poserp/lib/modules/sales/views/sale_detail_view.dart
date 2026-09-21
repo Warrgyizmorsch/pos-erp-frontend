@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_stat_card.dart';
@@ -25,6 +27,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
   bool isLoading = true;
   Sale? sale;
   bool isReposting = false;
+  bool isGeneratingEInvoice = false;
 
   @override
   void dispose() {
@@ -72,6 +75,18 @@ class _SaleDetailViewState extends State<SaleDetailView> {
     }
     if (mounted) {
       setState(() => isReposting = false);
+    }
+  }
+
+  Future<void> _generateEInvoice() async {
+    if (sale == null) return;
+    setState(() => isGeneratingEInvoice = true);
+    final ok = await controller.generateEInvoice(sale!.id);
+    if (ok) {
+      await _loadSale();
+    }
+    if (mounted) {
+      setState(() => isGeneratingEInvoice = false);
     }
   }
 
@@ -248,6 +263,15 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                               height: 38,
                               onPressed: () => Get.toNamed('/pos', arguments: {'editSaleId': curSale.id}),
                             ),
+                            if (curSale.irn == null || curSale.irn!.isEmpty)
+                              AppButton(
+                                text: 'Generate IRN',
+                                icon: const Icon(Icons.qr_code_2_rounded, size: 16),
+                                variant: AppButtonVariant.primary,
+                                height: 38,
+                                isLoading: isGeneratingEInvoice,
+                                onPressed: _generateEInvoice,
+                              ),
                             AppButton(
                               text: 'Repost Ledger',
                               icon: const Icon(Icons.sync_rounded, size: 16),
@@ -280,6 +304,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                   },
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Government E-Invoice & Compliance Card
+              _buildEInvoiceSection(context, curSale, isDark),
               const SizedBox(height: 16),
 
               // Metrics Row
@@ -511,6 +539,182 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEInvoiceSection(BuildContext context, Sale curSale, bool isDark) {
+    final hasIrn = curSale.irn != null && curSale.irn!.isNotEmpty;
+
+    if (!hasIrn) {
+      return AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withAlpha(25),
+                borderRadius: AppRadius.md,
+              ),
+              child: const Icon(Icons.qr_code_2_rounded, color: AppColors.warning, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Government E-Invoice Not Generated',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Generate Government IRN & digitally signed QR code for legal GST compliance.',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            AppButton(
+              text: 'Generate IRN',
+              icon: const Icon(Icons.bolt_rounded, size: 16),
+              variant: AppButtonVariant.primary,
+              height: 36,
+              isLoading: isGeneratingEInvoice,
+              onPressed: _generateEInvoice,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withAlpha(25),
+                      borderRadius: AppRadius.md,
+                    ),
+                    child: const Icon(Icons.verified_user_rounded, color: AppColors.success, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Government E-Invoice & IRN',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Authenticated with Invoice Registration Portal (IRP)',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withAlpha(20),
+                  borderRadius: AppRadius.full,
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
+                    SizedBox(width: 4),
+                    Text(
+                      'AUTHENTICATED',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.success),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 20),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.inputDark : Colors.grey[100],
+              borderRadius: AppRadius.md,
+              border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'INVOICE REFERENCE NUMBER (IRN)',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: curSale.irn!));
+                        AppSnackbar.success('IRN copied to clipboard');
+                      },
+                      child: const Row(
+                        children: [
+                          Icon(Icons.copy_rounded, size: 12, color: AppColors.primary),
+                          SizedBox(width: 4),
+                          Text('Copy', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SelectableText(
+                  curSale.irn!,
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace', fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          if (curSale.ewayBillNumber != null && curSale.ewayBillNumber!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.local_shipping_outlined, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                const Text('E-Way Bill No: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                SelectableText(curSale.ewayBillNumber!, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+              ],
+            ),
+          ],
+          if (curSale.qrCode != null && curSale.qrCode!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.qr_code_rounded, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                const Text('Digital Signed QR Code: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text(
+                    curSale.qrCode!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'monospace'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
