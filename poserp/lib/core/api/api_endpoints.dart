@@ -152,7 +152,8 @@ class ApiEndpoints {
   static const String barcode = '/utilities/barcode';
   static const String importExport = '/utilities/import-export';
   static const String settings = '/settings';
-  static const String businessProfile = '/business/profile';
+  static const String business = '/business';
+  static const String businessProfile = '/business';
   static const String notifications = '/notifications';
   static const String uploadSingle = '/uploads/single';
   static const String uploadMultiple = '/uploads/multiple';

@@ -106,7 +106,9 @@ import '../../modules/sales/return/views/sale_return_list_view.dart';
 import '../../modules/sales/views/sale_detail_view.dart';
 import '../../modules/sales/views/sale_form_view.dart';
 import '../../modules/sales/views/sale_list_view.dart';
+import '../../modules/settings/bindings/business_profile_binding.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
+import '../../modules/settings/views/business_profile_view.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/shifts/bindings/shift_binding.dart';
 import '../../modules/shifts/views/shift_management_view.dart';
@@ -615,6 +617,12 @@ class AppPages {
       name: Routes.settings,
       page: () => const SettingsView(),
       binding: SettingsBinding(),
+      middlewares: [RoleMiddleware(PermissionService.adminOnlyRoles)],
+    ),
+    GetPage(
+      name: Routes.businessProfile,
+      page: () => const BusinessProfileView(),
+      binding: BusinessProfileBinding(),
       middlewares: [RoleMiddleware(PermissionService.adminOnlyRoles)],
     ),
 

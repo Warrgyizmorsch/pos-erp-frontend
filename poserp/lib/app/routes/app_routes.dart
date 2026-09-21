@@ -79,5 +79,6 @@ abstract class Routes {
   static const barcode = '/utilities/barcode';
   static const importExport = '/utilities/import-export';
   static const settings = '/settings';
+  static const businessProfile = '/settings/profile';
   static const notifications = '/notifications';
 }
