@@ -1,5 +1,6 @@
 import '../../core/api/api_exceptions.dart';
 import '../models/api_response.dart';
+import '../models/role.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
@@ -77,6 +78,74 @@ class AuthRepository {
     } catch (e) {
       if (e is AppException) rethrow;
       throw AppException(message: 'Failed to send password reset link.');
+    }
+  }
+
+  Future<List<User>> getUsers() async {
+    try {
+      final response = await _authService.getUsers();
+      return response.data ?? [];
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch users: $e');
+    }
+  }
+
+  Future<User> createUser(Map<String, dynamic> payload) async {
+    try {
+      final response = await _authService.createUser(payload);
+      if (response.data == null) {
+        throw AppException(message: 'Invalid response from server when creating user.');
+      }
+      return response.data!;
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to create user: $e');
+    }
+  }
+
+  Future<User> updateUser(String id, Map<String, dynamic> payload) async {
+    try {
+      final response = await _authService.updateUser(id, payload);
+      if (response.data == null) {
+        throw AppException(message: 'Invalid response from server when updating user.');
+      }
+      return response.data!;
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to update user: $e');
+    }
+  }
+
+  Future<void> deleteUser(String id) async {
+    try {
+      await _authService.deleteUser(id);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to delete user: $e');
+    }
+  }
+
+  Future<List<Role>> getRoles() async {
+    try {
+      final response = await _authService.getRoles();
+      return response.data ?? [];
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to fetch roles: $e');
+    }
+  }
+
+  Future<Role> updateRolePermissions(String id, List<String> permissions) async {
+    try {
+      final response = await _authService.updateRolePermissions(id, permissions);
+      if (response.data == null) {
+        throw AppException(message: 'Invalid response from server when updating role permissions.');
+      }
+      return response.data!;
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(message: 'Failed to update role permissions: $e');
     }
   }
 }

@@ -7,6 +7,7 @@ class User {
   final String? phone;
   final String? avatar;
   final bool isActive;
+  final List<String> permissions;
   final String createdAt;
   final String updatedAt;
 
@@ -18,6 +19,7 @@ class User {
     this.phone,
     this.avatar,
     required this.isActive,
+    this.permissions = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -31,6 +33,10 @@ class User {
       phone: json['phone'],
       avatar: json['avatar'],
       isActive: json['isActive'] ?? true,
+      permissions: (json['permissions'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
     );
@@ -45,6 +51,7 @@ class User {
       'phone': phone,
       'avatar': avatar,
       'isActive': isActive,
+      'permissions': permissions,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

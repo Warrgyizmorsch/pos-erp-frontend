@@ -80,5 +80,6 @@ abstract class Routes {
   static const importExport = '/utilities/import-export';
   static const settings = '/settings';
   static const businessProfile = '/settings/profile';
+  static const userManagement = '/settings/users';
   static const notifications = '/notifications';
 }

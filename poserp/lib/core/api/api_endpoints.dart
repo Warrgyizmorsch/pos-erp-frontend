@@ -5,6 +5,10 @@ class ApiEndpoints {
   static const String profile = '/auth/profile';
   static const String changePassword = '/auth/change-password';
   static const String forgotPassword = '/auth/forgot-password';
+  static const String users = '/auth/users';
+  static String userById(String id) => '/auth/users/$id';
+  static const String roles = '/auth/roles';
+  static String roleById(String id) => '/auth/roles/$id';
 
   // Master Data
   static const String categories = '/categories';
