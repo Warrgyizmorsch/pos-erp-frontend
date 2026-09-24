@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
 import '../controllers/financial_reports_controller.dart';
 import '../models/gst_report_summary.dart';
+import '../widgets/gstr1_export_dialog.dart';
 
 class GstReportItemMeta {
   final String key;
@@ -109,6 +111,31 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
       appBar: AppBar(
         title: const Text('GST & Tax Reports Hub'),
         actions: [
+          Obx(() {
+            if (controller.selectedGstKind.value == 'gstr1') {
+              return TextButton.icon(
+                icon: const Icon(Icons.file_download_outlined, size: 18),
+                label: const Text(
+                  'Export JSON',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  final rawData = controller.gstReportData.value;
+                  if (rawData != null) {
+                    Gstr1ExportDialog.show(
+                      context,
+                      rawData: rawData,
+                      startDate: controller.startDate.value,
+                      endDate: controller.endDate.value,
+                    );
+                  } else {
+                    AppSnackbar.info('Please wait for GSTR-1 data to load.');
+                  }
+                },
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => controller.loadCurrentTabReport(),
@@ -518,6 +545,7 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                         if (rawData is Map<String, dynamic> &&
                             rawData['note'] != null)
                           _buildNoticeCard(rawData['note'].toString(), isDark),
+                        _buildGstr1ExportBanner(context, rawData, isDark),
                         _buildGstr1SummaryGrid(rawData, isDark),
                         const SizedBox(height: 16),
                         _buildGenericGstDataView(currentKind, rawData, isDark),
@@ -865,6 +893,64 @@ class GstReportSummaryView extends GetView<FinancialReportsController> {
                 color: AppColors.info,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGstr1ExportBanner(BuildContext context, dynamic rawData, bool isDark) {
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withAlpha(25),
+              borderRadius: AppRadius.md,
+            ),
+            child: const Icon(
+              Icons.file_download_outlined,
+              color: Colors.indigo,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Government GST Offline Tool Export (GST3.0.0)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Export standardized JSON schema for B2B, B2C (Small), and HSN tables directly importable into the GST Offline Tool.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          AppButton(
+            text: 'Export JSON',
+            icon: const Icon(Icons.code_rounded, size: 16),
+            variant: AppButtonVariant.primary,
+            height: 38,
+            onPressed: () {
+              Gstr1ExportDialog.show(
+                context,
+                rawData: rawData,
+                startDate: controller.startDate.value,
+                endDate: controller.endDate.value,
+              );
+            },
           ),
         ],
       ),
