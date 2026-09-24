@@ -40,6 +40,83 @@ class UserManagementController extends GetxController {
     'checkout',
   ];
 
+  static const Map<String, List<String>> moduleCategories = {
+    'Sales & POS': ['pos', 'sales', 'checkout', 'shifts'],
+    'Inventory & Catalog': ['inventory', 'products', 'categories', 'subcategories'],
+    'Parties & Vendors': ['purchases', 'customers', 'suppliers', 'transporters'],
+    'Financials & Cash/Bank': [
+      'accounting',
+      'bank',
+      'cash',
+      'cash-bank',
+      'expenses',
+      'loans',
+      'cheques'
+    ],
+    'System & Operations': [
+      'dashboard',
+      'reports',
+      'settings',
+      'activity',
+      'backup',
+      'utilities'
+    ],
+  };
+
+  static const Map<String, List<String>> systemDefaultRolePermissions = {
+    'admin': allModules,
+    'manager': [
+      'dashboard',
+      'sales',
+      'purchases',
+      'inventory',
+      'products',
+      'categories',
+      'subcategories',
+      'customers',
+      'suppliers',
+      'expenses',
+      'reports',
+      'settings',
+      'pos',
+      'activity',
+      'shifts',
+      'transporters',
+      'utilities',
+      'checkout',
+    ],
+    'accountant': [
+      'dashboard',
+      'accounting',
+      'bank',
+      'cash',
+      'cash-bank',
+      'expenses',
+      'loans',
+      'cheques',
+      'reports',
+    ],
+    'stock_manager': [
+      'dashboard',
+      'inventory',
+      'products',
+      'categories',
+      'subcategories',
+      'purchases',
+      'suppliers',
+      'transporters',
+      'utilities',
+    ],
+    'cashier': [
+      'dashboard',
+      'pos',
+      'sales',
+      'shifts',
+      'checkout',
+      'customers',
+    ],
+  };
+
   static String formatModuleName(String mod) {
     if (mod == 'pos') return 'POS Terminal';
     return mod
@@ -175,20 +252,36 @@ class UserManagementController extends GetxController {
     }
   }
 
+  void toggleCategoryForUser(List<String> modules) {
+    final allSelected = modules.every((m) => userPermissions.contains(m));
+    if (allSelected) {
+      userPermissions.removeWhere((m) => modules.contains(m));
+    } else {
+      for (final m in modules) {
+        if (!userPermissions.contains(m)) {
+          userPermissions.add(m);
+        }
+      }
+    }
+  }
+
   void loadDefaultsForSelectedRole() {
     final roleName = selectedUserRole.value.toLowerCase();
     final defaultRole = roles.firstWhereOrNull(
       (r) => r.name.toLowerCase() == roleName,
     );
 
-    if (defaultRole != null) {
+    if (defaultRole != null && defaultRole.permissions.isNotEmpty) {
       userPermissions.assignAll(defaultRole.permissions);
       AppSnackbar.success(
         'Loaded ${defaultRole.permissions.length} default permissions for $roleName',
       );
     } else {
-      userPermissions.clear();
-      AppSnackbar.info('No role defaults found for $roleName');
+      final fallback = systemDefaultRolePermissions[roleName] ?? [];
+      userPermissions.assignAll(fallback);
+      AppSnackbar.success(
+        'Loaded ${fallback.length} standard default permissions for $roleName',
+      );
     }
   }
 
@@ -279,6 +372,28 @@ class UserManagementController extends GetxController {
     } else {
       rolePermissions.add(module);
     }
+  }
+
+  void toggleCategoryForRole(List<String> modules) {
+    final allSelected = modules.every((m) => rolePermissions.contains(m));
+    if (allSelected) {
+      rolePermissions.removeWhere((m) => modules.contains(m));
+    } else {
+      for (final m in modules) {
+        if (!rolePermissions.contains(m)) {
+          rolePermissions.add(m);
+        }
+      }
+    }
+  }
+
+  void resetRoleToSystemDefaults() {
+    final role = editingRole.value;
+    if (role == null) return;
+    final roleName = role.name.toLowerCase();
+    final fallback = systemDefaultRolePermissions[roleName] ?? [];
+    rolePermissions.assignAll(fallback);
+    AppSnackbar.info('Reset ${role.name} to system standard defaults (${fallback.length} modules)');
   }
 
   Future<bool> saveRolePermissions() async {

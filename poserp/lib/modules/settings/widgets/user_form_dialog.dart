@@ -493,70 +493,161 @@ class UserFormDialog extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // Checkboxes Grid
-        Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          children: UserManagementController.allModules.map((module) {
-            final isChecked = controller.userPermissions.contains(module);
-            final title = UserManagementController.formatModuleName(module);
+        // Checkboxes Categorized Grid
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = constraints.maxWidth > 520
+                ? (constraints.maxWidth - 24) / 3
+                : (constraints.maxWidth - 12) / 2;
 
-            return InkWell(
-              borderRadius: AppRadius.md,
-              onTap: () => controller.toggleUserPermission(module),
-              child: Container(
-                width: 190,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isChecked
-                      ? AppColors.primary.withAlpha(18)
-                      : (isDark ? AppColors.inputDark : Colors.grey[50]),
-                  borderRadius: AppRadius.md,
-                  border: Border.all(
-                    color: isChecked
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isChecked
-                          ? Icons.check_box_rounded
-                          : Icons.check_box_outline_blank_rounded,
-                      size: 18,
-                      color: isChecked ? AppColors.primary : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: isChecked
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isChecked
-                              ? (isDark
-                                  ? Colors.white
-                                  : AppColors.primary)
-                              : (isDark
-                                  ? AppColors.foregroundDark
-                                  : AppColors.foregroundLight),
+            return Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: UserManagementController.moduleCategories.entries.map((cat) {
+                  final categoryTitle = cat.key;
+                  final modules = cat.value;
+                  final selectedInCat = modules
+                      .where((m) => controller.userPermissions.contains(m))
+                      .length;
+                  final isAllSelected = selectedInCat == modules.length;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Category Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  categoryTitle,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isAllSelected
+                                        ? AppColors.success.withAlpha(20)
+                                        : Colors.grey.withAlpha(25),
+                                    borderRadius: AppRadius.full,
+                                  ),
+                                  child: Text(
+                                    '$selectedInCat/${modules.length}',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isAllSelected
+                                          ? AppColors.success
+                                          : Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            InkWell(
+                              borderRadius: AppRadius.sm,
+                              onTap: () => controller.toggleCategoryForUser(modules),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                child: Text(
+                                  isAllSelected ? 'Deselect Group' : 'Select Group',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        const SizedBox(height: 8),
+
+                        // Module items
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: modules.map((module) {
+                            final isChecked = controller.userPermissions.contains(module);
+                            final title = UserManagementController.formatModuleName(module);
+
+                            return InkWell(
+                              borderRadius: AppRadius.md,
+                              onTap: () => controller.toggleUserPermission(module),
+                              child: Container(
+                                width: itemWidth,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isChecked
+                                      ? AppColors.primary.withAlpha(18)
+                                      : (isDark ? AppColors.inputDark : Colors.grey[50]),
+                                  borderRadius: AppRadius.md,
+                                  border: Border.all(
+                                    color: isChecked
+                                        ? AppColors.primary
+                                        : (isDark
+                                            ? AppColors.borderDark
+                                            : AppColors.borderLight),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isChecked
+                                          ? Icons.check_box_rounded
+                                          : Icons.check_box_outline_blank_rounded,
+                                      size: 18,
+                                      color: isChecked ? AppColors.primary : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        title,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: isChecked
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: isChecked
+                                              ? (isDark
+                                                  ? Colors.white
+                                                  : AppColors.primary)
+                                              : (isDark
+                                                  ? AppColors.foregroundDark
+                                                  : AppColors.foregroundLight),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               ),
             );
-          }).toList(),
+          },
         ),
       ],
     );
