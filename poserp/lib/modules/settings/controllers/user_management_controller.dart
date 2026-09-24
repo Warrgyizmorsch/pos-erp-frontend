@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/api/api_exceptions.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../data/models/role.dart';
 import '../../../../data/models/user.dart';
@@ -183,7 +184,9 @@ class UserManagementController extends GetxController {
       users.assignAll(results[0] as List<User>);
       roles.assignAll(results[1] as List<Role>);
     } catch (e) {
-      AppSnackbar.error('Failed to load users and roles: $e');
+      AppSnackbar.error(
+        e is AppException ? e.message : 'Failed to load users and roles: $e',
+      );
     } finally {
       isLoading.value = false;
     }
@@ -326,6 +329,10 @@ class UserManagementController extends GetxController {
         if (index != -1) {
           users[index] = updated;
         }
+        if (updated.id == currentUser.value?.id) {
+          currentUser.value = updated;
+          await _storageService.saveUser(updated);
+        }
         AppSnackbar.success('User updated successfully');
       } else {
         final created = await _authRepository.createUser(payload);
@@ -334,7 +341,7 @@ class UserManagementController extends GetxController {
       }
       return true;
     } catch (e) {
-      AppSnackbar.error('Failed to save user: $e');
+      AppSnackbar.error(e is AppException ? e.message : 'Failed to save user: $e');
       return false;
     } finally {
       isSaving.value = false;
@@ -354,7 +361,7 @@ class UserManagementController extends GetxController {
       users.removeWhere((u) => u.id == user.id);
       AppSnackbar.success('User ${user.name} deleted successfully');
     } catch (e) {
-      AppSnackbar.error('Failed to delete user: $e');
+      AppSnackbar.error(e is AppException ? e.message : 'Failed to delete user: $e');
     } finally {
       updatingId.value = '';
     }
@@ -413,7 +420,7 @@ class UserManagementController extends GetxController {
       AppSnackbar.success('${role.name} default permissions updated');
       return true;
     } catch (e) {
-      AppSnackbar.error('Failed to update role permissions: $e');
+      AppSnackbar.error(e is AppException ? e.message : 'Failed to update role permissions: $e');
       return false;
     } finally {
       updatingId.value = '';
