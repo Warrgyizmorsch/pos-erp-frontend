@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
+import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../services/gstr1_export_service.dart';
@@ -63,75 +64,80 @@ class Gstr1ExportDialog extends StatelessWidget {
     final period = payload['fp']?.toString() ?? '—';
 
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
       backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 680,
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.indigo.withAlpha(25),
-                          borderRadius: AppRadius.md,
-                        ),
-                        child: const Icon(
-                          Icons.data_object_rounded,
-                          color: Colors.indigo,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'GSTR-1 Offline Tool JSON (GST3.0.0)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withAlpha(25),
+                      borderRadius: AppRadius.md,
+                    ),
+                    child: const Icon(
+                      Icons.data_object_rounded,
+                      color: Colors.indigo,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'GSTR-1 Offline Tool JSON',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
                           ),
-                          Text(
-                            'Filing Period: $period • Schema: GST3.0.0',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[600],
-                            ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Period: $period • Schema: GST3.0.0',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
                           ),
-                        ],
-                      ),
-                    ],
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     onPressed: () => Get.back(),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // Metrics Chips
               Wrap(
-                spacing: 8,
+                spacing: 6,
                 runSpacing: 6,
                 children: [
-                  _buildChip('B2B Invoices: $b2bCount', AppColors.primary),
-                  _buildChip('B2C Small: $b2csCount', AppColors.info),
-                  _buildChip('HSN Codes: $hsnCount', Colors.teal),
+                  _buildChip('B2B: $b2bCount', AppColors.primary),
+                  _buildChip('B2C: $b2csCount', AppColors.info),
+                  _buildChip('HSN: $hsnCount', Colors.teal),
                   _buildChip(
                     'GSTIN: ${payload['gstin']}',
                     Colors.deepPurple,
@@ -157,7 +163,7 @@ class Gstr1ExportDialog extends StatelessWidget {
                       jsonString,
                       style: TextStyle(
                         fontFamily: 'monospace',
-                        fontSize: 11.5,
+                        fontSize: 11,
                         color: isDark
                             ? AppColors.foregroundDark
                             : AppColors.foregroundLight,
@@ -167,59 +173,110 @@ class Gstr1ExportDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Compatible with GST Offline Tool v3.0+',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                  ),
-                  Row(
+              // Action Buttons (Responsive)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isNarrow = constraints.maxWidth < 460;
+                  if (isNarrow) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Compatible with GST Offline Tool v3.0+',
+                          style: TextStyle(fontSize: 10.5, color: Colors.grey[600]),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppButton(
+                                text: 'Close',
+                                variant: AppButtonVariant.outline,
+                                height: AppSizes.buttonHeightSm,
+                                onPressed: () => Get.back(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: AppButton(
+                                text: 'Copy JSON',
+                                icon: const Icon(Icons.copy_rounded, size: 15),
+                                variant: AppButtonVariant.primary,
+                                height: AppSizes.buttonHeightSm,
+                                onPressed: () async {
+                                  await Gstr1ExportService.copyGstr1JsonToClipboard(
+                                    rawData,
+                                    gstin: gstin,
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AppButton(
-                        text: 'Close',
-                        variant: AppButtonVariant.ghost,
-                        onPressed: () => Get.back(),
+                      Text(
+                        'Compatible with GST Offline Tool v3.0+',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       ),
-                      const SizedBox(width: 8),
-                      AppButton(
-                        text: 'Copy JSON',
-                        icon: const Icon(Icons.copy_rounded, size: 16),
-                        variant: AppButtonVariant.outline,
-                        onPressed: () async {
-                          await Gstr1ExportService.copyGstr1JsonToClipboard(
-                            rawData,
-                            gstin: gstin,
-                            startDate: startDate,
-                            endDate: endDate,
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      AppButton(
-                        text: 'Save JSON',
-                        icon: const Icon(Icons.download_rounded, size: 16),
-                        variant: AppButtonVariant.primary,
-                        onPressed: () async {
-                          await Gstr1ExportService.copyGstr1JsonToClipboard(
-                            rawData,
-                            gstin: gstin,
-                            startDate: startDate,
-                            endDate: endDate,
-                          );
-                          Get.back();
-                          AppSnackbar.success(
-                            'GSTR-1 JSON (GST3.0.0) generated and ready for offline filing.',
-                            title: 'Export Complete',
-                          );
-                        },
+                      Row(
+                        children: [
+                          AppButton(
+                            text: 'Close',
+                            variant: AppButtonVariant.ghost,
+                            height: AppSizes.buttonHeightSm,
+                            onPressed: () => Get.back(),
+                          ),
+                          const SizedBox(width: 8),
+                          AppButton(
+                            text: 'Copy JSON',
+                            icon: const Icon(Icons.copy_rounded, size: 16),
+                            variant: AppButtonVariant.outline,
+                            height: AppSizes.buttonHeightSm,
+                            onPressed: () async {
+                              await Gstr1ExportService.copyGstr1JsonToClipboard(
+                                rawData,
+                                gstin: gstin,
+                                startDate: startDate,
+                                endDate: endDate,
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          AppButton(
+                            text: 'Save JSON',
+                            icon: const Icon(Icons.download_rounded, size: 16),
+                            variant: AppButtonVariant.primary,
+                            height: AppSizes.buttonHeightSm,
+                            onPressed: () async {
+                              await Gstr1ExportService.copyGstr1JsonToClipboard(
+                                rawData,
+                                gstin: gstin,
+                                startDate: startDate,
+                                endDate: endDate,
+                              );
+                              Get.back();
+                              AppSnackbar.success(
+                                'GSTR-1 JSON (GST3.0.0) generated and ready for offline filing.',
+                                title: 'Export Complete',
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ],
           ),
@@ -230,7 +287,7 @@ class Gstr1ExportDialog extends StatelessWidget {
 
   Widget _buildChip(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withAlpha(20),
         borderRadius: AppRadius.full,
@@ -239,7 +296,7 @@ class Gstr1ExportDialog extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: FontWeight.bold,
           color: color,
         ),
