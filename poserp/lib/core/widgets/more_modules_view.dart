@@ -12,408 +12,435 @@ class MoreModulesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final userRole = authController.currentUser.value?.role ?? '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.backgroundDark
-          : AppColors.backgroundLight,
-      appBar: AppTopBar(
-        title: 'System Modules',
-        subtitle: 'Access all enterprise ERP capabilities & tools',
-        showBackButton: false,
-        userRole: userRole,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Accounting & Financial Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.accountingRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Accounting & Financial Engine',
-                  icon: Icons.account_balance_outlined,
-                  color: AppColors.primary,
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.dashboard_customize_outlined,
-                    label: 'Accounting Dashboard',
-                    route: '/accounting',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.account_tree_outlined,
-                    label: 'Chart of Accounts',
-                    route: '/accounting/chart-of-accounts',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.menu_book_rounded,
-                    label: 'Ledger Accounts',
-                    route: '/accounting/ledgers',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.receipt_long_rounded,
-                    label: 'Accounting Vouchers',
-                    route: '/accounting/vouchers',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.book_outlined,
-                    label: 'Day Book Report',
-                    route: '/accounting/day-book',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.scale_rounded,
-                    label: 'Trial Balance',
-                    route: '/accounting/trial-balance',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.receipt_rounded,
-                    label: 'GST & Tax Reports',
-                    route: '/accounting/gst',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.bar_chart_rounded,
-                    label: 'Sales & Business Reports',
-                    route: '/reports',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.pie_chart_outline_rounded,
-                    label: 'Financial Reports',
-                    route: '/accounting/reports',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.health_and_safety_outlined,
-                    label: 'Accounting Health',
-                    route: '/accounting/health',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.published_with_changes_rounded,
-                    label: 'Reconciliation Hub',
-                    route: '/accounting/reconciliation',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.upload_file_rounded,
-                    label: 'Bank Importer',
-                    route: '/accounting/bank-statement-import',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.settings_applications_outlined,
-                    label: 'Accounting Config',
-                    route: '/accounting/settings',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
+    return Obx(() {
+      final currentUser = authController.currentUser.value;
+      final userRole = currentUser?.role ?? '';
 
-              // Cash & Banking Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.cashBankRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Cash & Banking',
-                  icon: Icons.account_balance_wallet_outlined,
-                  color: isDark ? AppColors.info : const Color(0xFF0284C7),
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.payments_outlined,
-                    label: 'Petty Cash',
-                    route: '/cash',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.account_balance_rounded,
-                    label: 'Bank Accounts',
-                    route: '/bank',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.swap_horiz_rounded,
-                    label: 'Cash & Bank Ledger',
-                    route: '/cash-bank',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.payment_rounded,
-                    label: 'Cheques Register',
-                    route: '/cheques',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.request_quote_outlined,
-                    label: 'Loan Accounts',
-                    route: '/loans',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
+      final hasAccounting = PermissionService.hasPermission('accounting', user: currentUser);
+      final hasReports = PermissionService.hasPermission('reports', user: currentUser);
+      final hasCash = PermissionService.hasPermission('cash', user: currentUser);
+      final hasBank = PermissionService.hasPermission('bank', user: currentUser);
+      final hasCashBank = PermissionService.hasPermission('cash-bank', user: currentUser);
+      final hasCheques = PermissionService.hasPermission('cheques', user: currentUser);
+      final hasLoans = PermissionService.hasPermission('loans', user: currentUser);
+      final hasCustomers = PermissionService.hasPermission('customers', user: currentUser);
+      final hasSuppliers = PermissionService.hasPermission('suppliers', user: currentUser);
+      final hasTransporters = PermissionService.hasPermission('transporters', user: currentUser);
+      final hasProducts = PermissionService.hasPermission('products', user: currentUser);
+      final hasCategories = PermissionService.hasPermission('categories', user: currentUser);
+      final hasSubcategories = PermissionService.hasPermission('subcategories', user: currentUser);
+      final hasInventory = PermissionService.hasPermission('inventory', user: currentUser);
+      final hasPos = PermissionService.hasPermission('pos', user: currentUser);
+      final hasCheckout = PermissionService.hasPermission('checkout', user: currentUser) || hasPos;
+      final hasSales = PermissionService.hasPermission('sales', user: currentUser);
+      final hasPurchases = PermissionService.hasPermission('purchases', user: currentUser);
+      final hasExpenses = PermissionService.hasPermission('expenses', user: currentUser);
+      final hasShifts = PermissionService.hasPermission('shifts', user: currentUser);
+      final hasUtilities = PermissionService.hasPermission('utilities', user: currentUser);
+      final hasActivity = PermissionService.hasPermission('activity', user: currentUser);
+      final hasBackup = PermissionService.hasPermission('backup', user: currentUser);
+      final hasSettings = PermissionService.hasPermission('settings', user: currentUser);
 
-              // Parties & Contacts Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.partiesRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Parties & Contacts',
-                  icon: Icons.people_outline,
-                  color: AppColors.primary,
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.person_rounded,
-                    label: 'Customers',
-                    route: '/customers',
+      return Scaffold(
+        backgroundColor: isDark
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight,
+        appBar: AppTopBar(
+          title: 'System Modules',
+          subtitle: 'Access all enterprise ERP capabilities & tools',
+          showBackButton: false,
+          userRole: userRole,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Accounting & Financial Group
+                if (hasAccounting || hasReports) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Accounting & Financial Engine',
+                    icon: Icons.account_balance_outlined,
+                    color: AppColors.primary,
                   ),
-                  _ModuleItem(
-                    icon: Icons.storefront_rounded,
-                    label: 'Suppliers & Vendors',
-                    route: '/suppliers',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.local_shipping_rounded,
-                    label: 'Transporters',
-                    route: '/transporters',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.menu_book_rounded,
-                    label: 'Digital Khaata',
-                    route: '/khaata',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
-
-              // Inventory & Product Catalog Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.inventoryRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Inventory & Product Catalog',
-                  icon: Icons.inventory_2_outlined,
-                  color: isDark ? AppColors.info : const Color(0xFF0284C7),
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.inventory_rounded,
-                    label: 'Products Catalog',
-                    route: '/products',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.category_rounded,
-                    label: 'Categories',
-                    route: '/categories',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.alt_route_rounded,
-                    label: 'Subcategories',
-                    route: '/subcategories',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.warehouse_rounded,
-                    label: 'Inventory & Stock Movements',
-                    route: '/inventory',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.playlist_add_check_rounded,
-                    label: 'Opening Stock Manager',
-                    route: '/opening-stock',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.store_mall_directory_rounded,
-                    label: 'Stores / Godowns',
-                    route: '/inventory/godowns',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.sync_alt_rounded,
-                    label: 'Stock Transfer',
-                    route: '/inventory/stock-transfer',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
-
-              // Sales & POS Billing Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.salesRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Sales & POS Billing',
-                  icon: Icons.point_of_sale_rounded,
-                  color: AppColors.primary,
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.point_of_sale_rounded,
-                    label: 'POS Billing Terminal',
-                    route: '/pos',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.shopping_cart_checkout_rounded,
-                    label: 'POS Checkout Cart',
-                    route: '/checkout',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.receipt_long_rounded,
-                    label: 'Sales Invoices',
-                    route: '/sales',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.payments_rounded,
-                    label: 'Payment-In Collection',
-                    route: '/sales/payment-in',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.assignment_return_rounded,
-                    label: 'Sale Returns (Credit Notes)',
-                    route: '/sales/return',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
-
-              // Purchases & Vendor Procurement Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.purchaseRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Purchases & Vendor Procurement',
-                  icon: Icons.shopping_bag_outlined,
-                  color: AppColors.primary,
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.shopping_bag_rounded,
-                    label: 'Purchase Bills List',
-                    route: '/purchases',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.add_shopping_cart_rounded,
-                    label: 'Create Purchase Bill',
-                    route: '/purchases/create',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.upload_outlined,
-                    label: 'Payment-Out Disbursements',
-                    route: '/payment-out',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.assignment_return_outlined,
-                    label: 'Purchase Returns (Debit Notes)',
-                    route: '/purchase-return',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
-
-              // Expenses & Indirect Income Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.expenseRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Expenses & Indirect Income',
-                  icon: Icons.receipt_long_outlined,
-                  color: isDark ? AppColors.warning : const Color(0xFFD97706),
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.receipt_long_rounded,
-                    label: 'Expenses Manager',
-                    route: '/expenses',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.trending_up_rounded,
-                    label: 'Other Direct / Indirect Income',
-                    route: '/expenses/income',
-                  ),
-                ]),
-                const SizedBox(height: 16),
-              ],
-
-              // Shift & Utility Tools Group
-              _buildSectionHeader(
-                context: context,
-                title: 'Shift & Utility Tools',
-                icon: Icons.construction_outlined,
-                color: isDark ? AppColors.warning : const Color(0xFFD97706),
-              ),
-              _buildGridSection([
-                if (PermissionService.hasRole(
-                  userRole,
-                  PermissionService.shiftRoles,
-                ))
-                  _ModuleItem(
-                    icon: Icons.schedule_rounded,
-                    label: 'Cashier Shifts',
-                    route: '/shifts',
-                  ),
-                if (PermissionService.hasRole(
-                  userRole,
-                  PermissionService.utilityRoles,
-                )) ...[
-                  _ModuleItem(
-                    icon: Icons.qr_code_2_rounded,
-                    label: 'Barcode Generator',
-                    route: '/utilities/barcode',
-                  ),
-                  _ModuleItem(
-                    icon: Icons.import_export_rounded,
-                    label: 'Import / Export',
-                    route: '/utilities/import-export',
-                  ),
+                  _buildGridSection([
+                    if (hasAccounting) ...[
+                      _ModuleItem(
+                        icon: Icons.dashboard_customize_outlined,
+                        label: 'Accounting Dashboard',
+                        route: '/accounting',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.account_tree_outlined,
+                        label: 'Chart of Accounts',
+                        route: '/accounting/chart-of-accounts',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.menu_book_rounded,
+                        label: 'Ledger Accounts',
+                        route: '/accounting/ledgers',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Accounting Vouchers',
+                        route: '/accounting/vouchers',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.book_outlined,
+                        label: 'Day Book Report',
+                        route: '/accounting/day-book',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.scale_rounded,
+                        label: 'Trial Balance',
+                        route: '/accounting/trial-balance',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.receipt_rounded,
+                        label: 'GST & Tax Reports',
+                        route: '/accounting/gst',
+                      ),
+                    ],
+                    if (hasReports)
+                      _ModuleItem(
+                        icon: Icons.bar_chart_rounded,
+                        label: 'Sales & Business Reports',
+                        route: '/reports',
+                      ),
+                    if (hasAccounting) ...[
+                      _ModuleItem(
+                        icon: Icons.pie_chart_outline_rounded,
+                        label: 'Financial Reports',
+                        route: '/accounting/reports',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.health_and_safety_outlined,
+                        label: 'Accounting Health',
+                        route: '/accounting/health',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.published_with_changes_rounded,
+                        label: 'Reconciliation Hub',
+                        route: '/accounting/reconciliation',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.upload_file_rounded,
+                        label: 'Bank Importer',
+                        route: '/accounting/bank-statement-import',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.settings_applications_outlined,
+                        label: 'Accounting Config',
+                        route: '/accounting/settings',
+                      ),
+                    ],
+                  ]),
+                  const SizedBox(height: 16),
                 ],
-              ]),
-              const SizedBox(height: 16),
 
-              // Administration & Security Group
-              if (PermissionService.hasRole(
-                userRole,
-                PermissionService.adminOnlyRoles,
-              )) ...[
-                _buildSectionHeader(
-                  context: context,
-                  title: 'Administration & Security',
-                  icon: Icons.admin_panel_settings_outlined,
-                  color: isDark ? AppColors.danger : const Color(0xFFE11D48),
-                ),
-                _buildGridSection([
-                  _ModuleItem(
-                    icon: Icons.history_rounded,
-                    label: 'Activity Audit Logs',
-                    route: '/activity',
+                // Cash & Banking Group
+                if (hasCash || hasBank || hasCashBank || hasCheques || hasLoans) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Cash & Banking',
+                    icon: Icons.account_balance_wallet_outlined,
+                    color: isDark ? AppColors.info : const Color(0xFF0284C7),
                   ),
-                  _ModuleItem(
-                    icon: Icons.cloud_sync_rounded,
-                    label: 'Backup & Restore',
-                    route: '/backup',
+                  _buildGridSection([
+                    if (hasCash)
+                      _ModuleItem(
+                        icon: Icons.payments_outlined,
+                        label: 'Petty Cash',
+                        route: '/cash',
+                      ),
+                    if (hasBank)
+                      _ModuleItem(
+                        icon: Icons.account_balance_rounded,
+                        label: 'Bank Accounts',
+                        route: '/bank',
+                      ),
+                    if (hasCashBank)
+                      _ModuleItem(
+                        icon: Icons.swap_horiz_rounded,
+                        label: 'Cash & Bank Ledger',
+                        route: '/cash-bank',
+                      ),
+                    if (hasCheques)
+                      _ModuleItem(
+                        icon: Icons.payment_rounded,
+                        label: 'Cheques Register',
+                        route: '/cheques',
+                      ),
+                    if (hasLoans)
+                      _ModuleItem(
+                        icon: Icons.request_quote_outlined,
+                        label: 'Loan Accounts',
+                        route: '/loans',
+                      ),
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Parties & Contacts Group
+                if (hasCustomers || hasSuppliers || hasTransporters) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Parties & Contacts',
+                    icon: Icons.people_outline,
+                    color: AppColors.primary,
                   ),
-                  _ModuleItem(
-                    icon: Icons.tune_rounded,
-                    label: 'System Settings',
-                    route: '/settings',
+                  _buildGridSection([
+                    if (hasCustomers)
+                      _ModuleItem(
+                        icon: Icons.person_rounded,
+                        label: 'Customers',
+                        route: '/customers',
+                      ),
+                    if (hasSuppliers)
+                      _ModuleItem(
+                        icon: Icons.storefront_rounded,
+                        label: 'Suppliers & Vendors',
+                        route: '/suppliers',
+                      ),
+                    if (hasTransporters)
+                      _ModuleItem(
+                        icon: Icons.local_shipping_rounded,
+                        label: 'Transporters',
+                        route: '/transporters',
+                      ),
+                    if (hasCustomers)
+                      _ModuleItem(
+                        icon: Icons.menu_book_rounded,
+                        label: 'Digital Khaata',
+                        route: '/khaata',
+                      ),
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Inventory & Product Catalog Group
+                if (hasProducts || hasCategories || hasSubcategories || hasInventory) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Inventory & Product Catalog',
+                    icon: Icons.inventory_2_outlined,
+                    color: isDark ? AppColors.info : const Color(0xFF0284C7),
                   ),
-                ]),
-                const SizedBox(height: 20),
+                  _buildGridSection([
+                    if (hasProducts)
+                      _ModuleItem(
+                        icon: Icons.inventory_rounded,
+                        label: 'Products Catalog',
+                        route: '/products',
+                      ),
+                    if (hasCategories)
+                      _ModuleItem(
+                        icon: Icons.category_rounded,
+                        label: 'Categories',
+                        route: '/categories',
+                      ),
+                    if (hasSubcategories)
+                      _ModuleItem(
+                        icon: Icons.alt_route_rounded,
+                        label: 'Subcategories',
+                        route: '/subcategories',
+                      ),
+                    if (hasInventory) ...[
+                      _ModuleItem(
+                        icon: Icons.warehouse_rounded,
+                        label: 'Inventory & Stock Movements',
+                        route: '/inventory',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.playlist_add_check_rounded,
+                        label: 'Opening Stock Manager',
+                        route: '/opening-stock',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.store_mall_directory_rounded,
+                        label: 'Stores / Godowns',
+                        route: '/inventory/godowns',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.sync_alt_rounded,
+                        label: 'Stock Transfer',
+                        route: '/inventory/stock-transfer',
+                      ),
+                    ],
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Sales & POS Billing Group
+                if (hasPos || hasCheckout || hasSales) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Sales & POS Billing',
+                    icon: Icons.point_of_sale_rounded,
+                    color: AppColors.primary,
+                  ),
+                  _buildGridSection([
+                    if (hasPos)
+                      _ModuleItem(
+                        icon: Icons.point_of_sale_rounded,
+                        label: 'POS Billing Terminal',
+                        route: '/pos',
+                      ),
+                    if (hasCheckout)
+                      _ModuleItem(
+                        icon: Icons.shopping_cart_checkout_rounded,
+                        label: 'POS Checkout Cart',
+                        route: '/checkout',
+                      ),
+                    if (hasSales) ...[
+                      _ModuleItem(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Sales Invoices',
+                        route: '/sales',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.payments_rounded,
+                        label: 'Payment-In Collection',
+                        route: '/sales/payment-in',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.assignment_return_rounded,
+                        label: 'Sale Returns (Credit Notes)',
+                        route: '/sales/return',
+                      ),
+                    ],
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Purchases & Vendor Procurement Group
+                if (hasPurchases) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Purchases & Vendor Procurement',
+                    icon: Icons.shopping_bag_outlined,
+                    color: AppColors.primary,
+                  ),
+                  _buildGridSection([
+                    _ModuleItem(
+                      icon: Icons.shopping_bag_rounded,
+                      label: 'Purchase Bills List',
+                      route: '/purchases',
+                    ),
+                    _ModuleItem(
+                      icon: Icons.add_shopping_cart_rounded,
+                      label: 'Create Purchase Bill',
+                      route: '/purchases/create',
+                    ),
+                    _ModuleItem(
+                      icon: Icons.upload_outlined,
+                      label: 'Payment-Out Disbursements',
+                      route: '/payment-out',
+                    ),
+                    _ModuleItem(
+                      icon: Icons.assignment_return_outlined,
+                      label: 'Purchase Returns (Debit Notes)',
+                      route: '/purchase-return',
+                    ),
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Expenses & Indirect Income Group
+                if (hasExpenses) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Expenses & Indirect Income',
+                    icon: Icons.receipt_long_outlined,
+                    color: isDark ? AppColors.warning : const Color(0xFFD97706),
+                  ),
+                  _buildGridSection([
+                    _ModuleItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Expenses Manager',
+                      route: '/expenses',
+                    ),
+                    _ModuleItem(
+                      icon: Icons.trending_up_rounded,
+                      label: 'Other Direct / Indirect Income',
+                      route: '/expenses/income',
+                    ),
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Shift & Utility Tools Group
+                if (hasShifts || hasUtilities) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Shift & Utility Tools',
+                    icon: Icons.construction_outlined,
+                    color: isDark ? AppColors.warning : const Color(0xFFD97706),
+                  ),
+                  _buildGridSection([
+                    if (hasShifts)
+                      _ModuleItem(
+                        icon: Icons.schedule_rounded,
+                        label: 'Cashier Shifts',
+                        route: '/shifts',
+                      ),
+                    if (hasUtilities) ...[
+                      _ModuleItem(
+                        icon: Icons.qr_code_2_rounded,
+                        label: 'Barcode Generator',
+                        route: '/utilities/barcode',
+                      ),
+                      _ModuleItem(
+                        icon: Icons.import_export_rounded,
+                        label: 'Import / Export',
+                        route: '/utilities/import-export',
+                      ),
+                    ],
+                  ]),
+                  const SizedBox(height: 16),
+                ],
+
+                // Administration & Security Group
+                if (hasActivity || hasBackup || hasSettings) ...[
+                  _buildSectionHeader(
+                    context: context,
+                    title: 'Administration & Security',
+                    icon: Icons.admin_panel_settings_outlined,
+                    color: isDark ? AppColors.danger : const Color(0xFFE11D48),
+                  ),
+                  _buildGridSection([
+                    if (hasActivity)
+                      _ModuleItem(
+                        icon: Icons.history_rounded,
+                        label: 'Activity Audit Logs',
+                        route: '/activity',
+                      ),
+                    if (hasBackup)
+                      _ModuleItem(
+                        icon: Icons.cloud_sync_rounded,
+                        label: 'Backup & Restore',
+                        route: '/backup',
+                      ),
+                    if (hasSettings)
+                      _ModuleItem(
+                        icon: Icons.tune_rounded,
+                        label: 'System Settings',
+                        route: '/settings',
+                      ),
+                  ]),
+                  const SizedBox(height: 20),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildSectionHeader({

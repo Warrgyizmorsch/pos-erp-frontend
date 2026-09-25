@@ -152,7 +152,8 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                   // Dynamic Authorized Modules List
                   Obx(() {
                     final user = controller.currentUser.value;
-                    final role = user?.role ?? AppRoles.admin;
+                    bool hasPerm(String module) =>
+                        PermissionService.hasPermission(module, user: user);
 
                     return AppCard(
                       padding: const EdgeInsets.all(20),
@@ -168,115 +169,133 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Only modules permitted for your active role are displayed below.',
+                            'Only modules permitted for your active role & permissions are displayed below.',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           const Divider(height: 24),
 
                           // Inventory Master Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.inventoryRoles,
-                          )) ...[
-                            _moduleButton(
-                              'Categories Module',
-                              '/categories',
-                              AppButtonVariant.primary,
-                            ),
+                          if (hasPerm('inventory') ||
+                              hasPerm('products') ||
+                              hasPerm('categories') ||
+                              hasPerm('subcategories')) ...[
+                            if (hasPerm('categories')) ...[
+                              _moduleButton(
+                                'Categories Module',
+                                '/categories',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('subcategories')) ...[
+                              _moduleButton(
+                                'Subcategories Module',
+                                '/subcategories',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('products')) ...[
+                              _moduleButton(
+                                'Products Catalog',
+                                '/products',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('inventory')) ...[
+                              _moduleButton(
+                                'Opening Stock Manager',
+                                '/opening-stock',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                              _moduleButton(
+                                'Inventory Manager',
+                                '/inventory',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const SizedBox(height: 8),
-                            _moduleButton(
-                              'Subcategories Module',
-                              '/subcategories',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Products Catalog',
-                              '/products',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Opening Stock Manager',
-                              '/opening-stock',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Inventory Manager',
-                              '/inventory',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 16),
                           ],
 
                           // Parties Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.partiesRoles,
-                          )) ...[
-                            _moduleButton(
-                              'Customers Module',
-                              '/customers',
-                              AppButtonVariant.primary,
-                            ),
+                          if (hasPerm('customers') ||
+                              hasPerm('suppliers') ||
+                              hasPerm('transporters')) ...[
+                            if (hasPerm('customers')) ...[
+                              _moduleButton(
+                                'Customers Module',
+                                '/customers',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('suppliers')) ...[
+                              _moduleButton(
+                                'Suppliers Module',
+                                '/suppliers',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('transporters')) ...[
+                              _moduleButton(
+                                'Transporters Module',
+                                '/transporters',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const SizedBox(height: 8),
-                            _moduleButton(
-                              'Suppliers Module',
-                              '/suppliers',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Transporters Module',
-                              '/transporters',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 16),
                           ],
 
                           // Sales & POS Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.salesRoles,
-                          )) ...[
-                            _moduleButton(
-                              'POS Cashier Terminal',
-                              '/pos',
-                              AppButtonVariant.secondary,
-                            ),
+                          if (hasPerm('sales') ||
+                              hasPerm('pos') ||
+                              hasPerm('checkout')) ...[
+                            if (hasPerm('pos')) ...[
+                              _moduleButton(
+                                'POS Cashier Terminal',
+                                '/pos',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('checkout') || hasPerm('pos')) ...[
+                              _moduleButton(
+                                'POS Dedicated Checkout',
+                                '/checkout',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('sales')) ...[
+                              _moduleButton(
+                                'Sales Invoices',
+                                '/sales',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                              _moduleButton(
+                                'Payment-In Register',
+                                '/sales/payment-in',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                              _moduleButton(
+                                'Sale Return / Credit Note',
+                                '/sales/return',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const SizedBox(height: 8),
-                            _moduleButton(
-                              'POS Dedicated Checkout',
-                              '/checkout',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Sales Invoices',
-                              '/sales',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Payment-In Register',
-                              '/sales/payment-in',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Sale Return / Credit Note',
-                              '/sales/return',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 16),
                           ],
 
                           // Purchases Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.purchaseRoles,
-                          )) ...[
+                          if (hasPerm('purchases')) ...[
                             _moduleButton(
                               'Purchase Bills',
                               '/purchases',
@@ -298,10 +317,7 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ],
 
                           // Expenses & Income Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.expenseRoles,
-                          )) ...[
+                          if (hasPerm('expenses')) ...[
                             _moduleButton(
                               'Expenses Manager',
                               '/expenses',
@@ -317,47 +333,56 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ],
 
                           // Cash & Bank Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.cashBankRoles,
-                          )) ...[
-                            _moduleButton(
-                              'Petty Cash Register',
-                              '/cash',
-                              AppButtonVariant.primary,
-                            ),
+                          if (hasPerm('cash') ||
+                              hasPerm('bank') ||
+                              hasPerm('cash-bank') ||
+                              hasPerm('cheques') ||
+                              hasPerm('loans')) ...[
+                            if (hasPerm('cash')) ...[
+                              _moduleButton(
+                                'Petty Cash Register',
+                                '/cash',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('bank')) ...[
+                              _moduleButton(
+                                'Bank Accounts Registry',
+                                '/bank',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('cash-bank')) ...[
+                              _moduleButton(
+                                'Cash & Bank Ledger',
+                                '/cash-bank',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('cheques')) ...[
+                              _moduleButton(
+                                'Cheques Register',
+                                '/cheques',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('loans')) ...[
+                              _moduleButton(
+                                'Loans Management',
+                                '/loans',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const SizedBox(height: 8),
-                            _moduleButton(
-                              'Bank Accounts Registry',
-                              '/bank',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Cash & Bank Ledger',
-                              '/cash-bank',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Cheques Register',
-                              '/cheques',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'Loans Management',
-                              '/loans',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 16),
                           ],
 
                           // Cashier Shifts Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.shiftRoles,
-                          )) ...[
+                          if (hasPerm('shifts')) ...[
                             _moduleButton(
                               'Cashier Shifts Manager',
                               '/shifts',
@@ -367,10 +392,7 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ],
 
                           // Accounting Engine Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.accountingRoles,
-                          )) ...[
+                          if (hasPerm('accounting')) ...[
                             _moduleButton(
                               'Accounting Dashboard',
                               '/accounting',
@@ -440,10 +462,7 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ],
 
                           // Reports & BI Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.reportsRoles,
-                          )) ...[
+                          if (hasPerm('reports')) ...[
                             _moduleButton(
                               'Reports & Analytics',
                               '/reports',
@@ -453,35 +472,38 @@ class DashboardPlaceholderView extends GetView<AuthController> {
                           ],
 
                           // Admin Only Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.adminOnlyRoles,
-                          )) ...[
-                            _moduleButton(
-                              'Activity Audit Logs',
-                              '/activity',
-                              AppButtonVariant.secondary,
-                            ),
+                          if (hasPerm('activity') ||
+                              hasPerm('backup') ||
+                              hasPerm('settings')) ...[
+                            if (hasPerm('activity')) ...[
+                              _moduleButton(
+                                'Activity Audit Logs',
+                                '/activity',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('backup')) ...[
+                              _moduleButton(
+                                'Backup & Restore',
+                                '/backup',
+                                AppButtonVariant.primary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            if (hasPerm('settings')) ...[
+                              _moduleButton(
+                                'System Settings',
+                                '/settings',
+                                AppButtonVariant.secondary,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const SizedBox(height: 8),
-                            _moduleButton(
-                              'Backup & Restore',
-                              '/backup',
-                              AppButtonVariant.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            _moduleButton(
-                              'System Settings',
-                              '/settings',
-                              AppButtonVariant.secondary,
-                            ),
-                            const SizedBox(height: 16),
                           ],
 
                           // Utilities Group
-                          if (PermissionService.hasRole(
-                            role,
-                            PermissionService.utilityRoles,
-                          )) ...[
+                          if (hasPerm('utilities')) ...[
                             _moduleButton(
                               'Barcode Generator',
                               '/utilities/barcode',
