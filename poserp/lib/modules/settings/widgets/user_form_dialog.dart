@@ -88,19 +88,23 @@ class UserFormDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildTabButton(
-                      index: 0,
-                      label: 'Profile & Role',
-                      icon: Icons.person_outline_rounded,
-                      isActive: controller.userDialogTab.value == 0,
+                    Expanded(
+                      child: _buildTabButton(
+                        index: 0,
+                        label: 'Profile & Role',
+                        icon: Icons.person_outline_rounded,
+                        isActive: controller.userDialogTab.value == 0,
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    _buildTabButton(
-                      index: 1,
-                      label:
-                          'Module Permissions (${controller.userPermissions.length})',
-                      icon: Icons.security_rounded,
-                      isActive: controller.userDialogTab.value == 1,
+                    Expanded(
+                      child: _buildTabButton(
+                        index: 1,
+                        label:
+                            'Permissions (${controller.userPermissions.length})',
+                        icon: Icons.security_rounded,
+                        isActive: controller.userDialogTab.value == 1,
+                      ),
                     ),
                   ],
                 ),
@@ -166,7 +170,7 @@ class UserFormDialog extends StatelessWidget {
     return InkWell(
       onTap: () => controller.userDialogTab.value = index,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -176,19 +180,24 @@ class UserFormDialog extends StatelessWidget {
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 17,
+              size: 16,
               color: isActive ? AppColors.primary : Colors.grey[600],
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? AppColors.primary : Colors.grey[600],
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? AppColors.primary : Colors.grey[600],
+                ),
               ),
             ),
           ],
@@ -461,8 +470,11 @@ class UserFormDialog extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Quick select actions
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
             Obx(
               () => Text(
@@ -474,6 +486,7 @@ class UserFormDialog extends StatelessWidget {
               ),
             ),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TextButton(
                   onPressed: () {
