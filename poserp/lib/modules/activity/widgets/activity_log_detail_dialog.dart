@@ -1,75 +1,153 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../models/activity_log.dart';
+import 'activity_log_card.dart';
 
-class ActivityLogDetailDialog extends StatelessWidget {
+class ActivityLogDetailDialog extends StatefulWidget {
   final ActivityLog log;
 
   const ActivityLogDetailDialog({super.key, required this.log});
 
   @override
+  State<ActivityLogDetailDialog> createState() =>
+      _ActivityLogDetailDialogState();
+}
+
+class _ActivityLogDetailDialogState extends State<ActivityLogDetailDialog> {
+  bool _showRawJson = false;
+
+  String _formatDateTime(String dateStr) {
+    final parsed = DateTime.tryParse(dateStr);
+    if (parsed == null) return dateStr;
+    final local = parsed.toLocal();
+    final time =
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}:${local.second.toString().padLeft(2, '0')}';
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year} at $time';
+  }
+
+  Widget _buildActionBadge(String action) {
+    final color = ActivityLogCard.getActionColor(action);
+    final icon = ActivityLogCard.getActionIcon(action);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: AppRadius.full,
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            action.replaceAll('_', ' ').toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final log = widget.log;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: screenHeight * 0.88,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Modal Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+              child: Row(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(25),
+                      borderRadius: AppRadius.md,
+                    ),
+                    child: const Icon(
+                      Icons.assignment_outlined,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(25),
-                            borderRadius: AppRadius.md,
+                        const Text(
+                          'Activity Log Details',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: const Icon(
-                            Icons.assignment_outlined,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Activity Log Details',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Recorded at ${log.createdAt.split('T')[0]}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatDateTime(log.createdAt),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -78,199 +156,252 @@ class ActivityLogDetailDialog extends StatelessWidget {
                   _buildActionBadge(log.action),
                 ],
               ),
-              const Divider(height: 24),
+            ),
+            const Divider(height: 1),
 
-              // Overview Grid
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.inputDark : Colors.grey[100],
-                  borderRadius: AppRadius.md,
-                ),
+            // Scrollable Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'USER',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                log.userName,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (log.userEmail != null)
-                                Text(
-                                  log.userEmail!,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
+                    // Overview Summary Card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.inputDark : Colors.grey[100],
+                        borderRadius: AppRadius.md,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildDetailRow('User', log.userName, isDark),
+                          if (log.userEmail != null &&
+                              log.userEmail!.isNotEmpty)
+                            _buildDetailRow('Email', log.userEmail!, isDark),
+                          _buildDetailRow('Module', log.module, isDark),
+                          _buildDetailRow(
+                            'Action',
+                            log.action.replaceAll('_', ' ').toUpperCase(),
+                            isDark,
                           ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'IP ADDRESS',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                log.ipAddress ?? '—',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                          if (log.ipAddress != null &&
+                              log.ipAddress!.isNotEmpty)
+                            _buildDetailRow('IP Address', log.ipAddress!, isDark),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
+                    const SizedBox(height: 16),
+
+                    // Description Section
+                    const Text(
+                      'EVENT DESCRIPTION',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.cardDark
+                            : Colors.grey[50],
+                        borderRadius: AppRadius.md,
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                        ),
+                      ),
+                      child: SelectableText(
+                        log.description,
+                        style: const TextStyle(fontSize: 13, height: 1.4),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Changes / Payload Details
+                    if (log.details != null && log.details!.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'PAYLOAD / STATE CHANGES',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                                letterSpacing: 0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: Icon(
+                                  _showRawJson
+                                      ? Icons.view_list_rounded
+                                      : Icons.code_rounded,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  _showRawJson ? 'Formatted' : 'Raw JSON',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _showRawJson = !_showRawJson;
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(Icons.copy_rounded, size: 14),
+                                tooltip: 'Copy Details',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  Clipboard.setData(
+                                    ClipboardData(
+                                      text: const JsonEncoder.withIndent('  ')
+                                          .convert(log.details),
+                                    ),
+                                  );
+                                  Get.snackbar(
+                                    'Copied',
+                                    'Details copied to clipboard',
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    duration: const Duration(seconds: 2),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      if (_showRawJson)
+                        Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(maxHeight: 220),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.inputDark
+                                : Colors.grey[200],
+                            borderRadius: AppRadius.md,
+                          ),
+                          child: SingleChildScrollView(
+                            child: SelectableText(
+                              const JsonEncoder.withIndent('  ')
+                                  .convert(log.details),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.cardDark
+                                : Colors.grey[50],
+                            borderRadius: AppRadius.md,
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.borderLight,
+                            ),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'MODULE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
+                            children: log.details!.entries.map((entry) {
+                              final key = entry.key;
+                              final val = entry.value;
+                              final valStr = val is Map || val is List
+                                  ? const JsonEncoder.withIndent('  ')
+                                      .convert(val)
+                                  : val.toString();
+
+                              return Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withAlpha(20),
-                                  borderRadius: AppRadius.full,
-                                ),
-                                child: Text(
-                                  log.module.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: isDark
+                                          ? AppColors.borderDark
+                                          : AppColors.borderLight,
+                                    ),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      width: 120,
+                                      child: Text(
+                                        key,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? AppColors.primary
+                                              : AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: SelectableText(
+                                        valStr,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontFamily: 'monospace',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'ACTION TYPE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                log.action.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+            ),
 
-              // Description
-              const Text(
-                'DESCRIPTION',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(log.description, style: const TextStyle(fontSize: 13)),
-              const SizedBox(height: 16),
-
-              // Details JSON
-              if (log.details != null && log.details!.isNotEmpty) ...[
-                const Text(
-                  'STATE DETAILS (JSON)',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(maxHeight: 180),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.inputDark : Colors.grey[200],
-                    borderRadius: AppRadius.md,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      const JsonEncoder.withIndent('  ').convert(log.details),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Actions
-              Align(
+            // Footer
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+              child: Align(
                 alignment: Alignment.centerRight,
                 child: AppButton(
                   text: 'Close',
@@ -278,35 +409,9 @@ class ActivityLogDetailDialog extends StatelessWidget {
                   onPressed: () => Get.back(),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionBadge(String action) {
-    Color bg = AppColors.info;
-    final a = action.toLowerCase();
-    if (a.contains('create') || a.contains('add')) {
-      bg = AppColors.success;
-    } else if (a.contains('delete') || a.contains('cancel')) {
-      bg = AppColors.danger;
-    } else if (a.contains('login') || a.contains('logout')) {
-      bg = AppColors.warning;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg.withAlpha(20),
-        borderRadius: AppRadius.full,
-      ),
-      child: Text(
-        action.toUpperCase(),
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: bg),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }

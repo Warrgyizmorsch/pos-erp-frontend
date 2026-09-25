@@ -19,6 +19,7 @@ class ActivityLogController extends GetxController {
   final RxString selectedAction = 'all'.obs;
   final RxString startDate = ''.obs;
   final RxString endDate = ''.obs;
+  final RxString selectedQuickFilter = 'all'.obs;
 
   bool get hasActiveFilters =>
       searchUser.value.isNotEmpty ||
@@ -26,6 +27,68 @@ class ActivityLogController extends GetxController {
       selectedAction.value != 'all' ||
       startDate.value.isNotEmpty ||
       endDate.value.isNotEmpty;
+
+  int get activeFilterCount {
+    int count = 0;
+    if (searchUser.value.trim().isNotEmpty) count++;
+    if (selectedModule.value != 'all') count++;
+    if (selectedAction.value != 'all') count++;
+    if (startDate.value.isNotEmpty || endDate.value.isNotEmpty) count++;
+    return count;
+  }
+
+  void setQuickFilter(String type) {
+    selectedQuickFilter.value = type;
+    final now = DateTime.now();
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    // Reset standard filters first
+    searchUser.value = '';
+    selectedModule.value = 'all';
+    selectedAction.value = 'all';
+    startDate.value = '';
+    endDate.value = '';
+
+    switch (type) {
+      case 'today':
+        startDate.value = todayStr;
+        endDate.value = todayStr;
+        break;
+      case 'sale':
+        selectedModule.value = 'Sale';
+        break;
+      case 'purchase':
+        selectedModule.value = 'Purchase';
+        break;
+      case 'login':
+        selectedAction.value = 'login';
+        break;
+      case 'delete':
+        selectedAction.value = 'delete';
+        break;
+      case 'all':
+      default:
+        break;
+    }
+  }
+
+  void clearUserFilter() {
+    searchUser.value = '';
+  }
+
+  void clearModuleFilter() {
+    selectedModule.value = 'all';
+  }
+
+  void clearActionFilter() {
+    selectedAction.value = 'all';
+  }
+
+  void clearDateFilter() {
+    startDate.value = '';
+    endDate.value = '';
+  }
 
   @override
   void onInit() {
@@ -90,6 +153,7 @@ class ActivityLogController extends GetxController {
     selectedAction.value = 'all';
     startDate.value = '';
     endDate.value = '';
+    selectedQuickFilter.value = 'all';
     currentPage.value = 1;
     loadLogs();
   }
