@@ -188,40 +188,47 @@ class RoleDefaultsDialog extends StatelessWidget {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          categoryTitle,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 1.5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isAllSelected
-                                                ? AppColors.success.withAlpha(20)
-                                                : Colors.grey.withAlpha(25),
-                                            borderRadius: AppRadius.full,
-                                          ),
-                                          child: Text(
-                                            '$selectedInCat/${modules.length}',
-                                            style: TextStyle(
-                                              fontSize: 9.5,
-                                              fontWeight: FontWeight.bold,
-                                              color: isAllSelected
-                                                  ? AppColors.success
-                                                  : Colors.grey[600],
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              categoryTitle,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 1.5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isAllSelected
+                                                  ? AppColors.success.withAlpha(20)
+                                                  : Colors.grey.withAlpha(25),
+                                              borderRadius: AppRadius.full,
+                                            ),
+                                            child: Text(
+                                              '$selectedInCat/${modules.length}',
+                                              style: TextStyle(
+                                                fontSize: 9.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: isAllSelected
+                                                    ? AppColors.success
+                                                    : Colors.grey[600],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
                                     InkWell(
                                       borderRadius: AppRadius.sm,
                                       onTap: () => controller.toggleCategoryForRole(modules),
