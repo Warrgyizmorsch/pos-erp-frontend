@@ -62,7 +62,10 @@ class SettingsView extends GetView<SettingsController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
                               const Text(
                                 'Business & Store Profile',
@@ -71,7 +74,6 @@ class SettingsView extends GetView<SettingsController> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -136,7 +138,10 @@ class SettingsView extends GetView<SettingsController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
                               const Text(
                                 'User Management & Permissions',
@@ -145,7 +150,6 @@ class SettingsView extends GetView<SettingsController> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -194,23 +198,29 @@ class SettingsView extends GetView<SettingsController> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.person_outline,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'User Profile & Credentials',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Row(
+                          children: const [
+                            Icon(
+                              Icons.person_outline,
+                              color: AppColors.primary,
+                              size: 20,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'User Profile & Credentials',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Obx(
                         () => Container(
                           padding: const EdgeInsets.symmetric(
@@ -392,11 +402,14 @@ class SettingsView extends GetView<SettingsController> {
                         size: 20,
                       ),
                       SizedBox(width: 8),
-                      Text(
-                        'Application Preferences & Modules',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          'Application Preferences & Modules',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
