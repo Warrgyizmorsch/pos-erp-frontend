@@ -545,7 +545,15 @@ class _POSPrintDialogState extends State<POSPrintDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: const TextStyle(
@@ -812,44 +820,100 @@ class _POSPrintDialogState extends State<POSPrintDialog> {
           const Divider(color: Colors.black, height: 16),
 
           // Totals Section
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                flex: 5,
-                child: Text(
-                  'Terms & Conditions:\n1. Goods once sold will not be taken back.\n2. Subject to local state jurisdiction.',
-                  style: TextStyle(fontSize: 9, color: Colors.grey),
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 420;
+
+              final totalsColumn = Column(
+                children: [
+                  if (subtotal > 0)
+                    _buildReceiptRow('Subtotal:', '₹${subtotal.toStringAsFixed(2)}'),
+                  if (taxAmount > 0)
+                    _buildReceiptRow('GST Tax:', '₹${taxAmount.toStringAsFixed(2)}'),
+                  if (discountAmount > 0)
+                    _buildReceiptRow('Discount:', '-₹${discountAmount.toStringAsFixed(2)}'),
+                  const Divider(color: Colors.black, height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Flexible(
+                        child: Text(
+                          'GRAND TOTAL:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.black,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '₹${totalAmt.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+
+              final termsWidget = const Text(
+                'Terms & Conditions:\n1. Goods once sold will not be taken back.\n2. Subject to local state jurisdiction.',
+                style: TextStyle(fontSize: 9, color: Colors.grey),
+              );
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (subtotal > 0) _buildReceiptRow('Subtotal:', '₹${subtotal.toStringAsFixed(2)}'),
-                    if (taxAmount > 0) _buildReceiptRow('GST Tax:', '₹${taxAmount.toStringAsFixed(2)}'),
-                    if (discountAmount > 0) _buildReceiptRow('Discount:', '-₹${discountAmount.toStringAsFixed(2)}'),
-                    const Divider(color: Colors.black, height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('GRAND TOTAL:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black)),
-                        Text('₹${totalAmt.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)),
-                      ],
-                    ),
+                    totalsColumn,
+                    const SizedBox(height: 12),
+                    const Divider(color: Colors.black12, height: 1),
+                    const SizedBox(height: 8),
+                    termsWidget,
                   ],
-                ),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 5, child: termsWidget),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 5, child: totalsColumn),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
           // Signatory Footer
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Customer Signature', style: TextStyle(fontSize: 9, color: Colors.grey)),
-              Text('Authorized Signatory for POS ERP', style: TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: const [
+              Text(
+                'Customer Signature',
+                style: TextStyle(fontSize: 9, color: Colors.grey),
+              ),
+              Text(
+                'Authorized Signatory for POS ERP',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],
