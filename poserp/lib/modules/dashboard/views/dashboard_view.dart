@@ -37,11 +37,6 @@ class DashboardView extends GetView<DashboardController> {
       final rawIndex = controller.activeBottomNavIndex.value;
       final safeNavIndex = rawIndex.clamp(0, tabs.length - 1);
 
-      if (rawIndex != safeNavIndex) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          controller.setBottomNavIndex(safeNavIndex);
-        });
-      }
 
       return Scaffold(
         appBar: safeNavIndex == 0

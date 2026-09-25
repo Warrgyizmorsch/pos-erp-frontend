@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import '../../sales/controllers/sale_controller.dart';
 import '../models/dashboard_summary.dart';
 import '../repositories/dashboard_repository.dart';
 
@@ -37,8 +36,5 @@ class DashboardController extends GetxController {
 
   void setBottomNavIndex(int index) {
     activeBottomNavIndex.value = index;
-    if (index == 1 && Get.isRegistered<SaleController>()) {
-      Get.find<SaleController>().loadSales();
-    }
   }
 }

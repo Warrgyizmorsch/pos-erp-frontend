@@ -3,6 +3,7 @@ import '../../../core/api/api_exceptions.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../data/models/user.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepository;
@@ -95,9 +96,12 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     try {
+      if (Get.isRegistered<DashboardController>()) {
+        Get.find<DashboardController>().activeBottomNavIndex.value = 0;
+      }
+      Get.offAllNamed('/login');
       await _authRepository.logout();
       currentUser.value = null;
-      Get.offAllNamed('/login');
     } catch (e) {
       showErrorSnackbar('Failed to log out cleanly.');
     }
