@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/utils/app_snackbar.dart';
@@ -11,16 +12,25 @@ enum PrintFormat { thermal80mm, standardA4 }
 
 class POSPrintDialog extends StatefulWidget {
   final Map<String, dynamic> saleData;
+  final bool isCheckout;
 
-  const POSPrintDialog({super.key, required this.saleData});
+  const POSPrintDialog({
+    super.key,
+    required this.saleData,
+    this.isCheckout = false,
+  });
 
   static Future<void> show(
     BuildContext context,
-    Map<String, dynamic> saleData,
-  ) async {
+    Map<String, dynamic> saleData, {
+    bool isCheckout = false,
+  }) async {
     await showDialog(
       context: context,
-      builder: (context) => POSPrintDialog(saleData: saleData),
+      builder: (context) => POSPrintDialog(
+        saleData: saleData,
+        isCheckout: isCheckout,
+      ),
     );
   }
 
@@ -30,6 +40,34 @@ class POSPrintDialog extends StatefulWidget {
 
 class _POSPrintDialogState extends State<POSPrintDialog> {
   PrintFormat _format = PrintFormat.thermal80mm;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isCheckout) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAutoPrint();
+      });
+    }
+  }
+
+  Future<void> _checkAutoPrint() async {
+    if (!mounted) return;
+    try {
+      final printerService = Get.find<BluetoothPrinterService>();
+      final box = GetStorage();
+      final autoPrint = box.read<bool>('pos_auto_print_receipts') ?? true;
+
+      if (autoPrint &&
+          printerService.isConnected.value &&
+          _format == PrintFormat.thermal80mm) {
+        final success = await printerService.printReceipt(widget.saleData);
+        if (success && mounted) {
+          Get.back();
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {

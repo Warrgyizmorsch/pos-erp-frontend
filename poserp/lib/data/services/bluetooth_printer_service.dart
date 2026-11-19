@@ -15,6 +15,9 @@ class BluetoothPrinterService extends GetxService {
   static const String keyPrinterMac = 'bt_printer_mac';
   static const String keyPrinterName = 'bt_printer_name';
   static const String keyPaperSize = 'bt_paper_size';
+  static const String keyAutoCut = 'bt_auto_cut';
+  static const String keyCutFeedLines = 'bt_cut_feed_lines';
+  static const String keyCutType = 'bt_cut_type';
 
   final RxBool isConnected = false.obs;
   final RxBool isConnecting = false.obs;
@@ -25,6 +28,9 @@ class BluetoothPrinterService extends GetxService {
   final RxString connectedPrinterName = ''.obs;
   final RxString connectedPrinterMac = ''.obs;
   final RxString paperSize = '80mm'.obs; // '80mm' or '58mm'
+  final RxBool autoCut = true.obs;
+  final RxInt cutFeedLines = 2.obs; // 1 = minimal (~4mm), 2 = compact (~8mm), 3 = standard (~12mm)
+  final RxString cutType = 'full'.obs; // 'full' (Universal full cut default), 'feed_cut', 'esc_i', 'partial'
 
   final RxList<BluetoothInfo> availableDevices = <BluetoothInfo>[].obs;
 
@@ -35,9 +41,21 @@ class BluetoothPrinterService extends GetxService {
     final savedMac = _box.read<String>(keyPrinterMac);
     final savedName = _box.read<String>(keyPrinterName);
     final savedSize = _box.read<String>(keyPaperSize);
+    final savedAutoCut = _box.read<bool>(keyAutoCut);
+    final savedFeedLines = _box.read<int>(keyCutFeedLines);
+    final savedCutType = _box.read<String>(keyCutType);
 
     if (savedSize != null && (savedSize == '80mm' || savedSize == '58mm')) {
       paperSize.value = savedSize;
+    }
+    if (savedAutoCut != null) {
+      autoCut.value = savedAutoCut;
+    }
+    if (savedFeedLines != null) {
+      cutFeedLines.value = savedFeedLines;
+    }
+    if (savedCutType != null) {
+      cutType.value = savedCutType;
     }
 
     if (savedMac != null && savedMac.isNotEmpty) {
@@ -282,6 +300,28 @@ class BluetoothPrinterService extends GetxService {
     }
   }
 
+  /// Enable or disable auto-cut after printing
+  Future<void> setAutoCut(bool val) async {
+    autoCut.value = val;
+    await _box.write(keyAutoCut, val);
+  }
+
+  /// Set bottom margin feed lines before cutting (1 = minimal, 2 = compact, 3 = standard)
+  Future<void> setCutFeedLines(int lines) async {
+    if (lines >= 0 && lines <= 5) {
+      cutFeedLines.value = lines;
+      await _box.write(keyCutFeedLines, lines);
+    }
+  }
+
+  /// Set cut type ('partial' or 'full')
+  Future<void> setCutType(String type) async {
+    if (type == 'partial' || type == 'full') {
+      cutType.value = type;
+      await _box.write(keyCutType, type);
+    }
+  }
+
   /// Ensure we have an active connection to the printer
   Future<bool> ensureConnected() async {
     if (!_isSupportedPlatform()) return false;
@@ -377,9 +417,13 @@ class BluetoothPrinterService extends GetxService {
         businessAddress: businessAddress,
         businessPhone: businessPhone,
         businessGstin: businessGstin,
+        autoCut: autoCut.value,
+        cutFeedLines: cutFeedLines.value,
+        cutMode: cutType.value,
       );
 
       final success = await PrintBluetoothThermal.writeBytes(bytes);
+
       if (success) {
         AppSnackbar.success(
           'Receipt sent to ${connectedPrinterName.value} successfully.',
@@ -422,9 +466,13 @@ class BluetoothPrinterService extends GetxService {
             ? connectedPrinterName.value
             : 'Posiflow Thermal Printer',
         macAddress: connectedPrinterMac.value,
+        autoCut: autoCut.value,
+        cutFeedLines: cutFeedLines.value,
+        cutMode: cutType.value,
       );
 
       final success = await PrintBluetoothThermal.writeBytes(bytes);
+
       if (success) {
         AppSnackbar.success(
           'Test print sent to ${connectedPrinterName.value} successfully.',
@@ -441,6 +489,51 @@ class BluetoothPrinterService extends GetxService {
     } catch (e) {
       _logger.e('Failed to send test print: $e');
       AppSnackbar.error('Test print failed: $e', title: 'Print Error');
+      return false;
+    } finally {
+      isPrinting.value = false;
+    }
+  }
+
+  /// Direct test trigger for the auto-cutter blade
+  Future<bool> testCut({String? specificMode}) async {
+    final mode = specificMode ?? cutType.value;
+    try {
+      isPrinting.value = true;
+
+      final ready = await ensureConnected();
+      if (!ready) {
+        AppSnackbar.warning(
+          'Printer is not connected. Please connect first.',
+          title: 'Printer Offline',
+        );
+        return false;
+      }
+
+      // Feed lines and trigger cut commands
+      final cutPacket = ThermalReceiptGenerator.getCutBytes(
+        feedLines: cutFeedLines.value,
+        autoCut: true,
+        cutMode: mode,
+      );
+
+      final success = await PrintBluetoothThermal.writeBytes(cutPacket);
+      if (success) {
+        AppSnackbar.success(
+          'Cut command "$mode" sent to ${connectedPrinterName.value}.',
+          title: 'Cutter Tested',
+        );
+        return true;
+      } else {
+        AppSnackbar.error(
+          'Failed to trigger cutter on printer.',
+          title: 'Cutter Failed',
+        );
+        return false;
+      }
+    } catch (e) {
+      _logger.e('Failed to test cut: $e');
+      AppSnackbar.error('Cutter test failed: $e', title: 'Cutter Error');
       return false;
     } finally {
       isPrinting.value = false;

@@ -450,7 +450,11 @@ class POSRightPanel extends StatelessWidget {
                 if (success &&
                     controller.lastSavedSale.value != null &&
                     context.mounted) {
-                  POSPrintDialog.show(context, controller.lastSavedSale.value!);
+                  POSPrintDialog.show(
+                    context,
+                    controller.lastSavedSale.value!,
+                    isCheckout: true,
+                  );
                 }
               },
             ),

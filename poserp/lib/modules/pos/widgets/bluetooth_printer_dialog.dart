@@ -160,6 +160,23 @@ class BluetoothPrinterDialog extends StatelessWidget {
                                   : () => printerService.printTestReceipt(),
                             ),
                             const SizedBox(width: 4),
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              icon: const Icon(Icons.content_cut, size: 14),
+                              label: const Text('Test Cut',
+                                  style: TextStyle(fontSize: 11)),
+                              onPressed: printerService.isPrinting.value
+                                  ? null
+                                  : () => printerService.testCut(),
+                            ),
+                            const SizedBox(width: 4),
                             IconButton(
                               icon: const Icon(Icons.link_off,
                                   size: 18, color: Colors.red),
@@ -175,39 +192,275 @@ class BluetoothPrinterDialog extends StatelessWidget {
               }),
               const SizedBox(height: 14),
 
-              // Paper Width Preference Selector
-              Row(
-                children: [
-                  const Text(
-                    'Paper Width:',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 12),
-                  Obx(() {
-                    final current = printerService.paperSize.value;
-                    return Row(
+              // Printer Hardware Preferences (Paper Width, Auto-Cut & Margins)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.inputDark : Colors.grey[100],
+                  borderRadius: AppRadius.md,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row 1: Paper Width
+                    Row(
                       children: [
-                        ChoiceChip(
-                          label: const Text('80mm (Standard POS)',
-                              style: TextStyle(fontSize: 11)),
-                          selected: current == '80mm',
-                          onSelected: (sel) {
-                            if (sel) printerService.setPaperSize('80mm');
-                          },
+                        const Text(
+                          'Paper Width:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('58mm (Mini)',
-                              style: TextStyle(fontSize: 11)),
-                          selected: current == '58mm',
-                          onSelected: (sel) {
-                            if (sel) printerService.setPaperSize('58mm');
-                          },
+                        const SizedBox(width: 10),
+                        Obx(() {
+                          final current = printerService.paperSize.value;
+                          return Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('80mm (Standard POS)',
+                                    style: TextStyle(fontSize: 11)),
+                                selected: current == '80mm',
+                                onSelected: (sel) {
+                                  if (sel) printerService.setPaperSize('80mm');
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                                label: const Text('58mm (Mini)',
+                                    style: TextStyle(fontSize: 11)),
+                                selected: current == '58mm',
+                                onSelected: (sel) {
+                                  if (sel) printerService.setPaperSize('58mm');
+                                },
+                              ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                    const Divider(height: 14),
+
+                    // Row 2: Auto-Cut Toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.content_cut_rounded,
+                                size: 16, color: AppColors.primary),
+                            SizedBox(width: 6),
+                            Text(
+                              'Auto-Cut Paper on Print:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Obx(
+                          () => Switch(
+                            value: printerService.autoCut.value,
+                            activeThumbColor: AppColors.success,
+                            onChanged: (val) =>
+                                printerService.setAutoCut(val),
+                          ),
                         ),
                       ],
-                    );
-                  }),
-                ],
+                    ),
+
+                    // Row 3: Bottom Blank Space (Margin)
+                    Obx(() {
+                      if (!printerService.autoCut.value) {
+                        return const SizedBox.shrink();
+                      }
+                      final feedLines = printerService.cutFeedLines.value;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              'Bottom Space (Cut Margin):',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            ChoiceChip(
+                              label: const Text('Minimal (1 line)',
+                                  style: TextStyle(fontSize: 10)),
+                              selected: feedLines == 1,
+                              onSelected: (sel) {
+                                if (sel) printerService.setCutFeedLines(1);
+                              },
+                            ),
+                            ChoiceChip(
+                              label: const Text('Compact (2 lines)',
+                                  style: TextStyle(fontSize: 10)),
+                              selected: feedLines == 2,
+                              onSelected: (sel) {
+                                if (sel) printerService.setCutFeedLines(2);
+                              },
+                            ),
+                            ChoiceChip(
+                              label: const Text('Standard (3 lines)',
+                                  style: TextStyle(fontSize: 10)),
+                              selected: feedLines == 3,
+                              onSelected: (sel) {
+                                if (sel) printerService.setCutFeedLines(3);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    // Row 4: Cutter Command Mode Selection
+                    Obx(() {
+                      if (!printerService.autoCut.value) {
+                        return const SizedBox.shrink();
+                      }
+                      final currentMode = printerService.cutType.value;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                Text(
+                                  'Cutter Command:',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('GS V 0 (Standard)',
+                                      style: TextStyle(fontSize: 10)),
+                                  selected: currentMode == 'gs_v_0' ||
+                                      currentMode == 'full',
+                                  onSelected: (sel) {
+                                    if (sel) {
+                                      printerService.setCutType('gs_v_0');
+                                    }
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Posiflex (ESC i)',
+                                      style: TextStyle(fontSize: 10)),
+                                  selected: currentMode == 'esc_i',
+                                  onSelected: (sel) {
+                                    if (sel) printerService.setCutType('esc_i');
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Feed & Cut (GS V 66)',
+                                      style: TextStyle(fontSize: 10)),
+                                  selected: currentMode == 'gs_v_66' ||
+                                      currentMode == 'feed_cut',
+                                  onSelected: (sel) {
+                                    if (sel) {
+                                      printerService.setCutType('gs_v_66');
+                                    }
+                                  },
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Partial Cut (GS V 1)',
+                                      style: TextStyle(fontSize: 10)),
+                                  selected: currentMode == 'gs_v_1' ||
+                                      currentMode == 'partial',
+                                  onSelected: (sel) {
+                                    if (sel) {
+                                      printerService.setCutType('gs_v_1');
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.content_cut, size: 12),
+                                  label: Text(
+                                    'Test "$currentMode" Cut',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  onPressed: printerService.isPrinting.value
+                                      ? null
+                                      : () => printerService.testCut(),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Tap to test if cutter blade fires on printer',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 8),
+
+                    // Hardware note banner
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withAlpha(20),
+                        borderRadius: AppRadius.sm,
+                        border: Border.all(color: Colors.amber.withAlpha(80)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline,
+                              size: 14, color: Colors.amber),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Note for Posiflow PSF80-B: As a portable/mobile 80mm printer, PSF-80B has a manual tear bar (serrated edge) and no motorized auto-cutter blade. The app feeds 2 lines so you can tear receipts cleanly with zero wasted space.',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isDark
+                                    ? Colors.amber[200]
+                                    : Colors.grey[800],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
 

@@ -76,7 +76,11 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
                               )
                               .toList(),
                         };
-                        await POSPrintDialog.show(context, saleData);
+                        await POSPrintDialog.show(
+                          context,
+                          saleData,
+                          isCheckout: true,
+                        );
                         Get.offNamed('/pos');
                       }
                     },

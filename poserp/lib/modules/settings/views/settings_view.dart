@@ -537,7 +537,7 @@ class SettingsView extends GetView<SettingsController> {
                                     ),
                                     Text(
                                       isConn
-                                          ? 'Connected: $devName ($paperSize)'
+                                          ? 'Connected: $devName ($paperSize • ${printerService.autoCut.value ? "Auto-Cut ON (${printerService.cutFeedLines.value}L)" : "Auto-Cut OFF"})'
                                           : 'No Bluetooth printer connected',
                                       style: TextStyle(
                                         fontSize: 11,
@@ -606,6 +606,26 @@ class SettingsView extends GetView<SettingsController> {
                                       ? null
                                       : () =>
                                           printerService.printTestReceipt(),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.content_cut, size: 14),
+                                  label: const Text(
+                                    'Test Cut',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: printerService.isPrinting.value
+                                      ? null
+                                      : () => printerService.testCut(),
                                 ),
                                 const SizedBox(width: 8),
                                 OutlinedButton.icon(

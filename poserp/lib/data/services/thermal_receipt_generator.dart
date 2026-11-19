@@ -3,6 +3,8 @@ import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 class ThermalReceiptGenerator {
   /// Generate ESC/POS byte array for a POS sale receipt.
   /// [paperSize] can be '80mm' or '58mm'.
+  /// [cutFeedLines] controls bottom blank space before auto-cut (1 = minimal, 2 = compact, 3 = standard).
+  /// [cutMode] 'full' (universal full cut, recommended), 'feed_cut', 'esc_i' (Posiflex/Star), 'partial'.
   static Future<List<int>> generateReceipt(
     Map<String, dynamic> saleData, {
     String paperSize = '80mm',
@@ -10,6 +12,9 @@ class ThermalReceiptGenerator {
     String? businessAddress,
     String? businessPhone,
     String? businessGstin,
+    bool autoCut = true,
+    int cutFeedLines = 2,
+    String cutMode = 'full',
   }) async {
     final profile = await CapabilityProfile.load();
     final pSize = paperSize == '58mm' ? PaperSize.mm58 : PaperSize.mm80;
@@ -340,12 +345,14 @@ class ThermalReceiptGenerator {
     bytes += generator.text(
       'Goods once sold cannot be returned.',
       styles: const PosStyles(align: PosAlign.center),
-      linesAfter: 1,
     );
 
-    // 9. Feed & Cut
-    bytes += generator.feed(2);
-    bytes += generator.cut();
+    // 9. Compact Auto-Cut (minimal bottom blank space, clears cutter knife cleanly)
+    bytes += getCutBytes(
+      feedLines: cutFeedLines,
+      autoCut: autoCut,
+      cutMode: cutMode,
+    );
 
     return bytes;
   }
@@ -355,6 +362,9 @@ class ThermalReceiptGenerator {
     String paperSize = '80mm',
     String printerName = 'Posiflow Thermal Printer',
     String? macAddress,
+    bool autoCut = true,
+    int cutFeedLines = 2,
+    String cutMode = 'full',
   }) async {
     final profile = await CapabilityProfile.load();
     final pSize = paperSize == '58mm' ? PaperSize.mm58 : PaperSize.mm80;
@@ -395,12 +405,77 @@ class ThermalReceiptGenerator {
     bytes += generator.text(
       'Your terminal printer is connected and ready to print POS receipts.',
       styles: const PosStyles(align: PosAlign.center),
-      linesAfter: 1,
     );
 
-    bytes += generator.feed(2);
-    bytes += generator.cut();
+    // Auto-cut
+    bytes += getCutBytes(
+      feedLines: cutFeedLines,
+      autoCut: autoCut,
+      cutMode: cutMode,
+    );
 
     return bytes;
+  }
+
+  /// Generate ESC/POS auto-cut bytes with tight, minimal bottom blank space.
+  /// [feedLines] specifies lines fed so text clears printhead and reaches tear bar/blade (default 2 lines is ~8mm).
+  /// [cutMode] can be 'gs_v_0' (Universal Full Cut), 'esc_i', 'gs_v_66', or 'partial'.
+  static List<int> getCutBytes({
+    int feedLines = 2,
+    bool autoCut = true,
+    String cutMode = 'gs_v_0',
+  }) {
+    List<int> bytes = [];
+
+    // 1. Send true Line Feed bytes (0x0A) to advance paper past printhead to the tear bar / cutter blade
+    final lines = feedLines > 0 ? feedLines : 1;
+    for (int i = 0; i < lines; i++) {
+      bytes.add(0x0A); // LF
+    }
+
+    // 2. Append motorized cutter blade command if autoCut is enabled
+    if (autoCut) {
+      bytes.addAll(getRawCutCommand(cutMode: cutMode));
+    }
+
+    return bytes;
+  }
+
+  /// Generate raw cut command bytes for the printer cutter blade.
+  /// Uses clean, single-command ESC/POS sequences to prevent parser confusion.
+  static List<int> getRawCutCommand({String cutMode = 'gs_v_0'}) {
+    switch (cutMode) {
+      case 'esc_i':
+        // ESC i (Posiflex / Star / Rongta full cut) -> Decimal: [27, 105]
+        return [0x1B, 0x69];
+
+      case 'esc_m':
+        // ESC m (Posiflex / Star partial cut) -> Decimal: [27, 109]
+        return [0x1B, 0x6D];
+
+      case 'gs_v_66':
+      case 'feed_cut':
+        // GS V 66 0: Feed to cut position and partial cut -> Decimal: [29, 86, 66, 0]
+        return [0x1D, 0x56, 0x42, 0x00];
+
+      case 'gs_v_65':
+        // GS V 65 0: Feed to cut position and full cut -> Decimal: [29, 86, 65, 0]
+        return [0x1D, 0x56, 0x41, 0x00];
+
+      case 'gs_v_1':
+      case 'partial':
+        // GS V 1: Partial cut binary -> Decimal: [29, 86, 1]
+        return [0x1D, 0x56, 0x01];
+
+      case 'gs_v_48':
+        // GS V '0': Full cut ASCII (esc_pos_utils style) -> Decimal: [29, 86, 48]
+        return [0x1D, 0x56, 0x30];
+
+      case 'gs_v_0':
+      case 'full':
+      default:
+        // GS V 0: Standard Full Cut binary (Most universal ESC/POS) -> Decimal: [29, 86, 0]
+        return [0x1D, 0x56, 0x00];
+    }
   }
 }

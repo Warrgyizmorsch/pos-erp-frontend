@@ -1,0 +1,666 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../data/services/bluetooth_printer_service.dart';
+import '../../pos/widgets/bluetooth_printer_dialog.dart';
+import '../controllers/settings_controller.dart';
+import '../widgets/change_password_dialog.dart';
+
+class SettingsView extends GetView<SettingsController> {
+  const SettingsView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppTopBar(
+        title: 'System Settings',
+        subtitle: 'User profile, app preferences & accounting toggles',
+        actions: [
+          Obx(
+            () => IconButton(
+              icon: const Icon(Icons.save_rounded, size: 24),
+              tooltip: 'Save Settings',
+              onPressed: controller.isSaving.value
+                  ? null
+                  : () => controller.saveProfile(),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Business & Store Profile Banner Card
+            InkWell(
+              borderRadius: AppRadius.lg,
+              onTap: () => Get.toNamed('/settings/profile'),
+              child: AppCard(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(25),
+                        borderRadius: AppRadius.md,
+                      ),
+                      child: const Icon(
+                        Icons.storefront_rounded,
+                        color: AppColors.primary,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              const Text(
+                                'Business & Store Profile',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withAlpha(20),
+                                  borderRadius: AppRadius.full,
+                                ),
+                                child: const Text(
+                                  'INVOICE & GST',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Configure GSTIN, store address, bank settlement info & invoice terms.',
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // User Management Banner Card
+            InkWell(
+              borderRadius: AppRadius.lg,
+              onTap: () => Get.toNamed('/settings/users'),
+              child: AppCard(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.indigo.withAlpha(25),
+                        borderRadius: AppRadius.md,
+                      ),
+                      child: const Icon(
+                        Icons.manage_accounts_rounded,
+                        color: Colors.indigo,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              const Text(
+                                'User Management & Permissions',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withAlpha(20),
+                                  borderRadius: AppRadius.full,
+                                ),
+                                child: const Text(
+                                  'ACCESS CONTROL',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.indigo,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Manage team members, assign roles & configure fine-grained module access.',
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Profile Section Card
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: const [
+                            Icon(
+                              Icons.person_outline,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'User Profile & Credentials',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Obx(
+                        () => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(20),
+                            borderRadius: AppRadius.full,
+                          ),
+                          child: Text(
+                            controller.role.value.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 600;
+
+                      final nameField = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Full Name',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(
+                            () => TextField(
+                              controller:
+                                  TextEditingController(
+                                      text: controller.name.value,
+                                    )
+                                    ..selection = TextSelection.collapsed(
+                                      offset: controller.name.value.length,
+                                    ),
+                              onChanged: (val) => controller.name.value = val,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? AppColors.inputDark
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.md,
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+
+                      final phoneField = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Phone Number',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(
+                            () => TextField(
+                              controller:
+                                  TextEditingController(
+                                      text: controller.phone.value,
+                                    )
+                                    ..selection = TextSelection.collapsed(
+                                      offset: controller.phone.value.length,
+                                    ),
+                              onChanged: (val) => controller.phone.value = val,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? AppColors.inputDark
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: AppRadius.md,
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+
+                      if (isMobile) {
+                        return Column(
+                          children: [
+                            nameField,
+                            const SizedBox(height: 12),
+                            phoneField,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: nameField),
+                          const SizedBox(width: 12),
+                          Expanded(child: phoneField),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => Text(
+                          'Email Address: ${controller.email.value.isNotEmpty ? controller.email.value : "admin@poserp.com"}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      AppButton(
+                        text: 'Change Password',
+                        variant: AppButtonVariant.outline,
+                        icon: const Icon(Icons.lock_outline, size: 16),
+                        height: 38,
+                        onPressed: () =>
+                            Get.dialog(const ChangePasswordDialog()),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Application Preferences Card
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.tune_outlined,
+                        color: AppColors.info,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Application Preferences & Modules',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+
+                  // Theme Switcher
+                  Obx(
+                    () => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Dark Mode Appearance',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Switch UI palette between Dark and Light mode.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      value: controller.isDarkTheme.value,
+                      activeThumbColor: AppColors.primary,
+                      onChanged: (val) {
+                        controller.isDarkTheme.value = val;
+                        Get.changeThemeMode(
+                          val ? ThemeMode.dark : ThemeMode.light,
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 16),
+
+                  // Accounting Toggle
+                  Obx(
+                    () => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Double-Entry Accounting Engine',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Automatically post journal vouchers for invoices, bills & cash/bank.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      value: controller.doubleEntryAccountingEnabled.value,
+                      activeThumbColor: AppColors.success,
+                      onChanged: (val) =>
+                          controller.doubleEntryAccountingEnabled.value = val,
+                    ),
+                  ),
+                  const Divider(height: 16),
+
+                  // Thermal Printer Auto Print
+                  Obx(
+                    () => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Auto-Print POS Thermal Receipts',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Automatically print receipts upon cashier sale completion.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      value: controller.autoPrintReceipts.value,
+                      activeThumbColor: AppColors.warning,
+                      onChanged: (val) => controller.setAutoPrint(val),
+                    ),
+                  ),
+                  const Divider(height: 16),
+
+                  // Posiflow / Bluetooth Thermal Printer Setup Card
+                  Obx(() {
+                    final printerService = Get.find<BluetoothPrinterService>();
+                    final isConn = printerService.isConnected.value;
+                    final devName = printerService.connectedPrinterName.value;
+                    final devMac = printerService.connectedPrinterMac.value;
+                    final paperSize = printerService.paperSize.value;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.inputDark : Colors.grey[100],
+                        borderRadius: AppRadius.md,
+                        border: Border.all(
+                          color: isConn
+                              ? AppColors.success.withAlpha(60)
+                              : (isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                isConn
+                                    ? Icons.bluetooth_connected
+                                    : Icons.print_outlined,
+                                color: isConn
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Posiflow / Terminal Printer (Bluetooth)',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      isConn
+                                          ? 'Connected: $devName ($paperSize • ${printerService.autoCut.value ? "Auto-Cut ON (${printerService.cutFeedLines.value}L)" : "Auto-Cut OFF"})'
+                                          : 'No Bluetooth printer connected',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isConn
+                                            ? AppColors.success
+                                            : Colors.grey[600],
+                                      ),
+                                    ),
+                                    if (isConn && devMac.isNotEmpty)
+                                      Text(
+                                        'MAC: $devMac',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: const Icon(
+                                  Icons.settings_bluetooth,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  isConn ? 'Configure' : 'Connect',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                onPressed: () =>
+                                    BluetoothPrinterDialog.show(context),
+                              ),
+                            ],
+                          ),
+                          if (isConn) ...[
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.receipt, size: 14),
+                                  label: const Text(
+                                    'Test Print',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: printerService.isPrinting.value
+                                      ? null
+                                      : () =>
+                                          printerService.printTestReceipt(),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.content_cut, size: 14),
+                                  label: const Text(
+                                    'Test Cut',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: printerService.isPrinting.value
+                                      ? null
+                                      : () => printerService.testCut(),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    side: const BorderSide(color: Colors.red),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.link_off, size: 14),
+                                  label: const Text(
+                                    'Disconnect',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: () =>
+                                      printerService.disconnect(),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

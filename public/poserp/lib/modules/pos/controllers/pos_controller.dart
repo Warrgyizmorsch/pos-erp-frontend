@@ -1,0 +1,627 @@
+import 'dart:math';
+import 'package:get/get.dart';
+import '../../../../core/api/api_exceptions.dart';
+import '../../../../core/utils/app_snackbar.dart';
+import '../../parties/customers/models/customer.dart';
+import '../../products/godowns/models/godown.dart';
+import '../../products/models/product.dart';
+import '../../sales/models/sale.dart';
+import '../models/pos_bill.dart';
+import '../models/pos_item.dart';
+import '../models/pos_sale_payload.dart';
+import '../repositories/pos_repository.dart';
+
+class POSController extends GetxController {
+  final POSRepository _repository;
+
+  POSController(this._repository);
+
+  // State
+  final RxList<POSBill> bills = <POSBill>[].obs;
+  final RxString activeBillId = ''.obs;
+  final RxInt nextBillNo = 2.obs;
+
+  final RxList<Product> availableProducts = <Product>[].obs;
+  final RxList<Customer> availableCustomers = <Customer>[].obs;
+  final RxList<Godown> availableGodowns = <Godown>[].obs;
+  final RxList<Map<String, dynamic>> bankAccounts =
+      <Map<String, dynamic>>[].obs;
+
+  final RxBool isLoading = false.obs;
+  final RxBool isSubmitting = false.obs;
+  final RxBool isAmountEdited = false.obs;
+  String? _loadedEditSaleId;
+
+  // Print modal data state
+  final Rxn<Map<String, dynamic>> lastSavedSale = Rxn<Map<String, dynamic>>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initInitialBill();
+    loadInitialData().then((_) {
+      final args = Get.arguments;
+      if (args is Map && args['editSaleId'] != null) {
+        loadSaleForEditing(args['editSaleId'].toString());
+      }
+    });
+  }
+
+  void _initInitialBill() {
+    const id = '1';
+    final initialBill = POSBill(
+      id: id,
+      billNo: 1,
+      customer: walkInCustomer,
+      items: [_createPlaceholderItem()],
+    );
+    bills.assignAll([initialBill]);
+    activeBillId.value = id;
+  }
+
+  POSItem _createPlaceholderItem() {
+    return POSItem(
+      id: Random().nextInt(9999999).toString(),
+      itemType: 'inventory',
+      affectsInventory: true,
+      itemCode: '',
+      itemName: '',
+      customItem: true,
+      quantity: 1,
+      unit: 'Pcs',
+      pricePerUnit: 0,
+      rate: 0,
+      purchasePrice: 0,
+      taxPercent: 0,
+      taxableAmount: 0,
+      taxAmount: 0,
+      total: 0,
+      discount: 0,
+      isInclusive: false,
+    );
+  }
+
+  POSBill? get activeBill {
+    return bills.firstWhereOrNull((b) => b.id == activeBillId.value);
+  }
+
+  Future<void> loadInitialData() async {
+    try {
+      isLoading.value = true;
+      final prods = await _repository.fetchProducts();
+      final custs = await _repository.fetchCustomers();
+      final banks = await _repository.fetchBankAccounts();
+      final godowns = await _repository.fetchGodowns();
+
+      availableProducts.assignAll(prods);
+      availableCustomers.assignAll(custs);
+      bankAccounts.assignAll(banks);
+      availableGodowns.assignAll(godowns);
+
+      if (availableGodowns.isNotEmpty) {
+        final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+            availableGodowns.first;
+        final cur = activeBill;
+        if (cur != null && (cur.godownId == null || cur.godownId!.isEmpty)) {
+          _updateBill(cur.copyWith(godownId: defaultGodown.id));
+        }
+      }
+    } catch (e) {
+      // Non-blocking log
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadSaleForEditing(String saleId) async {
+    if (_loadedEditSaleId == saleId) return;
+    _loadedEditSaleId = saleId;
+
+    try {
+      isLoading.value = true;
+      if (availableProducts.isEmpty || availableCustomers.isEmpty) {
+        await loadInitialData();
+      }
+
+      final Sale sale = await _repository.fetchSaleById(saleId);
+
+      final List<POSItem> items = sale.items.map((item) {
+        final pId = item.productId ?? item.product;
+        final prodMatch =
+            availableProducts.firstWhereOrNull((p) => p.id == pId);
+        final displayName = (item.name != null && item.name!.isNotEmpty)
+            ? item.name!
+            : (item.itemName.isNotEmpty
+                ? item.itemName
+                : (prodMatch?.name ?? 'Custom Item'));
+
+        final posItem = POSItem(
+          id: Random().nextInt(9999999).toString(),
+          productId: pId,
+          product: prodMatch,
+          itemType: item.itemType.isNotEmpty
+              ? item.itemType
+              : (pId != null ? 'inventory' : 'non_stock_product'),
+          affectsInventory: item.affectsInventory,
+          itemCode: (item.sku != null && item.sku!.isNotEmpty)
+              ? item.sku!
+              : (prodMatch?.sku ?? ''),
+          itemName: displayName,
+          description: item.description,
+          customItem: pId == null,
+          quantity: item.quantity > 0 ? item.quantity : 1,
+          unit: prodMatch?.unit ?? 'Pcs',
+          pricePerUnit: item.rate > 0 ? item.rate : item.unitPrice,
+          rate: item.rate > 0 ? item.rate : item.unitPrice,
+          purchasePrice: item.purchasePrice > 0
+              ? item.purchasePrice
+              : (prodMatch?.purchasePrice ?? 0),
+          taxPercent: item.taxRate > 0
+              ? item.taxRate
+              : (item.gstRate > 0 ? item.gstRate : (prodMatch?.taxRate ?? 0)),
+          discount: item.discount,
+          isInclusive: prodMatch?.salesTaxType == 'with',
+        );
+        return POSItem.calculateAmounts(posItem);
+      }).toList();
+
+      items.add(_createPlaceholderItem());
+
+      Customer cust = walkInCustomer;
+      if (sale.customer is Customer) {
+        cust = sale.customer as Customer;
+      } else if (sale.customer != null) {
+        final match = availableCustomers.firstWhereOrNull(
+          (c) => c.id == sale.customer.toString(),
+        );
+        if (match != null) {
+          cust = match;
+        } else if (sale.customerName.isNotEmpty &&
+            sale.customerName != 'Walk-in Customer') {
+          cust = Customer(
+            id: sale.customer.toString(),
+            name: sale.customerName,
+            phone: '',
+            email: '',
+            address: '',
+          );
+        }
+      } else if (sale.customerName.isNotEmpty &&
+          sale.customerName != 'Walk-in Customer') {
+        cust = Customer(
+          id: 'cust_${sale.id}',
+          name: sale.customerName,
+          phone: '',
+          email: '',
+          address: '',
+        );
+      }
+
+      String mode = 'Cash';
+      final pm = sale.paymentMethod.toLowerCase();
+      if (pm == 'card') {
+        mode = 'Card';
+      } else if (pm == 'upi') {
+        mode = 'UPI';
+      } else if (pm == 'bank') {
+        mode = 'Bank';
+      } else if (pm == 'wallet') {
+        mode = 'Wallet';
+      }
+
+      final active = activeBill;
+      final billId = active?.id ??
+          (activeBillId.value.isNotEmpty ? activeBillId.value : '1');
+      final billNo = active?.billNo ?? 1;
+
+      final updatedBill = POSBill(
+        id: billId,
+        editingId: sale.id,
+        billNo: billNo,
+        customer: cust,
+        items: items,
+        selectedRowIndex: items.length > 1 ? items.length - 2 : 0,
+        paymentMode: mode,
+        amountReceived: sale.amountPaid,
+        remarks: sale.notes ?? '',
+        cashBankAccountId: sale.cashBankAccountId,
+        godownId: sale.godownId,
+      );
+
+      final billIdx = bills.indexWhere((b) => b.id == updatedBill.id);
+      if (billIdx >= 0) {
+        bills[billIdx] = updatedBill;
+      } else {
+        bills.add(updatedBill);
+        activeBillId.value = updatedBill.id;
+      }
+      isAmountEdited.value = sale.amountPaid > 0;
+
+      AppSnackbar.success('Sale ${sale.invoiceNumber} loaded for editing.');
+    } catch (e) {
+      _loadedEditSaleId = null;
+      showErrorSnackbar(
+        e is AppException
+            ? e.message
+            : 'Failed to load sale for editing in POS.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void createNewBill() {
+    final id = Random().nextInt(9999999).toString();
+    final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+        (availableGodowns.isNotEmpty ? availableGodowns.first : null);
+    final newBill = POSBill(
+      id: id,
+      billNo: nextBillNo.value,
+      customer: walkInCustomer,
+      items: [_createPlaceholderItem()],
+      godownId: defaultGodown?.id,
+    );
+    bills.add(newBill);
+    activeBillId.value = id;
+    nextBillNo.value += 1;
+    isAmountEdited.value = false;
+  }
+
+  void closeBill(String id) {
+    if (bills.length == 1) {
+      _initInitialBill();
+      isAmountEdited.value = false;
+      return;
+    }
+    bills.removeWhere((b) => b.id == id);
+    if (activeBillId.value == id) {
+      activeBillId.value = bills.first.id;
+      isAmountEdited.value = false;
+    }
+  }
+
+  void setActiveBill(String id) {
+    activeBillId.value = id;
+    isAmountEdited.value = false;
+  }
+
+  void setCustomer(Customer? customer) {
+    final cur = activeBill;
+    if (cur == null) return;
+    _updateBill(cur.copyWith(customer: customer ?? walkInCustomer));
+  }
+
+  void setGodown(String? godownId) {
+    final cur = activeBill;
+    if (cur == null) return;
+    _updateBill(cur.copyWith(godownId: godownId));
+  }
+
+  void setPaymentMode(String mode) {
+    final cur = activeBill;
+    if (cur == null) return;
+    _updateBill(cur.copyWith(paymentMode: mode));
+  }
+
+  void setCashBankAccountId(String? accountId) {
+    final cur = activeBill;
+    if (cur == null) return;
+    _updateBill(cur.copyWith(cashBankAccountId: accountId));
+  }
+
+  void setAmountReceived(double amount) {
+    final cur = activeBill;
+    if (cur == null) return;
+    isAmountEdited.value = true;
+    _updateBill(cur.copyWith(amountReceived: amount));
+  }
+
+  void addItemFromProduct(Product product) {
+    final cur = activeBill;
+    if (cur == null) return;
+
+    final existingIdx = cur.items.indexWhere(
+      (i) => i.itemType == 'inventory' && i.productId == product.id,
+    );
+
+    List<POSItem> updatedItems = List.from(cur.items);
+
+    if (existingIdx >= 0) {
+      final existing = updatedItems[existingIdx];
+      final updated = POSItem.calculateAmounts(
+        existing.copyWith(quantity: existing.quantity + 1),
+      );
+      updatedItems[existingIdx] = updated;
+    } else {
+      final newItem = POSItem.calculateAmounts(
+        POSItem(
+          id: Random().nextInt(9999999).toString(),
+          productId: product.id,
+          product: product,
+          itemType: 'inventory',
+          affectsInventory: true,
+          itemCode: product.sku.isNotEmpty
+              ? product.sku
+              : (product.barcode ?? ''),
+          itemName: product.name,
+          customItem: false,
+          quantity: 1,
+          unit: product.unit,
+          pricePerUnit: product.salesPrice,
+          rate: product.salesPrice,
+          purchasePrice: product.purchasePrice,
+          taxPercent: product.taxRate,
+          isInclusive: product.salesTaxType == 'with',
+        ),
+      );
+
+      // Insert before last placeholder or append
+      if (updatedItems.isNotEmpty && updatedItems.last.itemName.isEmpty) {
+        updatedItems.insert(updatedItems.length - 1, newItem);
+      } else {
+        updatedItems.add(newItem);
+        updatedItems.add(_createPlaceholderItem());
+      }
+    }
+
+    _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
+  }
+
+  Future<bool> onScanBarcode(String barcodeQuery) async {
+    final query = barcodeQuery.trim();
+    if (query.isEmpty) return false;
+    final lower = query.toLowerCase();
+
+    // 1. Search local cached products first (barcode, SKU, exact ID, or name match)
+    Product? match = availableProducts.firstWhereOrNull(
+      (p) =>
+          p.barcode == query ||
+          p.sku.toLowerCase() == lower ||
+          p.id == query ||
+          p.name.toLowerCase().contains(lower),
+    );
+
+    // 2. If not found in local cache, query API
+    if (match == null) {
+      try {
+        final results = await _repository.fetchProducts(search: query);
+        match =
+            results.firstWhereOrNull(
+              (p) =>
+                  p.barcode == query ||
+                  p.sku.toLowerCase() == lower ||
+                  p.name.toLowerCase().contains(lower),
+            ) ??
+            (results.isNotEmpty ? results.first : null);
+      } catch (_) {}
+    }
+
+    if (match != null) {
+      addItemFromProduct(match);
+      AppSnackbar.success('Added "${match.name}" to cart.');
+      return true;
+    } else {
+      showErrorSnackbar('Product not found: $query');
+      return false;
+    }
+  }
+
+  void updateItemQuantity(String itemId, double qty) {
+    final cur = activeBill;
+    if (cur == null) return;
+
+    final updatedItems = cur.items.map((item) {
+      if (item.id != itemId) return item;
+      return POSItem.calculateAmounts(item.copyWith(quantity: qty));
+    }).toList();
+
+    _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
+  }
+
+  void updateItemPrice(String itemId, double price) {
+    final cur = activeBill;
+    if (cur == null) return;
+
+    final updatedItems = cur.items.map((item) {
+      if (item.id != itemId) return item;
+      return POSItem.calculateAmounts(
+        item.copyWith(pricePerUnit: price, rate: price),
+      );
+    }).toList();
+
+    _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
+  }
+
+  void updateItemDiscount(String itemId, double disc) {
+    final cur = activeBill;
+    if (cur == null) return;
+
+    final updatedItems = cur.items.map((item) {
+      if (item.id != itemId) return item;
+      return POSItem.calculateAmounts(item.copyWith(discount: disc));
+    }).toList();
+
+    _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
+  }
+
+  void removeItem(String itemId) {
+    final cur = activeBill;
+    if (cur == null) return;
+
+    var updatedItems = cur.items.where((i) => i.id != itemId).toList();
+    if (updatedItems.isEmpty ||
+        updatedItems.every((i) => i.itemName.isNotEmpty)) {
+      updatedItems.add(_createPlaceholderItem());
+    }
+
+    _updateBillWithCalculatedTotals(cur.copyWith(items: updatedItems));
+  }
+
+  void _updateBillWithCalculatedTotals(POSBill bill) {
+    if (!isAmountEdited.value) {
+      final newGrandTotal = bill.grandTotal;
+      _updateBill(bill.copyWith(amountReceived: newGrandTotal));
+    } else {
+      _updateBill(bill);
+    }
+  }
+
+  void _updateBill(POSBill bill) {
+    final idx = bills.indexWhere((b) => b.id == bill.id);
+    if (idx >= 0) {
+      bills[idx] = bill;
+    }
+  }
+
+  Future<bool> submitSale() async {
+    final cur = activeBill;
+    if (cur == null) return false;
+
+    if (cur.godownId == null || cur.godownId!.isEmpty) {
+      showErrorSnackbar('Please select a Godown to deduct stock from.');
+      return false;
+    }
+
+    final validItems = cur.items.where((i) => i.itemName.isNotEmpty).toList();
+    if (validItems.isEmpty) {
+      showErrorSnackbar('Please add at least one product item to the cart.');
+      return false;
+    }
+
+    final grandTotal = cur.grandTotal;
+    final receivedAmount = min(cur.amountReceived, grandTotal);
+    final paidInFull = receivedAmount >= grandTotal;
+
+    final isWalkIn = cur.customer == null || cur.customer!.id == 'walk-in';
+    final custId = isWalkIn ? null : cur.customer!.id;
+    final custName = isWalkIn ? 'Walk-in Customer' : cur.customer!.name;
+
+    final subtotal = validItems.fold(
+      0.0,
+      (sum, i) => sum + (i.quantity * i.pricePerUnit),
+    );
+    final taxAmt = validItems.fold(0.0, (sum, i) => sum + i.taxAmount);
+    final discountAmt = validItems.fold(
+      0.0,
+      (sum, i) => sum + ((i.quantity * i.pricePerUnit) * (i.discount / 100.0)),
+    );
+
+    final String paymentMethod = cur.paymentMode == 'Partial'
+        ? 'cash'
+        : cur.paymentMode == 'Bank'
+        ? 'upi'
+        : cur.paymentMode.toLowerCase();
+
+    final itemPayloads = validItems.map((i) {
+      final base = i.quantity * i.pricePerUnit;
+      final discAmt = base * (i.discount / 100.0);
+      final taxable = i.isInclusive
+          ? max(0.0, i.total - i.taxAmount)
+          : max(0.0, base - discAmt);
+      final cgst = double.parse((i.taxAmount / 2.0).toStringAsFixed(2));
+      final sgst = double.parse((i.taxAmount - cgst).toStringAsFixed(2));
+
+      final isInv = i.itemType == 'inventory';
+
+      return POSSaleItemPayload(
+        product: isInv ? i.productId : null,
+        productId: isInv ? i.productId : null,
+        itemType: i.itemType,
+        affectsInventory: isInv,
+        itemName: i.itemName,
+        description: i.description ?? '',
+        sku: i.itemCode,
+        quantity: i.quantity,
+        rate: i.pricePerUnit,
+        unitPrice: i.pricePerUnit,
+        purchasePrice: i.purchasePrice,
+        discount: i.discount,
+        taxRate: i.taxPercent,
+        gstRate: i.taxPercent,
+        taxableAmount: taxable,
+        taxAmount: i.taxAmount,
+        totalAmount: i.total,
+        cgst: cgst,
+        cgstAmount: cgst,
+        sgst: sgst,
+        sgstAmount: sgst,
+        igst: 0,
+        igstAmount: 0,
+        hsn: isInv && i.product != null ? (i.product!.hsnCode ?? '') : '',
+        total: i.total,
+      );
+    }).toList();
+
+    final cgstTotal = itemPayloads.fold(0.0, (sum, i) => sum + i.cgst);
+    final sgstTotal = itemPayloads.fold(0.0, (sum, i) => sum + i.sgst);
+
+    final payload = POSSalePayload(
+      customer: custId,
+      customerName: custName,
+      saleDate: DateTime.now().toIso8601String(),
+      items: itemPayloads,
+      subtotal: subtotal,
+      taxAmount: taxAmt,
+      totalCgst: cgstTotal,
+      totalSgst: sgstTotal,
+      totalIgst: 0,
+      discountAmount: discountAmt,
+      totalAmount: grandTotal,
+      amountPaid: receivedAmount,
+      status: 'completed',
+      paymentStatus: paidInFull ? 'paid' : 'partial',
+      paymentMethod: paymentMethod,
+      notes: cur.remarks,
+      cashBankAccountId: cur.cashBankAccountId,
+      godownId: cur.godownId,
+    );
+
+    try {
+      isSubmitting.value = true;
+      final savedData = await _repository.submitSale(
+        payload,
+        editingId: cur.editingId,
+      );
+      lastSavedSale.value = savedData;
+
+      AppSnackbar.success(
+        cur.editingId != null
+            ? 'Sale invoice updated successfully!'
+            : 'Sale saved & receipt generated!',
+      );
+
+      // Reset bill
+      resetCurrentBill();
+      return true;
+    } catch (e) {
+      showErrorSnackbar(
+        e is AppException ? e.message : 'Failed to submit POS sale',
+      );
+      return false;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  void resetCurrentBill() {
+    _loadedEditSaleId = null;
+    final cur = activeBill;
+    if (cur == null) return;
+    isAmountEdited.value = false;
+    final defaultGodown = availableGodowns.firstWhereOrNull((g) => g.isDefault) ??
+        (availableGodowns.isNotEmpty ? availableGodowns.first : null);
+    _updateBill(
+      POSBill(
+        id: cur.id,
+        billNo: cur.billNo,
+        customer: walkInCustomer,
+        items: [_createPlaceholderItem()],
+        godownId: cur.godownId ?? defaultGodown?.id,
+      ),
+    );
+  }
+
+  void showErrorSnackbar(String message) {
+    AppSnackbar.error(message);
+  }
+}
