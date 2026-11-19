@@ -5,6 +5,8 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../data/services/bluetooth_printer_service.dart';
+import '../../pos/widgets/bluetooth_printer_dialog.dart';
 import '../controllers/settings_controller.dart';
 import '../widgets/change_password_dialog.dart';
 
@@ -483,10 +485,156 @@ class SettingsView extends GetView<SettingsController> {
                       ),
                       value: controller.autoPrintReceipts.value,
                       activeThumbColor: AppColors.warning,
-                      onChanged: (val) =>
-                          controller.autoPrintReceipts.value = val,
+                      onChanged: (val) => controller.setAutoPrint(val),
                     ),
                   ),
+                  const Divider(height: 16),
+
+                  // Posiflow / Bluetooth Thermal Printer Setup Card
+                  Obx(() {
+                    final printerService = Get.find<BluetoothPrinterService>();
+                    final isConn = printerService.isConnected.value;
+                    final devName = printerService.connectedPrinterName.value;
+                    final devMac = printerService.connectedPrinterMac.value;
+                    final paperSize = printerService.paperSize.value;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.inputDark : Colors.grey[100],
+                        borderRadius: AppRadius.md,
+                        border: Border.all(
+                          color: isConn
+                              ? AppColors.success.withAlpha(60)
+                              : (isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                isConn
+                                    ? Icons.bluetooth_connected
+                                    : Icons.print_outlined,
+                                color: isConn
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Posiflow / Terminal Printer (Bluetooth)',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      isConn
+                                          ? 'Connected: $devName ($paperSize)'
+                                          : 'No Bluetooth printer connected',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isConn
+                                            ? AppColors.success
+                                            : Colors.grey[600],
+                                      ),
+                                    ),
+                                    if (isConn && devMac.isNotEmpty)
+                                      Text(
+                                        'MAC: $devMac',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: const Icon(
+                                  Icons.settings_bluetooth,
+                                  size: 14,
+                                ),
+                                label: Text(
+                                  isConn ? 'Configure' : 'Connect',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                onPressed: () =>
+                                    BluetoothPrinterDialog.show(context),
+                              ),
+                            ],
+                          ),
+                          if (isConn) ...[
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.receipt, size: 14),
+                                  label: const Text(
+                                    'Test Print',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: printerService.isPrinting.value
+                                      ? null
+                                      : () =>
+                                          printerService.printTestReceipt(),
+                                ),
+                                const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    side: const BorderSide(color: Colors.red),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.link_off, size: 14),
+                                  label: const Text(
+                                    'Disconnect',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: () =>
+                                      printerService.disconnect(),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),

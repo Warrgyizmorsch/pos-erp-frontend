@@ -4,7 +4,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../data/services/bluetooth_printer_service.dart';
 import '../controllers/pos_controller.dart';
+import '../widgets/bluetooth_printer_dialog.dart';
 import '../widgets/pos_item_table.dart';
 import '../widgets/pos_right_panel.dart';
 
@@ -40,6 +42,26 @@ class _POSViewState extends State<POSView> {
         title: 'POS Terminal',
         subtitle: 'Fast billing & multi-order tabs',
         actions: [
+          // Bluetooth Printer Button
+          Obx(() {
+            final printerService = Get.find<BluetoothPrinterService>();
+            final isConn = printerService.isConnected.value;
+            final name = printerService.connectedPrinterName.value;
+
+            return IconButton(
+              icon: Icon(
+                isConn ? Icons.print_rounded : Icons.print_outlined,
+                color: isConn ? AppColors.success : AppColors.primary,
+                size: 22,
+              ),
+              tooltip: isConn
+                  ? 'Printer Online: $name'
+                  : 'Connect Posiflow / BT Printer',
+              onPressed: () => BluetoothPrinterDialog.show(context),
+            );
+          }),
+          const SizedBox(width: 4),
+
           // Multi-bill Tabs Header
           Obx(
             () => SingleChildScrollView(

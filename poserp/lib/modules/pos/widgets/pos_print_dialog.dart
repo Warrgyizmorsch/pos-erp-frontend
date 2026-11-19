@@ -4,6 +4,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../data/services/bluetooth_printer_service.dart';
+import 'bluetooth_printer_dialog.dart';
 
 enum PrintFormat { thermal80mm, standardA4 }
 
@@ -209,7 +211,74 @@ class _POSPrintDialogState extends State<POSPrintDialog> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+
+              // Bluetooth Printer Status Bar
+              Obx(() {
+                final printerService = Get.find<BluetoothPrinterService>();
+                final isConn = printerService.isConnected.value;
+                final devName = printerService.connectedPrinterName.value;
+
+                return InkWell(
+                  onTap: () => BluetoothPrinterDialog.show(context),
+                  borderRadius: AppRadius.sm,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isConn
+                          ? AppColors.success.withAlpha(20)
+                          : AppColors.primary.withAlpha(15),
+                      borderRadius: AppRadius.sm,
+                      border: Border.all(
+                        color: isConn
+                            ? AppColors.success.withAlpha(80)
+                            : AppColors.primary.withAlpha(50),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isConn
+                              ? Icons.bluetooth_connected
+                              : Icons.bluetooth_searching,
+                          size: 15,
+                          color: isConn ? AppColors.success : AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isConn
+                                ? 'Printer: $devName (Online)'
+                                : 'Connect Posiflow / BT Printer',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isConn
+                                  ? AppColors.success
+                                  : AppColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isConn ? 'Change' : 'Connect',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: isConn
+                                ? AppColors.success
+                                : AppColors.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
 
               // Preview Scrollable Container
               Flexible(
@@ -253,27 +322,80 @@ class _POSPrintDialogState extends State<POSPrintDialog> {
 
               // Action Buttons
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  IconButton(
+                    tooltip: 'Thermal Printer Settings',
+                    icon: const Icon(
+                      Icons.settings_bluetooth,
+                      size: 22,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () => BluetoothPrinterDialog.show(context),
+                  ),
+                  const Spacer(),
                   AppButton(
                     text: 'Close',
                     variant: AppButtonVariant.ghost,
                     onPressed: () => Get.back(),
                   ),
-                  const SizedBox(width: 12),
-                  AppButton(
-                    text: _format == PrintFormat.thermal80mm
-                        ? 'Print Receipt'
-                        : 'Print A4 Tax Invoice',
-                    icon: const Icon(Icons.print, size: 18),
-                    onPressed: () {
-                      Get.back();
-                      AppSnackbar.success(
-                        'Invoice #$invoiceNo sent to printer spooler.',
-                        title: 'Print Spooler',
-                      );
-                    },
-                  ),
+                  const SizedBox(width: 10),
+                  Obx(() {
+                    final printerService = Get.find<BluetoothPrinterService>();
+                    final isPrinting = printerService.isPrinting.value;
+
+                    return AppButton(
+                      text: isPrinting
+                          ? 'Printing...'
+                          : (_format == PrintFormat.thermal80mm
+                              ? 'Print Receipt'
+                              : 'Print A4 Tax Invoice'),
+                      icon: isPrinting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.print, size: 18),
+                      onPressed: isPrinting
+                          ? null
+                          : () async {
+                              if (_format == PrintFormat.thermal80mm) {
+                                // Direct Bluetooth thermal receipt print
+                                final isConn =
+                                    await printerService.ensureConnected();
+                                if (!isConn) {
+                                  AppSnackbar.warning(
+                                    'Please connect your Posiflow / thermal printer first.',
+                                    title: 'Printer Not Connected',
+                                  );
+                                  if (context.mounted) {
+                                    await BluetoothPrinterDialog.show(context);
+                                  }
+                                  return;
+                                }
+
+                                final success =
+                                    await printerService.printReceipt(
+                                  widget.saleData,
+                                  customPaperSize: '80mm',
+                                );
+                                if (success) {
+                                  Get.back();
+                                }
+                              } else {
+                                // Standard A4 Spooler / Print
+                                Get.back();
+                                AppSnackbar.success(
+                                  'Invoice #$invoiceNo sent to printer spooler.',
+                                  title: 'Print Spooler',
+                                );
+                              }
+                            },
+                    );
+                  }),
                 ],
               ),
             ],

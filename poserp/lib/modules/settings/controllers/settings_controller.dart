@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/api_exceptions.dart';
@@ -7,6 +8,8 @@ import '../../authentication/controllers/auth_controller.dart';
 
 class SettingsController extends GetxController {
   final ApiClient _apiClient;
+  late final GetStorage _box;
+  static const String keyAutoPrint = 'pos_auto_print_receipts';
 
   SettingsController(this._apiClient);
 
@@ -23,6 +26,9 @@ class SettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _box = GetStorage();
+    autoPrintReceipts.value = _box.read<bool>(keyAutoPrint) ?? true;
+
     if (Get.isRegistered<AuthController>()) {
       final authCtrl = Get.find<AuthController>();
       final u = authCtrl.currentUser.value;
@@ -33,6 +39,11 @@ class SettingsController extends GetxController {
         role.value = u.role;
       }
     }
+  }
+
+  void setAutoPrint(bool val) {
+    autoPrintReceipts.value = val;
+    _box.write(keyAutoPrint, val);
   }
 
   Future<void> saveProfile() async {

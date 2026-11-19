@@ -7,7 +7,9 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_top_bar.dart';
+import '../../../../data/services/bluetooth_printer_service.dart';
 import '../controllers/pos_checkout_controller.dart';
+import '../widgets/bluetooth_printer_dialog.dart';
 import '../widgets/pos_print_dialog.dart';
 
 class POSCheckoutView extends GetView<POSCheckoutController> {
@@ -16,9 +18,29 @@ class POSCheckoutView extends GetView<POSCheckoutController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppTopBar(
+      appBar: AppTopBar(
         title: 'POS Payment & Checkout',
         subtitle: 'Multi-tender payment, change calculation & receipt',
+        actions: [
+          Obx(() {
+            final printerService = Get.find<BluetoothPrinterService>();
+            final isConn = printerService.isConnected.value;
+            final name = printerService.connectedPrinterName.value;
+
+            return IconButton(
+              icon: Icon(
+                isConn ? Icons.print_rounded : Icons.print_outlined,
+                color: isConn ? AppColors.success : AppColors.primary,
+                size: 22,
+              ),
+              tooltip: isConn
+                  ? 'Printer Online: $name'
+                  : 'Connect Posiflow / BT Printer',
+              onPressed: () => BluetoothPrinterDialog.show(context),
+            );
+          }),
+          const SizedBox(width: 8),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
